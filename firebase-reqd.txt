@@ -24,12 +24,12 @@ DEPLOYMENT ARCHITECTURE
  URL: https://console.firebase.google.com → "Add project"
 
  Suggested Project Name : TruFleetX
- Suggested Project ID   : trufleetx-prod  ✅ FIXED — used in .firebaserc, CLI, and all SDK calls
+ Suggested Project ID   : trufleet-2a103  ✅ CONFIRMED (auto-assigned by Firebase)
  Disable Google Analytics: optional (enable if you want usage stats)
 
  After creation — go to: Project Settings → General
 
- [✅] Project ID      : trufleetx-prod
+ [✅] Project ID      : trufleet-2a103
       ↑ THIS IS YOUR CONNECTION ID — used in .firebaserc, CLI, and all SDK calls.
 
  [ ] Project Number  : _______________________________________
@@ -46,15 +46,27 @@ DEPLOYMENT ARCHITECTURE
  App nickname: TruFleetX-Web
  Check "Also set up Firebase Hosting" → YES
 
- Firebase shows a firebaseConfig object after registration. Record all values:
+ Firebase shows a firebaseConfig object after registration.
+ ✅ ALL VALUES CONFIRMED from Firebase App Hosting build log:
 
- [ ] apiKey            : _______________________________________
- [ ] authDomain        : _______________________________________ .firebaseapp.com
- [ ] projectId         : _______________________________________  (same as above)
- [ ] storageBucket     : _______________________________________ .appspot.com
- [ ] messagingSenderId : _______________________________________
- [ ] appId             : _______________________________________
- [ ] measurementId     : _______________________________________  (optional / Analytics)
+ [✅] apiKey            : AIzaSyAP2_ddZgXr6pfYSa5G34bbQ9WGzmMkSjY
+ [✅] authDomain        : trufleet-2a103.firebaseapp.com
+ [✅] projectId         : trufleet-2a103
+ [✅] storageBucket     : trufleet-2a103.firebasestorage.app
+ [✅] messagingSenderId : 778228138367
+ [✅] appId             : 1:778228138367:web:3c4cfd4f9c96b3bb925a4a
+ [ ] measurementId     : (only present if Google Analytics is enabled)
+
+ ─── firebaseConfig snippet (paste into any frontend JS if needed) ───────────
+ const firebaseConfig = {
+   apiKey:            "AIzaSyAP2_ddZgXr6pfYSa5G34bbQ9WGzmMkSjY",
+   authDomain:        "trufleet-2a103.firebaseapp.com",
+   projectId:         "trufleet-2a103",
+   storageBucket:     "trufleet-2a103.firebasestorage.app",
+   messagingSenderId: "778228138367",
+   appId:             "1:778228138367:web:3c4cfd4f9c96b3bb925a4a"
+ };
+ ─────────────────────────────────────────────────────────────────────────────
 
  NOTE: The above config is PUBLIC (safe in frontend code). It only identifies
        your project — actual security is enforced by Firestore Rules + your
@@ -169,9 +181,9 @@ DEPLOYMENT ARCHITECTURE
 ══════════════════════════════════════════════════════════════════════════════
  STEP 8 — DEPLOYMENT URLS (fill in after first `firebase deploy`)
 ══════════════════════════════════════════════════════════════════════════════
- [✅] Hosting Live URL   : https://trufleetx-prod.web.app
- [✅] Hosting Alt URL    : https://trufleetx-prod.firebaseapp.com
- [✅] Functions API URL  : https://asia-south1-trufleetx-prod.cloudfunctions.net/api
+ [✅] Hosting Live URL   : https://trufleet-2a103.web.app
+ [✅] Hosting Alt URL    : https://trufleet-2a103.firebaseapp.com
+ [✅] Functions API URL  : https://asia-south1-trufleet-2a103.cloudfunctions.net/api
      (All /api/* calls from your HTML pages rewrite to this function automatically)
 
 
@@ -192,7 +204,7 @@ DEPLOYMENT ARCHITECTURE
 ══════════════════════════════════════════════════════════════════════════════
  {
    "projects": {
-     "default": "trufleetx-prod"   ✅ FIXED
+     "default": "trufleet-2a103"   ✅ CONFIRMED (auto-assigned)
    }
  }
 

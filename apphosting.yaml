@@ -1,0 +1,12 @@
+# apphosting.yaml — Firebase App Hosting configuration
+# Place this file at the REPO ROOT (TruFleetX/apphosting.yaml)
+# Docs: https://firebase.google.com/docs/app-hosting/configure
+
+# Tell the buildpack: the Express app (package.json) is inside /server
+# This fixes the build error: "package.json not found" at repo root
+rootDir: server
+
+runConfig:
+  runtime: nodejs20
+  startCommand: node server.js
+  # Firebase App Hosting sets PORT automatically — server.js reads process.env.PORT
