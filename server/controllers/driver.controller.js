@@ -2,10 +2,18 @@ const supabase = require('../config/supabaseClient');
 
 // GET all approved drivers with their profiles
 exports.getAllDrivers = async (req, res) => {
-    // Fetch approved drivers from users table
     const { data: drivers, error } = await supabase
         .from('users')
-        .select('id, email, full_name, avatar_url, created_at, driver_profiles(phone, license_number, license_type, license_expiry, safety_score, miles_this_month, total_incidents, years_experience, address, on_time_rate, status, assigned_vehicle_id, vehicles(make, model, registration_number))')
+        .select(`
+            id, email, full_name, avatar_url, created_at,
+            driver_profiles (
+                phone, license_number, license_type, license_expiry,
+                safety_score, miles_this_month, total_incidents,
+                years_experience, address, on_time_rate, status,
+                assigned_vehicle_id,
+                vehicles!assigned_vehicle_id ( make, model, registration_number )
+            )
+        `)
         .eq('role', 'driver')
         .eq('is_approved', true)
         .order('created_at', { ascending: false });
@@ -20,7 +28,16 @@ exports.getDriverById = async (req, res) => {
 
     const { data, error } = await supabase
         .from('users')
-        .select('id, email, full_name, avatar_url, created_at, driver_profiles(phone, license_number, license_type, license_expiry, safety_score, miles_this_month, total_incidents, years_experience, address, on_time_rate, status, assigned_vehicle_id, vehicles(make, model, registration_number))')
+        .select(`
+            id, email, full_name, avatar_url, created_at,
+            driver_profiles (
+                phone, license_number, license_type, license_expiry,
+                safety_score, miles_this_month, total_incidents,
+                years_experience, address, on_time_rate, status,
+                assigned_vehicle_id,
+                vehicles!assigned_vehicle_id ( make, model, registration_number )
+            )
+        `)
         .eq('id', driverId)
         .eq('role', 'driver')
         .single();

@@ -667,16 +667,16 @@
                     const res = await fetch(`/api/drivers/${driverId}`, { headers: authHeaders });
                     if (!res.ok) throw new Error();
                     const d = await res.json();
-                    const p = d.driver_profile || {};
+                    const p = d.driver_profiles?.[0] ?? d.driver_profiles ?? {};
                     document.getElementById('drawerName').textContent = d.full_name || d.email || '--';
-                    document.getElementById('drawerDriverId').textContent = 'TRU-' + String(d.id).padStart(5, '0');
+                    document.getElementById('drawerDriverId').textContent = 'TRU-' + String(d.id).slice(-5).toUpperCase();
                     document.getElementById('drawerImg').src = d.avatar_url
                         || `https://ui-avatars.com/api/?name=${encodeURIComponent(d.full_name||'Driver')}&background=random&size=80`;
                     document.getElementById('drawerPhone').textContent = p.phone || '--';
                     document.getElementById('drawerLicense').textContent = p.license_type || '--';
                     document.getElementById('drawerJoined').textContent = d.created_at
                         ? new Date(d.created_at).toLocaleDateString('en-IN', {day:'2-digit',month:'long',year:'numeric'}) : '--';
-                    document.getElementById('drawerIncidents').textContent = p.incidents ?? '--';
+                    document.getElementById('drawerIncidents').textContent = p.total_incidents ?? '0';
                     const score = p.safety_score || 0;
                     if (safetyChart) { safetyChart.updateSeries([score]); }
                 } catch { document.getElementById('drawerName').textContent = 'Failed to load'; }
@@ -695,25 +695,29 @@
             return 'status-dot';
         }
         function vehicleLabel(d) {
-            if (d.vehicle) return `<i class="fa-solid fa-truck"></i> ${d.vehicle.make} ${d.vehicle.model} (${d.vehicle.registration_number || ''})`;
+            const p = d.driver_profiles?.[0] ?? d.driver_profiles ?? {};
+            const v = p.vehicles;
+            if (v) return `<i class="fa-solid fa-truck"></i> ${v.make} ${v.model} (${v.registration_number || ''})`;
             return `<i class="fa-solid fa-ban" style="color:var(--danger);"></i> Unassigned`;
         }
 
         function renderDrivers(drivers) {
             const grid = document.getElementById('driverGrid');
-            const active = drivers.filter(d => (d.status||'active') !== 'inactive').length;
+            // driver_profiles is returned as an array by Supabase (one-to-many FK)
+            const prof = d => d.driver_profiles?.[0] ?? d.driver_profiles ?? {};
+            const active = drivers.filter(d => (prof(d).status || 'available') !== 'inactive').length;
             document.getElementById('activeDriverCount').textContent = active.toLocaleString();
             if (!drivers.length) {
                 grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#94A3B8;">No drivers onboarded yet.</div>';
                 return;
             }
-            const p = d => (d.driver_profile || {});
+            const p = prof;
             grid.innerHTML = drivers.map(d => `
-                <div class="driver-card" onclick="openDrawer('view', ${d.id})">
+                <div class="driver-card" onclick="openDrawer('view', '${d.id}')">
                     <div class="card-header">
                         <div class="driver-avatar-wrapper">
                             <img src="${d.avatar_url || 'https://ui-avatars.com/api/?name='+encodeURIComponent(d.full_name||'Driver')+'&background=random&size=60'}" class="driver-avatar" alt="Driver">
-                            <div class="${statusDotClass(d.status)}"></div>
+                            <div class="${statusDotClass(p(d).status)}"></div>
                         </div>
                         <div class="rating-badge"><i class="fa-solid fa-star"></i> ${p(d).rating || '--'}</div>
                     </div>

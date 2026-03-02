@@ -249,7 +249,7 @@
         /* KPI CARDS */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -556,16 +556,16 @@
                             <i class="fa-solid fa-layer-group"></i>
                         </div>
                         <span class="kpi-value" id="countTotal">--</span>
-                        <span class="kpi-label">Total Vehicles <span class="trend-badge trend-up"><i class="fa-solid fa-arrow-trend-up"></i> 12%</span></span>
+                        <span class="kpi-label">Total Vehicles</span>
                     </div>
 
-                    <!-- Active On Road -->
+                    <!-- Active Trips On Road -->
                     <div class="kpi-card">
                         <div class="kpi-icon-wrapper bg-green-light">
                             <i class="fa-solid fa-road"></i>
                         </div>
-                        <span class="kpi-value" id="countActive">--</span>
-                        <span class="kpi-label">Currently Dispatched <span class="trend-badge trend-up"><i class="fa-solid fa-arrow-trend-up"></i> 5%</span></span>
+                        <span class="kpi-value" id="countActiveTrips">--</span>
+                        <span class="kpi-label">Active Trips On Road <span class="trend-badge trend-up"><i class="fa-solid fa-arrow-trend-up"></i> Live</span></span>
                     </div>
 
                     <!-- Maintenance/Blocked -->
@@ -577,13 +577,31 @@
                         <span class="kpi-label">In Maintenance</span>
                     </div>
 
+                    <!-- Total Drivers -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrapper" style="background:#F0FDF4">
+                            <i class="fa-solid fa-id-badge" style="color:#10B981"></i>
+                        </div>
+                        <span class="kpi-value" id="countDrivers">--</span>
+                        <span class="kpi-label">Fleet Pilots (Drivers)</span>
+                    </div>
+
+                    <!-- Pending Approvals -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrapper" style="background:#FFF7ED">
+                            <i class="fa-solid fa-user-clock" style="color:#F59E0B"></i>
+                        </div>
+                        <span class="kpi-value" id="countPending">--</span>
+                        <span class="kpi-label">Pending Approvals <a href="User_Approval_admin.html" style="font-size:0.7rem;margin-left:4px;color:var(--accent)">Review</a></span>
+                    </div>
+
                     <!-- Insurance Alerts -->
                     <div class="kpi-card">
                         <div class="kpi-icon-wrapper bg-red-light">
                             <i class="fa-solid fa-file-contract"></i>
                         </div>
                         <span class="kpi-value" id="countExpiring">--</span>
-                        <span class="kpi-label">Policies Expiring (7 Days)</span>
+                        <span class="kpi-label">Policies Expiring (7d)</span>
                     </div>
                 </div>
 
@@ -708,8 +726,10 @@
         async function loadStats() {
             const stats = await apiFetch('/api/dashboard/stats');
             animateValue('countTotal',       0, stats.totalVehicles       || 0, 1500);
-            animateValue('countActive',      0, stats.activeVehicles      || 0, 1500);
+            animateValue('countActiveTrips', 0, stats.activeTrips         || 0, 1500);
             animateValue('countMaintenance', 0, stats.maintenanceVehicles || 0, 1200);
+            animateValue('countDrivers',     0, stats.totalDrivers        || 0, 1300);
+            animateValue('countPending',     0, stats.pendingApprovals    || 0, 1000);
             animateValue('countExpiring',    0, stats.expiringPolicies    || 0, 1000);
         }
 

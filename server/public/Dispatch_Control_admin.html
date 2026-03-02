@@ -582,8 +582,8 @@
                             <span>Today, ${fmtTime(r.created_at)}</span>
                         </div>
                         <div class="action-btn-group">
-                            <button class="btn-reject" onclick="rejectRequest(${r.id})"><i class="fa-solid fa-xmark"></i></button>
-                            <button class="btn-approve" onclick="approveRequest(${r.id})">Approve & Assign</button>
+                            <button class="btn-reject" onclick="rejectRequest('${r.id}')"><i class="fa-solid fa-xmark"></i></button>
+                            <button class="btn-approve" onclick="approveRequest('${r.id}')">Approve & Assign</button>
                         </div>
                     </div>`).join('');
             } catch {

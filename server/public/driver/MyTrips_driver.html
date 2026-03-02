@@ -692,7 +692,7 @@
                     })
                 });
                 closeDispatchModal();
-                alert(`✅ Dispatch request submitted!\nTicket: ${res.request?.ticket_number || ''}\n\nYour request is awaiting manager/admin approval.`);
+                alert(`✅ Trip Activated!\nTicket: ${res.request?.ticket_number || ''}\n\nAll checks passed — your trip is now active. Have a safe journey!`);
                 loadTrips();
             } catch (e) {
                 alert('❌ ' + e.message);

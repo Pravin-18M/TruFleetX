@@ -605,8 +605,8 @@ exports.raiseDispatchRequest = async (req, res) => {
         if (daysLeft <= 0)
             return res.status(400).json({ error: `${v.registration_number} insurance expired ${Math.abs(daysLeft)} days ago.` });
 
-        // All checks passed — create request
-        const ticket_number = 'REQ-' + Date.now().toString().slice(-6);
+        // All checks passed — auto-approve and activate immediately
+        const ticket_number = 'TRU-' + Date.now().toString().slice(-6);
 
         const { data, error } = await supabase
             .from('dispatch_requests')
@@ -619,14 +619,14 @@ exports.raiseDispatchRequest = async (req, res) => {
                 cargo_type:   cargo_type   || null,
                 cargo_weight: cargo_weight || null,
                 priority:     priority     || 'standard',
-                status:       'pending'
+                status:       'active'   // Auto-approved — no manual intervention required
             }])
             .select('*, vehicle:vehicles(make, model, registration_number)');
 
         if (error) return res.status(500).json({ error: error.message });
 
         res.status(201).json({
-            message: 'Dispatch request raised. Awaiting manager/admin approval.',
+            message: 'Trip approved and activated. Safe journey!',
             request: data[0]
         });
     } catch (e) {
