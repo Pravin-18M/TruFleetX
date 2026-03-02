@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Settings | Trufleet Admin</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
+    
+    <!-- FONTS & ICONS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* 
+         * DESIGN SYSTEM: "CONTROL-SURFACE"
+         */
+        :root {
+            --primary: #0F172A;
+            --accent: #2563EB;
+            --accent-soft: #EFF6FF;
+            --bg-body: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --text-main: #334155;
+            --text-muted: #64748B;
+            
+            --success: #10B981;
+            --danger: #EF4444;
+            --border: #E2E8F0;
+            
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --settings-nav-width: 240px;
+            
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            
+            --anim-speed: 0.3s;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            height: 100vh;
+            transition: grid-template-columns 0.4s ease;
+        }
+        .app-layout.collapsed { grid-template-columns: var(--sidebar-collapsed) 1fr; }
+        .app-layout.collapsed .brand-text { opacity: 0; display: none; }
+
+        /* MAIN NAV SIDEBAR (Global) */
+        aside {
+            background: #FFFFFF;
+            border-right: 1px solid #E2E8F0;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 50;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 1rem 2.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: 0.3s;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover, .nav-item.active { background-color: #EFF6FF; color: var(--accent); }
+
+        .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+        .brand-text { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1rem; }
+
+        /* MAIN SETTINGS AREA */
+        main {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .toggle-btn:hover { background: #EFF6FF; color: var(--accent); }
+
+        header {
+            padding: 1.5rem 2rem;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .page-title { font-family: 'Outfit'; font-weight: 700; font-size: 1.5rem; color: var(--primary); }
+
+        /* SETTINGS CONTAINER (Split View) */
+        .settings-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 1. SETTINGS NAVIGATION (Inner Sidebar) */
+        .settings-nav {
+            width: var(--settings-nav-width);
+            padding: 2rem;
+            border-right: 1px solid var(--border);
+            background: #FDFDFD;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .set-link {
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--anim-speed);
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .set-link:hover { background: var(--bg-body); color: var(--primary); }
+        
+        .set-link.active {
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* 2. SETTINGS CONTENT (Focus Pane) */
+        .settings-content {
+            flex: 1;
+            padding: 3rem 4rem;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .section-pane {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+            max-width: 700px;
+        }
+        .section-pane.active { display: block; }
+
+        .pane-header { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+        .pane-title { font-family: 'Outfit'; font-size: 1.25rem; font-weight: 600; color: var(--primary); margin-bottom: 0.5rem; }
+        .pane-desc { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* FORM ELEMENTS */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        
+        .form-label {
+            display: block; font-size: 0.9rem; font-weight: 500; color: var(--text-main); margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'Inter'; font-size: 0.95rem; color: var(--text-main); transition: 0.3s;
+        }
+
+        .form-input:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+        .form-input:disabled { background: #F1F5F9; color: var(--text-muted); cursor: not-allowed; }
+
+        /* AVATAR UPLOADER */
+        .avatar-section {
+            display: flex; align-items: center; gap: 2rem; margin-bottom: 2rem;
+        }
+        
+        .avatar-preview {
+            width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--border);
+        }
+
+        .btn-upload {
+            background: white; border: 1px solid var(--border); padding: 8px 16px;
+            border-radius: 6px; font-weight: 500; cursor: pointer; transition: 0.2s;
+        }
+        .btn-upload:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* BUTTONS */
+        .btn-primary {
+            background: var(--primary); color: white; padding: 12px 24px;
+            border-radius: 50px; border: none; font-weight: 600; cursor: pointer;
+            transition: 0.3s; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary:hover { background: #1E293B; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        /* SECURITY TOGGLES */
+        .toggle-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.5rem 0; border-bottom: 1px solid #F1F5F9;
+        }
+
+        .toggle-switch {
+            position: relative; width: 44px; height: 24px;
+        }
+        
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #CBD5E1; transition: .4s; border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* SESSION LIST */
+        .session-item {
+            display: flex; align-items: center; gap: 15px; padding: 1rem;
+            background: #F8FAFC; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border);
+        }
+
+        .device-icon { font-size: 1.2rem; color: var(--text-muted); }
+        .session-info h4 { font-size: 0.9rem; margin-bottom: 2px; }
+        .session-info p { font-size: 0.8rem; color: var(--text-muted); }
+        .active-badge { font-size: 0.7rem; background: #ECFDF5; color: #059669; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+
+        /* ANIMATIONS */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* TOAST */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--primary); color: white; padding: 15px 25px; border-radius: 12px;
+            display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transform: translateY(100px); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast.show { transform: translateY(0); }
+
+        @media (max-width: 768px) {
+            .app-layout { grid-template-columns: 1fr; }
+            .app-layout aside { position: fixed; left: -280px; top: 0; height: 100%; transition: 0.3s; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+            .app-layout.mobile-open aside { left: 0; }
+            .brand-text { display: block !important; opacity: 1 !important; }
+            .settings-container { flex-direction: column; }
+            .settings-nav { width: 100%; flex-direction: row; overflow-x: auto; padding: 1rem; border-bottom: 1px solid var(--border); }
+            .settings-content { padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-layout" id="appContainer">
+        
+        <!-- GLOBAL SIDEBAR -->
+        <aside id="sidebar">
+            <a href="#" class="brand-logo">
+                <i class="fa-solid fa-cube" style="color: var(--accent);"></i>
+                <span class="brand-text">Trufleet</span>
+            </a>
+            <nav class="nav-menu">
+                <a href="Dasboard_admin.html" class="nav-item">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span class="brand-text">Dashboard</span>
+                </a>
+                <a href="Vehicle_Management_admin.html" class="nav-item">
+                    <i class="fa-solid fa-truck-front"></i>
+                    <span class="brand-text">Fleet Manager</span>
+                </a>
+                <a href="Driver_management_admin.html" class="nav-item">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span class="brand-text">Drivers</span>
+                </a>
+                <a href="Dispatch_Control_admin.html" class="nav-item">
+                    <i class="fa-solid fa-route"></i>
+                    <span class="brand-text">Dispatch Control</span>
+                </a>
+                <a href="Insurance_admin.html" class="nav-item">
+                    <i class="fa-solid fa-file-shield"></i>
+                    <span class="brand-text">Insurance</span>
+                </a>
+                <a href="User_Approval_admin.html" class="nav-item">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span class="brand-text">User Approvals</span>
+                </a>
+
+                <div style="flex-grow: 1;"></div>
+
+                <a href="#" class="nav-item active">
+                    <i class="fa-solid fa-gear"></i>
+                    <span class="brand-text">Settings</span>
+                </a>
+                <a href="login.html" class="nav-item" style="color: var(--danger);" onclick="localStorage.removeItem('trufleet_token');localStorage.removeItem('trufleet_user');">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span class="brand-text">Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main>
+            <header>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></button>
+                    <div class="page-title">Settings</div>
+                </div>
+                <div style="font-size: 0.9rem; color: var(--text-muted);">Admin Portal v2.4</div>
+            </header>
+
+            <div class="settings-container">
+                
+                <!-- 1. SETTINGS NAV -->
+                <div class="settings-nav">
+                    <div class="set-link active" onclick="showSection('profile', this)">
+                        <i class="fa-regular fa-user"></i> My Profile
+                    </div>
+                    <div class="set-link" onclick="showSection('security', this)">
+                        <i class="fa-solid fa-shield-halved"></i> Security
+                    </div>
+                    <div class="set-link" onclick="showSection('notifications', this)">
+                        <i class="fa-regular fa-bell"></i> Notifications
+                    </div>
+                    <div class="set-link" onclick="showSection('team', this)">
+                        <i class="fa-solid fa-users"></i> Team Access
+                    </div>
+                </div>
+
+                <!-- 2. SETTINGS CONTENT -->
+                <div class="settings-content">
+                    
+                    <!-- SECTION: PROFILE -->
+                    <div id="profile" class="section-pane active">
+                        <div class="pane-header">
+                            <h2 class="pane-title">Personal Information</h2>
+                            <p class="pane-desc">Manage your public profile and contact details.</p>
+                        </div>
+
+                        <form onsubmit="handleProfileSave(event)">
+                            <div class="avatar-section">
+                                <img src="https://ui-avatars.com/api/?name=User&background=random&size=80" id="avatarPreview" class="avatar-preview">
+                                <div>
+                                    <button type="button" class="btn-upload" onclick="document.getElementById('avatarInput').click()">Change Avatar</button>
+                                    <input type="file" id="avatarInput" hidden onchange="previewImage(this)">
+                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">JPG, GIF or PNG. 1MB Max.</p>
+                                </div>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" id="inputFirstName" class="form-input" placeholder="First name">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" id="inputLastName" class="form-input" placeholder="Last name">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" id="inputEmail" class="form-input" value="--" disabled>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;"><i class="fa-solid fa-lock"></i> Contact Super Admin to change email.</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Role</label>
+                                <input type="text" id="inputRole" class="form-input" value="--" disabled>
+                            </div>
+
+                            <button type="submit" class="btn-primary">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- SECTION: SECURITY -->
+                    <div id="security" class="section-pane">
+                        <div class="pane-header">
+                            <h2 class="pane-title">Security & Login</h2>
+                            <p class="pane-desc">Manage your password and active sessions.</p>
+                        </div>
+
+                        <form onsubmit="handlePasswordSave(event)">
+                            <div class="form-group">
+                                <label class="form-label">Current Password</label>
+                                <input type="password" class="form-input" placeholder="••••••••">
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" class="form-input" placeholder="Min 8 characters">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-input" placeholder="Re-enter password">
+                                </div>
+                            </div>
+
+                            <div class="toggle-row">
+                                <div>
+                                    <h4 style="font-size: 0.95rem; margin-bottom: 2px;">Two-Factor Authentication</h4>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Secure your account with 2FA.</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div style="margin-top: 2rem;">
+                                <h4 style="font-size: 0.95rem; margin-bottom: 1rem;">Active Sessions</h4>
+                                
+                                <div class="session-item">
+                                    <i class="fa-solid fa-desktop device-icon"></i>
+                                    <div class="session-info">
+                                        <h4>MacBook Pro 16" <span class="active-badge">Current</span></h4>
+                                        <p>Mumbai, India • Chrome • 192.168.1.1</p>
+                                    </div>
+                                </div>
+
+                                <div class="session-item">
+                                    <i class="fa-solid fa-mobile-screen device-icon"></i>
+                                    <div class="session-info">
+                                        <h4>iPhone 14 Pro</h4>
+                                        <p>Pune, India • Safari • 1 hr ago</p>
+                                    </div>
+                                    <button type="button" style="margin-left: auto; border: 1px solid #E2E8F0; background: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; color: var(--danger);">Revoke</button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-primary" style="margin-top: 2rem;">Update Security</button>
+                        </form>
+                    </div>
+
+                    <!-- SECTION: NOTIFICATIONS -->
+                    <div id="notifications" class="section-pane">
+                        <div class="pane-header">
+                            <h2 class="pane-title">Notifications</h2>
+                            <p class="pane-desc">Control what you get notified about.</p>
+                        </div>
+
+                        <div class="toggle-row">
+                            <div>
+                                <h4 style="font-size: 0.95rem; margin-bottom: 2px;">Vehicle Alerts</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-muted);">Breakdowns, accidents, and speed violations.</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-row">
+                            <div>
+                                <h4 style="font-size: 0.95rem; margin-bottom: 2px;">Insurance Reminders</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-muted);">Get emails 7 days before policy expiry.</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-row">
+                            <div>
+                                <h4 style="font-size: 0.95rem; margin-bottom: 2px;">New User Requests</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-muted);">When a driver or manager signs up.</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toastMsg">Settings Saved</span>
+    </div>
+
+    <script>
+        const TOKEN = localStorage.getItem('trufleet_token');
+        if (!TOKEN) { window.location.href = 'login.html'; }
+        const authHeaders = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
+        // ── SIDEBAR TOGGLE ──────────────────────────────────────────
+        const appContainer = document.getElementById('appContainer');
+        const sidebar = document.getElementById('sidebar');
+        function toggleSidebar() {
+            if (window.innerWidth <= 768) { appContainer.classList.toggle('mobile-open'); }
+            else { appContainer.classList.toggle('collapsed'); }
+        }
+        sidebar.addEventListener('mouseenter', () => {
+            if (window.innerWidth > 768 && appContainer.classList.contains('collapsed')) {
+                appContainer.classList.remove('collapsed');
+                sidebar.dataset.autoExpanded = 'true';
+            }
+        });
+        sidebar.addEventListener('mouseleave', () => {
+            if (window.innerWidth > 768 && sidebar.dataset.autoExpanded === 'true') {
+                appContainer.classList.add('collapsed');
+                sidebar.dataset.autoExpanded = 'false';
+            }
+        });
+        // ─── POPULATE FROM localStorage ─────────────────────────────────
+        (function populateProfile() {
+            try {
+                const user = JSON.parse(localStorage.getItem('trufleet_user') || '{}');
+                const fullName = user.full_name || user.email || '';
+                const parts = fullName.split(' ');
+                document.getElementById('inputFirstName').value = parts[0] || '';
+                document.getElementById('inputLastName').value = parts.slice(1).join(' ') || '';
+                document.getElementById('inputEmail').value = user.email || '--';
+                document.getElementById('inputRole').value = user.role
+                    ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+                    : '--';
+                if (user.avatar_url) {
+                    document.getElementById('avatarPreview').src = user.avatar_url;
+                } else if (fullName) {
+                    document.getElementById('avatarPreview').src =
+                        'https://ui-avatars.com/api/?name=' + encodeURIComponent(fullName) + '&background=random&size=80';
+                }
+            } catch {}
+        })();
+
+        // ─── NAVIGATION LOGIC ─────────────────────────────────────────
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.set-link').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            document.querySelectorAll('.section-pane').forEach(el => el.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        // ─── AVATAR PREVIEW ───────────────────────────────────────────
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // ─── TOAST ──────────────────────────────────────────────────
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ─── SAVE PROFILE ────────────────────────────────────────────
+        async function handleProfileSave(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('.btn-primary');
+            const orig = btn?.innerHTML;
+            if (btn) { btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...'; btn.disabled = true; }
+            const firstName = document.getElementById('inputFirstName').value.trim();
+            const lastName  = document.getElementById('inputLastName').value.trim();
+            const full_name = [firstName, lastName].filter(Boolean).join(' ');
+            try {
+                const res = await fetch('/api/users/profile', {
+                    method: 'PUT',
+                    headers: authHeaders,
+                    body: JSON.stringify({ full_name })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed');
+                // Update localStorage
+                const stored = JSON.parse(localStorage.getItem('trufleet_user') || '{}');
+                stored.full_name = data.user.full_name;
+                localStorage.setItem('trufleet_user', JSON.stringify(stored));
+                showToast('Profile updated successfully');
+            } catch (err) { showToast(err.message || 'Update failed.'); }
+            finally { if (btn) { btn.innerHTML = orig; btn.disabled = false; } }
+        }
+
+        // ─── CHANGE PASSWORD ─────────────────────────────────────────
+        async function handlePasswordSave(e) {
+            e.preventDefault();
+            const inputs = e.target.querySelectorAll('input[type="password"]');
+            const current_password = inputs[0]?.value;
+            const new_password     = inputs[1]?.value;
+            const confirm_password = inputs[2]?.value;
+            if (new_password !== confirm_password) { showToast('Passwords do not match.'); return; }
+            const btn = e.target.querySelector('.btn-primary');
+            const orig = btn?.innerHTML;
+            if (btn) { btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...'; btn.disabled = true; }
+            try {
+                const res = await fetch('/api/users/password', {
+                    method: 'PUT',
+                    headers: authHeaders,
+                    body: JSON.stringify({ current_password, new_password })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed');
+                e.target.reset();
+                showToast('Password changed successfully');
+            } catch (err) { showToast(err.message || 'Password change failed.'); }
+            finally { if (btn) { btn.innerHTML = orig; btn.disabled = false; } }
+        }
+    </script>
+</body>
+</html>

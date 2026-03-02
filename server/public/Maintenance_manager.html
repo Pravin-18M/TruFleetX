@@ -1,0 +1,484 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TruFleet – Maintenance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0d0d12;--surface:#13131a;--card:#1a1a24;--border:rgba(255,255,255,.07);
+      --accent:#6c63ff;--accent2:#00d4aa;--text:#e8e8f0;--muted:#7a7a9a;
+      --danger:#ff4d6d;--warning:#ffb347;--nav-w:240px}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+    .sidebar{width:var(--nav-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);
+      display:flex;flex-direction:column;padding:28px 0;position:fixed;top:0;left:0;z-index:100}
+    .logo{display:flex;align-items:center;gap:10px;padding:0 24px 28px;border-bottom:1px solid var(--border)}
+    .logo-icon{width:36px;height:36px;background:var(--accent);border-radius:10px;display:grid;place-items:center;font-size:18px;color:#fff}
+    .logo-text{font-size:20px;font-weight:700;letter-spacing:-.3px}.logo-text span{color:var(--accent)}
+    nav{flex:1;padding:20px 12px}
+    nav a{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;
+      color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:4px;transition:all .2s}
+    nav a:hover,nav a.active{background:rgba(108,99,255,.12);color:var(--text)}
+    nav a.active{color:var(--accent)} nav a i{width:18px;text-align:center;font-size:15px}
+    .sidebar-foot{padding:16px 24px;border-top:1px solid var(--border)}
+    .user-chip{display:flex;align-items:center;gap:10px}
+    .avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-weight:700;font-size:14px;flex-shrink:0}
+    .user-info .name{font-size:13px;font-weight:600}
+    .user-info .role{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.5px}
+    .logout-btn{margin-top:10px;width:100%;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.25);
+      color:var(--danger);border-radius:8px;padding:8px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+    .logout-btn:hover{background:rgba(255,77,109,.2)}
+    .main{margin-left:var(--nav-w);flex:1;padding:28px 32px;overflow-x:hidden}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}
+    .page-title{font-size:22px;font-weight:700}.page-title span{color:var(--accent)}
+    .add-btn{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:10px;
+      background:var(--accent);border:none;color:#fff;font-family:'Outfit',sans-serif;
+      font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+    .add-btn:hover{background:#857dff}
+    /* KPIs */
+    .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+    .kpi-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 22px}
+    .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+    .kpi-value{font-size:30px;font-weight:700;letter-spacing:-1px}
+    .kpi-sub{font-size:11px;color:var(--muted);margin-top:4px}
+    /* Kanban */
+    .board-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .board-header h2{font-size:15px;font-weight:600}
+    .kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;align-items:start}
+    .column{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;min-height:200px}
+    .column.drag-over{border-color:var(--accent);background:rgba(108,99,255,.05)}
+    .col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .col-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+    .col-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(255,255,255,.07)}
+    .col-scheduled .col-title{color:#7a7a9a}
+    .col-inservice .col-title{color:var(--accent)}
+    .col-awaiting .col-title{color:var(--warning)}
+    .col-ready .col-title{color:var(--accent2)}
+    .work-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px;
+      margin-bottom:8px;cursor:grab;transition:all .2s;user-select:none}
+    .work-card:hover{border-color:rgba(108,99,255,.4);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+    .work-card.dragging{opacity:.4;cursor:grabbing}
+    .wc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:8px}
+    .wc-title{font-size:13px;font-weight:600;line-height:1.3}
+    .priority-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+    .p-high{background:var(--danger)}.p-medium{background:var(--warning)}.p-low{background:var(--accent2)}
+    .wc-reg{font-size:11px;color:var(--accent);font-weight:600;margin-bottom:4px}
+    .wc-meta{font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+    .wc-mechanic{font-size:11px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:4px}
+    /* Bottom row */
+    .bottom-row{display:grid;grid-template-columns:1fr 380px;gap:20px;margin-bottom:28px}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+    .panel-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .panel-head h2{font-size:15px;font-weight:600}
+    .panel-body{padding:16px 20px}
+    /* Proactive */
+    .proactive-list{display:flex;flex-direction:column;gap:8px}
+    .proactive-item{display:flex;align-items:center;gap:12px;background:var(--surface);
+      border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+    .pro-icon{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;
+      background:rgba(108,99,255,.15);color:var(--accent);font-size:14px;flex-shrink:0}
+    .pro-info{flex:1;min-width:0}
+    .pro-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pro-meta{font-size:11px;color:var(--muted);margin-top:2px}
+    .pro-date{font-size:11px;color:var(--muted);flex-shrink:0;text-align:right}
+    .empty-state{text-align:center;padding:24px;color:var(--muted);font-size:13px}
+    .empty-state i{font-size:24px;margin-bottom:8px;display:block;opacity:.4}
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:none;align-items:center;justify-content:center}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:540px;max-height:90vh;overflow-y:auto}
+    .modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+    .modal-head h2{font-size:16px;font-weight:700}
+    .modal-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+    .modal-body{padding:20px 24px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+    .form-row.full{grid-template-columns:1fr}
+    .form-group{display:flex;flex-direction:column;gap:6px}
+    .form-group label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+    .form-group input,.form-group select,.form-group textarea{
+      background:var(--card);border:1px solid var(--border);border-radius:8px;
+      padding:10px 12px;color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+    .form-group select option{background:var(--card)}
+    .form-group textarea{resize:vertical;min-height:70px}
+    .modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+    .btn-cancel{padding:9px 18px;border-radius:8px;border:1px solid var(--border);background:none;
+      color:var(--muted);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer}
+    .btn-submit{padding:9px 20px;border-radius:8px;background:var(--accent);border:none;
+      color:#fff;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+    .btn-submit:hover{background:#857dff}
+    .btn-submit:disabled{opacity:.5;cursor:not-allowed}
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon"><i class="fas fa-truck-fast"></i></div>
+    <div class="logo-text">Tru<span>Fleet</span></div>
+  </div>
+  <nav>
+    <a href="Dashboard_manager.html"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a href="View_fleet_manager.html"><i class="fas fa-truck"></i> View Fleet</a>
+    <a href="Drivers_manager.html"><i class="fas fa-id-badge"></i> Drivers</a>
+    <a href="Maintenance_manager.html" class="active"><i class="fas fa-wrench"></i> Maintenance</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="user-chip">
+      <div class="avatar" id="avatarInitial">M</div>
+      <div class="user-info">
+        <div class="name" id="userName">Loading...</div>
+        <div class="role">Manager</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-right-from-bracket"></i> Logout</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div class="page-title">Maintenance <span>Board</span></div>
+    <button class="add-btn" onclick="openModal()"><i class="fas fa-plus"></i> New Work Order</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Vehicles in Service</div>
+      <div class="kpi-value" id="kpiVehicles">—</div>
+      <div class="kpi-sub">Currently off-road</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg Downtime</div>
+      <div class="kpi-value" id="kpiDowntime">—</div>
+      <div class="kpi-sub">Days per order</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Cost This Month</div>
+      <div class="kpi-value" id="kpiCost">—</div>
+      <div class="kpi-sub">Actual expenses</div>
+    </div>
+  </div>
+
+  <!-- Kanban Board -->
+  <div class="board-header">
+    <h2><i class="fas fa-columns" style="margin-right:8px;color:var(--accent)"></i>Work Orders</h2>
+  </div>
+  <div class="kanban" id="kanban">
+    <div class="column col-scheduled" id="col-scheduled" ondragover="dragOver(event)" ondrop="drop(event,'scheduled')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+      <div class="col-head"><span class="col-title">Scheduled</span><span class="col-badge" id="cnt-scheduled">0</span></div>
+      <div class="col-cards" id="cards-scheduled"></div>
+    </div>
+    <div class="column col-inservice" id="col-inservice" ondragover="dragOver(event)" ondrop="drop(event,'in-service')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+      <div class="col-head"><span class="col-title">In Service</span><span class="col-badge" id="cnt-in-service">0</span></div>
+      <div class="col-cards" id="cards-in-service"></div>
+    </div>
+    <div class="column col-awaiting" id="col-awaiting" ondragover="dragOver(event)" ondrop="drop(event,'awaiting-parts')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+      <div class="col-head"><span class="col-title">Awaiting Parts</span><span class="col-badge" id="cnt-awaiting-parts">0</span></div>
+      <div class="col-cards" id="cards-awaiting-parts"></div>
+    </div>
+    <div class="column col-ready" id="col-ready" ondragover="dragOver(event)" ondrop="drop(event,'ready')" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+      <div class="col-head"><span class="col-title">Ready</span><span class="col-badge" id="cnt-ready">0</span></div>
+      <div class="col-cards" id="cards-ready"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Row: Cost Chart + Proactive -->
+  <div class="bottom-row">
+    <div class="panel">
+      <div class="panel-head"><h2><i class="fas fa-chart-area" style="margin-right:8px;color:var(--accent)"></i>Monthly Maintenance Cost</h2></div>
+      <div class="panel-body"><div id="costChart"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2><i class="fas fa-calendar-check" style="margin-right:8px;color:var(--accent2)"></i>Proactive Schedule</h2></div>
+      <div class="panel-body">
+        <div class="proactive-list" id="proactiveList">
+          <div class="empty-state"><i class="fas fa-spinner fa-spin"></i>Loading</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- New Work Order Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h2>New Work Order</h2>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" id="f-title" placeholder="e.g. Engine oil change" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Vehicle *</label>
+          <select id="f-vehicle"><option value="">Select vehicle</option></select>
+        </div>
+        <div class="form-group">
+          <label>Order Type</label>
+          <select id="f-type"><option value="corrective">Corrective</option><option value="proactive">Proactive</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="f-priority"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select>
+        </div>
+        <div class="form-group">
+          <label>Mechanic Name</label>
+          <input type="text" id="f-mechanic" placeholder="Assigned mechanic" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Scheduled Date</label>
+          <input type="datetime-local" id="f-date" />
+        </div>
+        <div class="form-group">
+          <label>Estimated Cost (₹)</label>
+          <input type="number" id="f-cost" placeholder="0" min="0" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Odometer (km)</label>
+          <input type="number" id="f-odo" placeholder="Current reading" min="0" />
+        </div>
+        <div class="form-group">
+          <label>ETA Parts</label>
+          <input type="text" id="f-eta" placeholder="e.g. 2 Days for clutch plate" />
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="f-desc" placeholder="Describe the issue or service required"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-submit" id="submitBtn" onclick="submitOrder()"><i class="fas fa-plus"></i> Create Order</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOKEN = localStorage.getItem('trufleet_token');
+if (!TOKEN) location.href = '../login.html';
+function parseJwt(t) { try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; } }
+const ME = parseJwt(TOKEN);
+if (!ME || (ME.role !== 'manager' && ME.role !== 'admin')) { localStorage.clear(); location.href = '../login.html'; }
+const uname = ME.full_name || ME.email || 'Manager';
+document.getElementById('userName').textContent = uname;
+document.getElementById('avatarInitial').textContent = uname.charAt(0).toUpperCase();
+function logout() { localStorage.clear(); location.href = '../login.html'; }
+async function apiFetch(path, opts={}) {
+  const res = await fetch(path, { ...opts, headers:{'Authorization':`Bearer ${TOKEN}`,'Content-Type':'application/json',...(opts.headers||{})} });
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'API error'); }
+  return res.json();
+}
+
+//  Kanban data 
+let ordersData = [];
+let dragId = null;
+const COLS = ['scheduled','in-service','awaiting-parts','ready'];
+
+function priorityDot(p) { return `<div class="priority-dot p-${p||'medium'}"></div>`; }
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : '—'; }
+function fmtCost(c) { return c != null ? '₹'+Number(c).toLocaleString('en-IN') : '—'; }
+
+function buildCard(o) {
+  const reg = o.vehicles?.registration_number || '—';
+  return `
+    <div class="work-card" id="wc-${o.id}" draggable="true"
+         ondragstart="dragStart(event,'${o.id}')" ondragend="dragEnd(event)">
+      <div class="wc-top">${priorityDot(o.priority)}<div class="wc-title">${o.title}</div></div>
+      <div class="wc-reg"><i class="fas fa-truck" style="font-size:10px"></i> ${reg}</div>
+      <div class="wc-meta">
+        <span>${fmtDate(o.scheduled_date)}</span>
+        <span>${fmtCost(o.estimated_cost)}</span>
+      </div>
+      ${o.mechanic_name ? `<div class="wc-mechanic"><i class="fas fa-user-gear"></i> ${o.mechanic_name}</div>` : ''}
+    </div>`;
+}
+
+function renderBoard() {
+  COLS.forEach(col => {
+    const cards = ordersData.filter(o => o.status === col);
+    const id = col === 'in-service' ? 'in-service' : col;
+    const colEl = document.getElementById(`cards-${id}`);
+    const cntEl = document.getElementById(`cnt-${id}`);
+    if (!colEl) return;
+    colEl.innerHTML = cards.length
+      ? cards.map(buildCard).join('')
+      : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;opacity:.6">No orders</div>';
+    if (cntEl) cntEl.textContent = cards.length;
+  });
+}
+
+//  Drag & Drop 
+function dragStart(e, id) { dragId = id; e.currentTarget.classList.add('dragging'); }
+function dragEnd(e) { e.currentTarget.classList.remove('dragging'); }
+function dragOver(e) { e.preventDefault(); }
+function dragEnter(e) { e.currentTarget.classList.add('drag-over'); }
+function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+async function drop(e, newStatus) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!dragId) return;
+  const order = ordersData.find(o => o.id === dragId);
+  if (!order || order.status === newStatus) { dragId = null; return; }
+  order.status = newStatus;
+  renderBoard();
+  try {
+    await apiFetch(`/api/manager/maintenance/${dragId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: newStatus })
+    });
+    loadStats();
+  } catch(err) {
+    console.error('Status update failed', err);
+    order.status = order._prevStatus;
+    renderBoard();
+  }
+  dragId = null;
+}
+
+//  Stats 
+async function loadStats() {
+  try {
+    const d = await apiFetch('/api/manager/maintenance/stats');
+    document.getElementById('kpiVehicles').textContent = d.vehiclesInService ?? '—';
+    document.getElementById('kpiDowntime').textContent = d.avgDowntimeDays != null ? d.avgDowntimeDays + 'd' : '—';
+    document.getElementById('kpiCost').textContent = d.monthCost != null ? '₹' + Number(d.monthCost).toLocaleString('en-IN') : '—';
+  } catch(e) { console.error('Stats error', e); }
+}
+
+//  Orders 
+async function loadOrders() {
+  try {
+    const data = await apiFetch('/api/manager/maintenance');
+    ordersData = (Array.isArray(data) ? data : (data.orders || [])).map(o => ({...o, _prevStatus: o.status}));
+    renderBoard();
+  } catch(e) { console.error('Orders error', e); }
+}
+
+//  Cost chart 
+let costChart = null;
+async function loadCostChart() {
+  try {
+    const data = await apiFetch('/api/manager/maintenance/cost-chart');
+    const items = Array.isArray(data) ? data : (data.chart || []);
+    const series = items.map(d => +(d.cost||0));
+    const cats   = items.map(d => d.month || '');
+    const opts = {
+      chart:{ type:'area', height:200, background:'transparent', toolbar:{show:false}, sparkline:{enabled:false} },
+      series:[{ name:'Cost (₹K)', data: series }],
+      xaxis:{ categories: cats, labels:{ style:{ colors:'#7a7a9a', fontSize:'11px' } } },
+      yaxis:{ labels:{ style:{ colors:'#7a7a9a', fontSize:'11px' }, formatter: v => '₹'+v+'K' } },
+      fill:{ type:'gradient', gradient:{ shadeIntensity:1, opacityFrom:.5, opacityTo:.05, stops:[0,90,100] } },
+      colors:['#6c63ff'],
+      dataLabels:{ enabled:false },
+      stroke:{ curve:'smooth', width:2 },
+      tooltip:{ theme:'dark', y:{ formatter: v => '₹'+v+'K' } },
+      grid:{ borderColor:'rgba(255,255,255,.05)' },
+      theme:{ mode:'dark' }
+    };
+    if (costChart) costChart.destroy();
+    costChart = new ApexCharts(document.getElementById('costChart'), opts);
+    costChart.render();
+  } catch(e) { console.error('Chart error', e); }
+}
+
+//  Proactive 
+async function loadProactive() {
+  const el = document.getElementById('proactiveList');
+  try {
+    const data = await apiFetch('/api/manager/maintenance/proactive');
+    const items = Array.isArray(data) ? data : (data.orders || []);
+    if (!items.length) {
+      el.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i>No upcoming proactive service</div>'; return;
+    }
+    el.innerHTML = items.map(o => `
+      <div class="proactive-item">
+        <div class="pro-icon"><i class="fas fa-calendar-check"></i></div>
+        <div class="pro-info">
+          <div class="pro-title">${o.title}</div>
+          <div class="pro-meta">${o.vehicles?.registration_number || '—'}</div>
+        </div>
+        <div class="pro-date">${fmtDate(o.scheduled_date)}</div>
+      </div>`).join('');
+  } catch(e) {
+    console.error('Proactive error', e);
+    el.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i>Could not load.</div>';
+  }
+}
+
+//  Modal 
+let vehiclesCache = [];
+async function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  if (!vehiclesCache.length) {
+    try {
+      const data = await apiFetch('/api/vehicles');
+      vehiclesCache = Array.isArray(data) ? data : (data.vehicles || []);
+      const sel = document.getElementById('f-vehicle');
+      sel.innerHTML = '<option value="">Select vehicle</option>' +
+        vehiclesCache.map(v => `<option value="${v.id}">${v.registration_number} — ${v.make||''} ${v.model||''}</option>`).join('');
+    } catch(e) { console.error('Vehicles load error', e); }
+  }
+}
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalOverlay')) return;
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+window.closeModal = function(e) {
+  if (!e || e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+};
+
+async function submitOrder() {
+  const btn = document.getElementById('submitBtn');
+  const title = document.getElementById('f-title').value.trim();
+  const vehicleId = document.getElementById('f-vehicle').value;
+  if (!title) { alert('Title is required'); return; }
+  if (!vehicleId) { alert('Please select a vehicle'); return; }
+  const payload = {
+    vehicle_id: vehicleId,
+    title,
+    description: document.getElementById('f-desc').value.trim() || null,
+    priority: document.getElementById('f-priority').value,
+    order_type: document.getElementById('f-type').value,
+    mechanic_name: document.getElementById('f-mechanic').value.trim() || null,
+    scheduled_date: document.getElementById('f-date').value || null,
+    estimated_cost: document.getElementById('f-cost').value || null,
+    odometer_reading: document.getElementById('f-odo').value || null,
+    eta_parts: document.getElementById('f-eta').value.trim() || null
+  };
+  btn.disabled = true; btn.textContent = 'Creating';
+  try {
+    await apiFetch('/api/manager/maintenance', { method:'POST', body: JSON.stringify(payload) });
+    document.getElementById('modalOverlay').classList.remove('open');
+    ['f-title','f-desc','f-mechanic','f-date','f-cost','f-odo','f-eta'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-priority').value = 'medium';
+    document.getElementById('f-type').value = 'corrective';
+    document.getElementById('f-vehicle').value = '';
+    loadOrders(); loadStats();
+  } catch(err) { alert('Failed to create order: ' + err.message); }
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Create Order';
+}
+
+//  Boot 
+Promise.all([loadStats(), loadOrders(), loadCostChart(), loadProactive()]);
+</script>
+</body>
+</html>

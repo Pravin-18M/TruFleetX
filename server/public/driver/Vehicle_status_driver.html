@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Vehicle | Trufleet Pilot</title>
+    
+    <!-- FONTS & ICONS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CHARTING (For Gauges) -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <style>
+        /* 
+         * DESIGN SYSTEM: "AERO-LIGHT" (Unified System)
+         */
+        :root {
+            --primary: #0F172A;
+            --accent: #2563EB;
+            --accent-soft: #EFF6FF;
+            --bg-body: #F1F5F9;
+            --bg-card: #FFFFFF;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --border: #E2E8F0;
+            
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --header-height: 80px;
+            
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            transition: grid-template-columns 0.4s ease;
+            min-height: 100vh;
+        }
+
+        .app-container.collapsed {
+            grid-template-columns: var(--sidebar-collapsed) 1fr;
+        }
+
+        /* SIDEBAR */
+        aside {
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 50;
+            transition: var(--transition-smooth);
+        }
+
+        .brand-logo {
+            display: flex; align-items: center; gap: 12px;
+            padding: 0 1rem 2.5rem; color: var(--primary); text-decoration: none;
+            overflow: hidden; white-space: nowrap;
+        }
+        
+        .brand-text {
+            font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.4rem;
+            opacity: 1; transition: opacity 0.2s;
+        }
+
+        .app-container.collapsed .brand-text { opacity: 0; display: none; }
+
+        .nav-menu { flex: 1; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 16px; padding: 12px 16px;
+            color: var(--text-muted); text-decoration: none; border-radius: 12px;
+            transition: var(--transition-smooth); font-weight: 500; margin-bottom: 4px;
+            white-space: nowrap; overflow: hidden;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--accent-soft);
+            color: var(--accent);
+        }
+        .nav-item i { min-width: 24px; text-align: center; font-size: 1.1rem; }
+
+        /* MAIN CONTENT */
+        main { overflow-y: auto; height: 100vh; }
+
+        header {
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .toggle-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
+
+        .profile-chip {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 12px; background: white; border: 1px solid var(--border);
+            border-radius: 30px; cursor: pointer;
+        }
+        .profile-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+
+        .dashboard-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeInPage 0.6s ease-out forwards;
+        }
+
+        /* VEHICLE HERO CARD */
+        .vehicle-hero {
+            background: var(--bg-card); border-radius: var(--radius-lg); padding: 2rem;
+            box-shadow: var(--shadow-card); margin-bottom: 2rem;
+            display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; align-items: center;
+        }
+        
+        .vehicle-info h2 { font-family: 'Outfit'; font-size: 1.5rem; color: var(--primary); margin-bottom: 0.5rem; }
+        .vehicle-sub { font-size: 1rem; color: var(--text-muted); font-weight: 500; margin-bottom: 1.5rem; }
+        
+        .spec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .spec-item { background: var(--bg-body); padding: 12px; border-radius: 12px; }
+        .spec-label { font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px; }
+        .spec-val { font-weight: 600; color: var(--primary); }
+
+        .vehicle-img-box {
+            height: 200px; border-radius: var(--radius-lg); overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .vehicle-img-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* GAUGES ROW */
+        .gauges-row {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;
+        }
+        .gauge-card {
+            background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card); text-align: center;
+        }
+        .gauge-title { font-weight: 600; color: var(--text-muted); margin-bottom: 1rem; }
+
+        /* DVIR CHECKLIST */
+        .checklist-card {
+            background: var(--bg-card); padding: 2rem; border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+        }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;
+        }
+        .sec-title { font-family: 'Outfit'; font-size: 1.25rem; font-weight: 600; color: var(--primary); }
+        
+        .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        
+        .check-btn {
+            background: var(--bg-body); border: 2px solid transparent; padding: 1rem;
+            border-radius: 12px; cursor: pointer; text-align: center; transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .check-btn:hover { background: #E2E8F0; }
+        .check-btn.checked { background: #ECFDF5; border-color: var(--success); color: #065F46; }
+        .check-btn i { font-size: 1.5rem; color: var(--text-muted); }
+        .check-btn.checked i { color: var(--success); }
+        
+        .report-btn {
+            background: var(--danger); color: white; border: none; padding: 12px 24px;
+            border-radius: 50px; font-weight: 600; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .report-btn:hover { background: #DC2626; transform: translateY(-2px); }
+
+        /* DRAWER (Report Issue) */
+        .drawer-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
+            z-index: 100; opacity: 0; visibility: hidden; transition: 0.4s ease;
+        }
+        .drawer {
+            position: absolute; top: 0; right: 0; width: 450px; height: 100%;
+            background: white; box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+            transform: translateX(100%); transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex; flex-direction: column;
+        }
+        .drawer-overlay.open { opacity: 1; visibility: visible; }
+        .drawer-overlay.open .drawer { transform: translateX(0); }
+        .drawer-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .drawer-body { padding: 2rem; overflow-y: auto; flex: 1; }
+
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'Inter'; font-size: 1rem;
+        }
+        .form-textarea { height: 120px; resize: none; }
+
+        @keyframes fadeInPage { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 1024px) {
+            .vehicle-hero { grid-template-columns: 1fr; }
+            .vehicle-img-box { height: 250px; }
+        }
+        @media (max-width: 768px) {
+            .app-container { grid-template-columns: 1fr; }
+            .app-container aside { position: fixed; left: -280px; transition: 0.3s; }
+            .app-container.mobile-open aside { left: 0; }
+            .gauges-row { grid-template-columns: 1fr; }
+            .drawer { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="appContainer">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <a href="#" class="brand-logo">
+                <i class="fa-solid fa-cube" style="font-size: 1.8rem; color: var(--accent);"></i>
+                <span class="brand-text">Trufleet</span>
+            </a>
+
+            <nav class="nav-menu">
+                <a href="dashboard_driver.html" class="nav-item">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span class="brand-text">Dashboard</span>
+                </a>
+                <a href="MyTrips_driver.html" class="nav-item">
+                    <i class="fa-solid fa-route"></i>
+                    <span class="brand-text">My Trips</span>
+                </a>
+                <a href="Vehicle_status_driver.html" class="nav-item active">
+                    <i class="fa-solid fa-truck"></i>
+                    <span class="brand-text">Vehicle Status</span>
+                </a>
+                <a href="Documents_driver.html" class="nav-item">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span class="brand-text">Documents</span>
+                </a>
+                <div style="flex-grow: 1;"></div>
+                <a href="support_driver.html" class="nav-item">
+                    <i class="fa-solid fa-headset"></i>
+                    <span class="brand-text">Support</span>
+                </a>
+                <a href="#" onclick="logout()" class="nav-item" style="color: var(--danger);">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span class="brand-text">Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main>
+            <header>
+                <div class="header-left">
+                    <button class="toggle-btn" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-bars-staggered"></i>
+                    </button>
+                    <span style="font-family: 'Outfit'; font-weight: 600; font-size: 1.25rem;">Vehicle Health</span>
+                </div>
+                <div class="profile-chip">
+                    <img id="profileImg" src="" class="profile-img" onerror="this.src='https://ui-avatars.com/api/?name=Driver&background=2563EB&color=fff'">
+                    <div>
+                        <span class="profile-name" id="profileName">Loading...</span>
+                        <span class="profile-role" style="display:block;font-size:0.7rem;color:var(--text-muted)">Fleet Pilot</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                
+                <!-- VEHICLE HERO -->
+                <div class="vehicle-hero">
+                    <div class="vehicle-info">
+                        <h2 id="vehicleTitle">Loading vehicle...</h2>
+                        <div class="vehicle-sub" id="vehicleReg">Registration: —</div>
+
+                        <div class="spec-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">Year</span>
+                                <span class="spec-val" id="specOdometer">—</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Next Service</span>
+                                <span class="spec-val" id="specNextService">—</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">VIN</span>
+                                <span class="spec-val" id="specFuelType">—</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Insurance</span>
+                                <span class="spec-val" id="specInsurance" style="color: var(--success);">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vehicle-img-box">
+                        <img src="https://images.unsplash.com/photo-1599421497992-93907c08278c?q=80&w=2070&auto=format&fit=crop" alt="Truck">
+                    </div>
+                </div>
+
+                <!-- LIVE GAUGES -->
+                <div class="gauges-row">
+                    <div class="gauge-card">
+                        <div class="gauge-title">Fuel Level</div>
+                        <div id="fuelChart"></div>
+                    </div>
+                    <div class="gauge-card">
+                        <div class="gauge-title">Battery Health</div>
+                        <div id="batteryChart"></div>
+                    </div>
+                    <div class="gauge-card">
+                        <div class="gauge-title">Engine Load</div>
+                        <div id="engineChart"></div>
+                    </div>
+                </div>
+
+                <!-- DIGITAL DVIR (Driver Vehicle Inspection Report) -->
+                <div class="checklist-card">
+                    <div class="section-header">
+                        <span class="sec-title">Daily Inspection (DVIR)</span>
+                        <button class="report-btn" onclick="openDrawer()">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Report Issue
+                        </button>
+                    </div>
+                    
+                    <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Tap items to verify they are in good working condition.</p>
+
+                    <div class="check-grid">
+                        <div class="check-btn" onclick="toggleCheck(this)">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <span>Lights & Signals</span>
+                        </div>
+                        <div class="check-btn" onclick="toggleCheck(this)">
+                            <i class="fa-solid fa-circle-dot"></i>
+                            <span>Tire Pressure</span>
+                        </div>
+                        <div class="check-btn" onclick="toggleCheck(this)">
+                            <i class="fa-solid fa-stop-circle"></i>
+                            <span>Brakes & ABS</span>
+                        </div>
+                        <div class="check-btn" onclick="toggleCheck(this)">
+                            <i class="fa-solid fa-wind"></i>
+                            <span>Wipers/Fluid</span>
+                        </div>
+                        <div class="check-btn" onclick="toggleCheck(this)">
+                            <i class="fa-solid fa-oil-can"></i>
+                            <span>Oil & Coolant</span>
+                        </div>
+                        <div class="check-btn" onclick="toggleCheck(this)">
+                            <i class="fa-solid fa-truck-ramp-box"></i>
+                            <span>Cargo Doors</span>
+                        </div>
+                    </div>
+
+                    <button class="primary-action-btn" style="width: 100%; background: var(--success); border: none; padding: 12px; border-radius: 50px; color: white; font-weight: 600; cursor: pointer;">
+                        Submit Inspection Report
+                    </button>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- REPORT ISSUE DRAWER -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target === this) closeDrawer()">
+        <div class="drawer">
+            <div class="drawer-header">
+                <div>
+                    <h2 style="font-family: 'Outfit'; color: var(--danger);">Report Issue</h2>
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">Create Maintenance Ticket</span>
+                </div>
+                <button onclick="closeDrawer()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="drawer-body">
+                <form id="issueForm" onsubmit="submitIssue(event)">
+                    <div class="form-group">
+                        <label class="form-label">Issue Category</label>
+                        <select class="form-select" id="issueCategory">
+                            <option>Engine / Mechanical</option>
+                            <option>Tires / Wheels</option>
+                            <option>Electrical / Lights</option>
+                            <option>Body / Accident</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        <select class="form-select" id="issuePriority">
+                            <option>Low - Can wait for next service</option>
+                            <option>Medium - Requires attention soon</option>
+                            <option>High - Vehicle cannot drive</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-textarea" id="issueDescription" placeholder="Describe the sound, smell, or behavior..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Upload Photo</label>
+                        <div style="border: 2px dashed var(--border); padding: 1.5rem; text-align: center; border-radius: 8px; cursor: pointer;">
+                            <i class="fa-solid fa-camera" style="font-size: 1.5rem; color: var(--text-muted);"></i>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">Tap to capture image</p>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitIssueBtn" style="width: 100%; padding: 12px; background: var(--danger); color: white; border: none; border-radius: 50px; font-weight: 600; cursor: pointer;">
+                        Submit Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─── Auth Guard ────────────────────────────────────────────────────────
+        const TOKEN = localStorage.getItem('trufleet_token');
+        if (!TOKEN) location.href = '../login.html';
+        function parseJwt(t) { try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; } }
+        const ME = parseJwt(TOKEN);
+        if (!ME || ME.role !== 'driver') { localStorage.clear(); location.href = '../login.html'; }
+
+        async function apiFetch(path, opts = {}) {
+            const res = await fetch(path, {
+                ...opts,
+                headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+            });
+            if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || 'API error'); }
+            return res.json();
+        }
+
+        function logout() { localStorage.clear(); location.href = '../login.html'; }
+
+        // ─── Sidebar ──────────────────────────────────────────────────────────────
+        const appContainer = document.getElementById('appContainer');
+        const sidebar      = document.getElementById('sidebar');
+        function toggleSidebar() {
+            if (window.innerWidth <= 768) appContainer.classList.toggle('mobile-open');
+            else appContainer.classList.toggle('collapsed');
+        }
+        sidebar.addEventListener('mouseenter', () => {
+            if (window.innerWidth > 768 && appContainer.classList.contains('collapsed')) {
+                appContainer.classList.remove('collapsed');
+                sidebar.dataset.autoExpanded = 'true';
+            }
+        });
+        sidebar.addEventListener('mouseleave', () => {
+            if (window.innerWidth > 768 && sidebar.dataset.autoExpanded === 'true') {
+                appContainer.classList.add('collapsed');
+                sidebar.dataset.autoExpanded = 'false';
+            }
+        });
+
+        // ─── Checklist DVIR ─────────────────────────────────────────────────────
+        function toggleCheck(btn) { btn.classList.toggle('checked'); }
+
+        // ─── Drawer ───────────────────────────────────────────────────────────
+        function openDrawer()  { document.getElementById('drawerOverlay').classList.add('open'); }
+        function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); }
+
+        // ─── Submit Issue ───────────────────────────────────────────────────────
+        async function submitIssue(e) {
+            e.preventDefault();
+            const btn  = document.getElementById('submitIssueBtn');
+            const desc = document.getElementById('issueDescription').value.trim();
+            if (!desc) { alert('Please provide a description.'); return; }
+            btn.disabled   = true;
+            btn.textContent = 'Submitting...';
+            try {
+                await apiFetch('/api/driver/vehicle/issue', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        category:    document.getElementById('issueCategory').value,
+                        priority:    document.getElementById('issuePriority').value,
+                        description: desc
+                    })
+                });
+                closeDrawer();
+                alert('Maintenance ticket created. Fleet manager has been notified.');
+                document.getElementById('issueForm').reset();
+                loadVehicle(); // refresh vehicle status
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled    = false;
+                btn.textContent = 'Submit Report';
+            }
+        }
+
+        // ─── ApexCharts gauges ───────────────────────────────────────────────────
+        let fuelChartInst = null, batteryChartInst = null, engineChartInst = null;
+
+        function renderGauges(fuelVal, batteryVal, engineVal) {
+            const commonOptions = {
+                chart: { type: 'radialBar', height: 200 },
+                plotOptions: {
+                    radialBar: {
+                        hollow: { size: '60%' },
+                        track: { background: '#F1F5F9' },
+                        dataLabels: {
+                            name: { show: false },
+                            value: { fontSize: '22px', fontWeight: 700, color: '#0F172A', offsetY: 10 }
+                        }
+                    }
+                },
+                stroke: { lineCap: 'round' }
+            };
+
+            if (fuelChartInst) fuelChartInst.destroy();
+            fuelChartInst = new ApexCharts(document.querySelector('#fuelChart'), {
+                ...commonOptions, series: [fuelVal], colors: ['#2563EB'], labels: ['Fuel']
+            });
+            fuelChartInst.render();
+
+            if (batteryChartInst) batteryChartInst.destroy();
+            batteryChartInst = new ApexCharts(document.querySelector('#batteryChart'), {
+                ...commonOptions, series: [batteryVal], colors: ['#10B981'], labels: ['Battery']
+            });
+            batteryChartInst.render();
+
+            if (engineChartInst) engineChartInst.destroy();
+            engineChartInst = new ApexCharts(document.querySelector('#engineChart'), {
+                ...commonOptions, series: [engineVal], colors: ['#F59E0B'], labels: ['Load']
+            });
+            engineChartInst.render();
+        }
+
+        // ─── Load Profile ────────────────────────────────────────────────────
+        async function loadMe() {
+            try {
+                const data = await apiFetch('/api/driver/me');
+                document.getElementById('profileName').textContent = data.full_name || 'Driver';
+                const img = document.getElementById('profileImg');
+                img.src = data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name || 'D')}&background=2563EB&color=fff`;
+            } catch (e) { console.error('loadMe:', e); }
+        }
+
+        // ─── Load Vehicle ─────────────────────────────────────────────────────
+        async function loadVehicle() {
+            try {
+                const data = await apiFetch('/api/driver/vehicle');
+                const v    = data.vehicle;
+                const ins  = data.insurance;
+                const mnt  = data.nextMaintenance;
+
+                if (!v) {
+                    document.getElementById('vehicleTitle').textContent = 'No vehicle assigned';
+                    document.getElementById('vehicleReg').textContent   = 'Contact your fleet manager';
+                    renderGauges(0, 0, 0);
+                    return;
+                }
+
+                document.getElementById('vehicleTitle').textContent = `${v.make || ''} ${v.model || ''}`;
+                document.getElementById('vehicleReg').textContent   = `Registration: ${v.registration_number || '—'}`;
+                document.getElementById('specOdometer').textContent = v.year || '—';
+                document.getElementById('specFuelType').textContent = v.vin || '—';
+
+                if (mnt) {
+                    const mntDate = mnt.scheduled_date
+                        ? new Date(mnt.scheduled_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : 'Scheduled';
+                    document.getElementById('specNextService').textContent = mntDate;
+                } else {
+                    document.getElementById('specNextService').textContent = 'Not scheduled';
+                }
+
+                const insEl = document.getElementById('specInsurance');
+                if (ins) {
+                    const expires = new Date(ins.expiry_date);
+                    const today   = new Date();
+                    const daysLeft = Math.ceil((expires - today) / (1000 * 60 * 60 * 24));
+                    if (daysLeft <= 0) {
+                        insEl.textContent    = 'Expired';
+                        insEl.style.color    = 'var(--danger)';
+                    } else if (daysLeft <= 30) {
+                        insEl.textContent    = `Expires in ${daysLeft}d`;
+                        insEl.style.color    = 'var(--warning)';
+                    } else {
+                        insEl.textContent    = 'Active';
+                        insEl.style.color    = 'var(--success)';
+                    }
+                } else {
+                    insEl.textContent = 'No policy found';
+                    insEl.style.color = 'var(--danger)';
+                }
+
+                // Gauges: use real fuel_level, placeholders for battery/engine
+                const fuel    = v.fuel_level != null ? Number(v.fuel_level) : 0;
+                const battery = 85; // IoT data not yet available; shown as placeholder
+                const engine  = v.status === 'maintenance' ? 100 : 40;
+                renderGauges(fuel, battery, engine);
+
+            } catch (e) {
+                console.error('loadVehicle:', e);
+                document.getElementById('vehicleTitle').textContent = 'Could not load vehicle data';
+                renderGauges(0, 0, 0);
+            }
+        }
+
+        // ─── Init ─────────────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMe();
+            loadVehicle();
+        });
+    </script>
+</body>
+</html>

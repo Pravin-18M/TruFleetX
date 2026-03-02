@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center | Trufleet Manager</title>
+    
+    <!-- FONTS & ICONS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CHARTING ENGINE -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <style>
+        /* 
+         * DESIGN SYSTEM: "AERO-LIGHT" (Consistent System)
+         */
+        :root {
+            --primary: #0F172A;
+            --accent: #2563EB;
+            --accent-soft: #EFF6FF;
+            --bg-body: #F1F5F9;
+            --bg-card: #FFFFFF;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --border: #E2E8F0;
+            
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --header-height: 80px;
+            
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+            
+            --radius-lg: 20px;
+            
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            transition: grid-template-columns 0.4s ease;
+            min-height: 100vh;
+        }
+
+        .app-container.collapsed {
+            grid-template-columns: var(--sidebar-collapsed) 1fr;
+        }
+
+        /* SIDEBAR (Manager-Specific) */
+        aside {
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 50;
+            transition: var(--transition-smooth);
+        }
+
+        .brand-logo {
+            display: flex; align-items: center; gap: 12px;
+            padding: 0 1rem 2.5rem; color: var(--primary); text-decoration: none;
+            overflow: hidden; white-space: nowrap;
+        }
+        
+        .brand-text {
+            font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.4rem;
+            opacity: 1; transition: opacity 0.2s;
+        }
+
+        .app-container.collapsed .brand-text { opacity: 0; display: none; }
+
+        .nav-menu { flex: 1; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 16px; padding: 12px 16px;
+            color: var(--text-muted); text-decoration: none; border-radius: 12px;
+            transition: var(--transition-smooth); font-weight: 500; margin-bottom: 4px;
+            white-space: nowrap; overflow: hidden;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        /* MAIN CONTENT */
+        main { overflow-y: auto; height: 100vh; }
+
+        header {
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+
+        .profile-chip {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 12px; background: white; border: 1px solid var(--border);
+            border-radius: 30px; cursor: pointer; transition: var(--transition-smooth);
+        }
+        .profile-chip:hover { border-color: var(--accent); }
+
+        .dashboard-content {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeInPage 0.6s ease-out forwards;
+        }
+
+        /* KPI CARDS */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-card); padding: 1.5rem;
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+            border: 1px solid rgba(226, 232, 240, 0.5); transition: var(--transition-spring);
+        }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
+
+        /* MANAGER-SPECIFIC GRID */
+        .manager-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .panel-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--bg-body);
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif; font-weight: 600;
+            font-size: 1.1rem; color: var(--primary);
+        }
+
+        /* Dispatch Queue */
+        .dispatch-queue .dispatch-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem; border-radius: 12px;
+            background: var(--bg-body); margin-bottom: 10px;
+            transition: var(--transition-smooth);
+        }
+
+        .dispatch-item .route-info {
+            font-weight: 500; font-size: 0.9rem;
+        }
+        .dispatch-item .route-info span { color: var(--text-muted); }
+
+        .dispatch-actions button {
+            border: none; padding: 8px 16px; border-radius: 6px;
+            font-weight: 600; cursor: pointer; transition: 0.2s;
+            margin-left: 8px;
+        }
+        .btn-approve { background: var(--accent-soft); color: var(--accent); }
+        .btn-approve:hover { background: var(--accent); color: white; }
+        .btn-deny { background: #FEE2E2; color: var(--danger); }
+
+        /* Live Activity Feed */
+        .activity-feed { max-height: 250px; overflow-y: auto; }
+
+        .activity-item {
+            display: flex; gap: 15px; padding: 12px 0;
+            border-bottom: 1px solid var(--bg-body);
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-icon {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--bg-body); display: flex; align-items: center;
+            justify-content: center; font-size: 0.9rem;
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeInPage {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 1200px) {
+            .manager-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .app-container { grid-template-columns: 1fr; }
+            .app-container aside { position: fixed; left: -280px; transition: 0.3s; }
+            .app-container.mobile-open aside { left: 0; }
+            .kpi-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="appContainer">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <a href="#" class="brand-logo">
+                <i class="fa-solid fa-cube" style="font-size: 1.8rem; color: var(--accent);"></i>
+                <span class="brand-text">Trufleet</span>
+            </a>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active">
+                    <i class="fa-solid fa-grid-2"></i>
+                    <span class="brand-text">Dashboard</span>
+                </a>
+                <a href="View_fleet_manager.html" class="nav-item">
+                    <i class="fa-solid fa-truck-front"></i>
+                    <span class="brand-text">View Fleet</span>
+                </a>
+                <a href="Drivers_manager.html" class="nav-item">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span class="brand-text">View Drivers</span>
+                </a>
+                <a href="Maintenance_manager.html" class="nav-item">
+                    <i class="fa-solid fa-wrench"></i>
+                    <span class="brand-text">Maintenance</span>
+                </a>
+                
+                <div style="flex-grow: 1;"></div>
+
+                <a href="#" onclick="logout()" class="nav-item" style="color: var(--danger);">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span class="brand-text">Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main>
+            <header>
+                <div>
+                    <button id="toggleBtn" onclick="toggleSidebar()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); margin-right: 1rem;">
+                        <i class="fa-solid fa-bars-staggered"></i>
+                    </button>
+                    <span style="font-family: 'Outfit'; font-weight: 600; font-size: 1.25rem; color: var(--primary);">Manager's Command Center</span>
+                </div>
+                <div class="profile-chip">
+                    <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974&auto=format&fit=crop" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                    <div style="text-align: left;">
+                        <span style="font-weight: 600; font-size: 0.85rem; color: var(--primary);">Arjun Mehta</span>
+                        <span style="display: block; font-size: 0.7rem; color: var(--text-muted);">Fleet Manager</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                
+                <!-- 1. KPI STATS -->
+                <div class="kpi-row">
+                    <div class="kpi-card">
+                        <span style="font-size: 2rem; font-family: 'Outfit'; font-weight: 700;">22</span>
+                        <p style="color: var(--text-muted);">Trips Today</p>
+                    </div>
+                    <div class="kpi-card">
+                        <span style="font-size: 2rem; font-family: 'Outfit'; font-weight: 700; color: var(--success);">97.8%</span>
+                        <p style="color: var(--text-muted);">On-Time Rate</p>
+                    </div>
+                    <div class="kpi-card">
+                        <span style="font-size: 2rem; font-family: 'Outfit'; font-weight: 700; color: var(--warning);">04</span>
+                        <p style="color: var(--text-muted);">Pending Dispatch</p>
+                    </div>
+                    <div class="kpi-card">
+                        <span style="font-size: 2rem; font-family: 'Outfit'; font-weight: 700; color: var(--danger);">02</span>
+                        <p style="color: var(--text-muted);">Vehicles In Maintenance</p>
+                    </div>
+                </div>
+
+                <!-- 2. MANAGER GRID -->
+                <div class="manager-grid">
+                    
+                    <!-- Left Column -->
+                    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <!-- Dispatch Queue -->
+                        <div class="panel-card dispatch-queue">
+                            <div class="panel-header">
+                                <span class="panel-title">Dispatch Approval Queue</span>
+                            </div>
+                            <!-- Item 1 -->
+                            <div class="dispatch-item">
+                                <p class="route-info">Mumbai <span><i class="fa-solid fa-arrow-right-long"></i></span> Pune</p>
+                                <div class="dispatch-actions">
+                                    <button class="btn-deny" onclick="handleDispatch(this, 'deny')">Deny</button>
+                                    <button class="btn-approve" onclick="handleDispatch(this, 'approve')">Approve</button>
+                                </div>
+                            </div>
+                             <!-- Item 2 -->
+                            <div class="dispatch-item">
+                                <p class="route-info">Bangalore <span><i class="fa-solid fa-arrow-right-long"></i></span> Chennai</p>
+                                <div class="dispatch-actions">
+                                    <button class="btn-deny" onclick="handleDispatch(this, 'deny')">Deny</button>
+                                    <button class="btn-approve" onclick="handleDispatch(this, 'approve')">Approve</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Maintenance Alerts -->
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <span class="panel-title">Upcoming Maintenance</span>
+                            </div>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 8px 0; font-weight: 500;">KA-01-EQ-9921</td>
+                                    <td style="padding: 8px 0; color: var(--text-muted);">Oil Change Due</td>
+                                    <td style="padding: 8px 0; text-align: right;"><span style="background: #FFFBEB; color: #D97706; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Medium</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; font-weight: 500;">MH-12-GH-1122</td>
+                                    <td style="padding: 8px 0; color: var(--text-muted);">Tyre Rotation</td>
+                                    <td style="padding: 8px 0; text-align: right;"><span style="background: #FEE2E2; color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">High</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <!-- Vehicle Status Chart -->
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <span class="panel-title">Fleet Status Overview</span>
+                            </div>
+                            <div id="vehicleStatusChart"></div>
+                        </div>
+
+                        <!-- Live Activity -->
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <span class="panel-title">Live Fleet Activity</span>
+                            </div>
+                            <div class="activity-feed">
+                                <div class="activity-item">
+                                    <div class="activity-icon" style="color: var(--success);"><i class="fa-solid fa-play"></i></div>
+                                    <div>
+                                        <p style="font-weight: 500;">KA-05 Started Trip to Hyderabad</p>
+                                        <p style="font-size: 0.8rem; color: var(--text-muted);">2m ago</p>
+                                    </div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="activity-icon" style="color: var(--accent);"><i class="fa-solid fa-flag-checkered"></i></div>
+                                    <div>
+                                        <p style="font-weight: 500;">MH-02 Reached Delhi Destination</p>
+                                        <p style="font-size: 0.8rem; color: var(--text-muted);">15m ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- AUTH GUARD ---
+        const TOKEN = localStorage.getItem('trufleet_token');
+        if (!TOKEN) location.href = '../login.html';
+        function parseJwt(t) { try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; } }
+        const ME = parseJwt(TOKEN);
+        if (!ME || ME.role !== 'manager') { localStorage.clear(); location.href = '../login.html'; }
+        function logout() { localStorage.clear(); location.href = '../login.html'; }
+
+        // --- SIDEBAR LOGIC (Consistent across dashboards) ---
+        const appContainer = document.getElementById('appContainer');
+        const sidebar = document.getElementById('sidebar');
+
+        function toggleSidebar() {
+            if (window.innerWidth <= 768) {
+                appContainer.classList.toggle('mobile-open');
+            } else {
+                appContainer.classList.toggle('collapsed');
+            }
+        }
+        
+        sidebar.addEventListener('mouseenter', () => {
+            if (window.innerWidth > 768 && appContainer.classList.contains('collapsed')) {
+                appContainer.classList.remove('collapsed');
+                sidebar.dataset.autoExpanded = 'true';
+            }
+        });
+
+        sidebar.addEventListener('mouseleave', () => {
+            if (window.innerWidth > 768 && sidebar.dataset.autoExpanded === 'true') {
+                appContainer.classList.add('collapsed');
+                sidebar.dataset.autoExpanded = 'false';
+            }
+        });
+
+        // --- CHART & PAGE LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            var options = {
+                series: [82, 35, 12],
+                chart: {
+                    type: 'donut',
+                    height: 250,
+                    fontFamily: 'Inter, sans-serif'
+                },
+                labels: ['On-Road', 'Idle', 'Maintenance'],
+                colors: ['#10B981', '#2563EB', '#F59E0B'],
+                dataLabels: { enabled: false },
+                legend: { position: 'bottom' },
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: {
+                            width: 200
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }]
+            };
+
+            var chart = new ApexCharts(document.querySelector("#vehicleStatusChart"), options);
+            chart.render();
+        });
+
+        // --- DISPATCH INTERACTION ---
+        function handleDispatch(element, action) {
+            const item = element.closest('.dispatch-item');
+            item.style.transition = 'opacity 0.3s, transform 0.3s';
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(20px)';
+            
+            // In a real app, you would send this to the server.
+            console.log(`Dispatch for ${item.querySelector('.route-info').innerText} was ${action}ed.`);
+
+            setTimeout(() => {
+                item.remove();
+            }, 300);
+        }
+
+    </script>
+</body>
+</html>

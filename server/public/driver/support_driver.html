@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilot Support | Trufleet</title>
+    
+    <!-- FONTS & ICONS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* 
+         * DESIGN SYSTEM: "AERO-LIGHT" (Unified System)
+         */
+        :root {
+            --primary: #0F172A;
+            --accent: #2563EB;
+            --accent-soft: #EFF6FF;
+            --bg-body: #F1F5F9;
+            --bg-card: #FFFFFF;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --danger-soft: #FEF2F2;
+            --border: #E2E8F0;
+            
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --header-height: 80px;
+            
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            --shadow-glow: 0 0 20px rgba(239, 68, 68, 0.4);
+            
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            transition: grid-template-columns 0.4s ease;
+            min-height: 100vh;
+        }
+
+        .app-container.collapsed {
+            grid-template-columns: var(--sidebar-collapsed) 1fr;
+        }
+
+        /* SIDEBAR */
+        aside {
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 50;
+            transition: var(--transition-smooth);
+        }
+
+        .brand-logo {
+            display: flex; align-items: center; gap: 12px;
+            padding: 0 1rem 2.5rem; color: var(--primary); text-decoration: none;
+            overflow: hidden; white-space: nowrap;
+        }
+        
+        .brand-text {
+            font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.4rem;
+            opacity: 1; transition: opacity 0.2s;
+        }
+
+        .app-container.collapsed .brand-text { opacity: 0; display: none; }
+
+        .nav-menu { flex: 1; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 16px; padding: 12px 16px;
+            color: var(--text-muted); text-decoration: none; border-radius: 12px;
+            transition: var(--transition-smooth); font-weight: 500; margin-bottom: 4px;
+            white-space: nowrap; overflow: hidden;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--accent-soft);
+            color: var(--accent);
+        }
+        .nav-item i { min-width: 24px; text-align: center; font-size: 1.1rem; }
+
+        /* MAIN CONTENT */
+        main { overflow-y: auto; height: 100vh; }
+
+        header {
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .toggle-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
+
+        .profile-chip {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 12px; background: white; border: 1px solid var(--border);
+            border-radius: 30px; cursor: pointer;
+        }
+        .profile-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+
+        .dashboard-content {
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeInPage 0.6s ease-out forwards;
+        }
+
+        /* EMERGENCY SOS CARD */
+        .sos-card {
+            background: var(--danger);
+            color: white;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-glow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sos-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: pulseBg 3s infinite;
+        }
+
+        .sos-info { position: relative; z-index: 2; }
+        .sos-info h2 { font-family: 'Outfit'; font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .sos-info p { font-size: 0.95rem; opacity: 0.9; max-width: 400px; }
+
+        .btn-sos {
+            position: relative; z-index: 2;
+            background: white; color: var(--danger);
+            border: none; padding: 1rem 2.5rem; border-radius: 50px;
+            font-size: 1.1rem; font-weight: 700; font-family: 'Outfit';
+            cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .btn-sos:hover { transform: scale(1.05); }
+
+        /* DIRECT CONTACTS GRID */
+        .section-title { font-family: 'Outfit'; font-size: 1.25rem; color: var(--primary); margin-bottom: 1rem; font-weight: 600; }
+        
+        .contact-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem; margin-bottom: 3rem;
+        }
+
+        .contact-card {
+            background: var(--bg-card); border-radius: var(--radius-lg);
+            padding: 1.5rem; border: 1px solid var(--border);
+            box-shadow: var(--shadow-card); transition: 0.3s;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .contact-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--accent); }
+
+        .contact-info { display: flex; align-items: center; gap: 15px; }
+        .contact-avatar {
+            width: 50px; height: 50px; border-radius: 12px; background: var(--bg-body);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem; color: var(--accent);
+        }
+        .contact-details h3 { font-family: 'Outfit'; font-size: 1.1rem; color: var(--primary); margin-bottom: 2px; }
+        .contact-details p { font-size: 0.85rem; color: var(--text-muted); font-weight: 500;}
+
+        .btn-call {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: #ECFDF5; color: var(--success); border: none;
+            font-size: 1.1rem; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-call:hover { background: var(--success); color: white; transform: scale(1.1); }
+
+        /* TICKETING SECTION */
+        .ticket-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;
+        }
+        .btn-new-ticket {
+            background: var(--primary); color: white; border: none;
+            padding: 10px 20px; border-radius: 50px; font-weight: 600; cursor: pointer;
+            transition: 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-new-ticket:hover { background: #1E293B; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+        .ticket-list { display: flex; flex-direction: column; gap: 1rem; }
+        
+        .ticket-item {
+            background: var(--bg-card); border-radius: var(--radius-md); padding: 1.25rem;
+            border: 1px solid var(--border); box-shadow: var(--shadow-card);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .ticket-left { display: flex; align-items: flex-start; gap: 15px; }
+        .ticket-icon {
+            width: 40px; height: 40px; border-radius: 10px; background: var(--bg-body);
+            display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+        }
+        .ticket-data h4 { font-size: 1rem; color: var(--primary); margin-bottom: 4px; }
+        .ticket-data p { font-size: 0.85rem; color: var(--text-muted); }
+        .ticket-id { font-family: monospace; font-size: 0.8rem; background: var(--bg-body); padding: 2px 6px; border-radius: 4px; margin-right: 8px;}
+
+        .status-badge {
+            padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+        }
+        .st-open { background: #FFFBEB; color: #D97706; }
+        .st-resolved { background: #F1F5F9; color: #64748B; }
+
+        /* DRAWER (Create Ticket) */
+        .drawer-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
+            z-index: 100; opacity: 0; visibility: hidden; transition: 0.4s ease;
+        }
+        .drawer {
+            position: absolute; top: 0; right: 0; width: 450px; height: 100%;
+            background: white; box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+            transform: translateX(100%); transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex; flex-direction: column;
+        }
+        .drawer-overlay.open { opacity: 1; visibility: visible; }
+        .drawer-overlay.open .drawer { transform: translateX(0); }
+        .drawer-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .drawer-body { padding: 2rem; overflow-y: auto; flex: 1; }
+
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--text-main); margin-bottom: 8px; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'Inter'; font-size: 0.95rem; background: white; transition: 0.2s;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .form-textarea { height: 120px; resize: vertical; }
+
+        .upload-zone {
+            border: 2px dashed var(--border); border-radius: 8px; padding: 2rem; text-align: center;
+            cursor: pointer; transition: 0.2s; background: var(--bg-body);
+        }
+        .upload-zone:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+        @keyframes fadeInPage { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseBg { 0% { opacity: 0.5; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 0.5; transform: scale(0.8); } }
+
+        @media (max-width: 768px) {
+            .app-container { grid-template-columns: 1fr; }
+            .app-container aside { position: fixed; left: -280px; transition: 0.3s; }
+            .app-container.mobile-open aside { left: 0; }
+            .sos-card { flex-direction: column; text-align: center; gap: 1.5rem; }
+            .btn-sos { width: 100%; justify-content: center; }
+            .drawer { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="appContainer">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <a href="#" class="brand-logo">
+                <i class="fa-solid fa-cube" style="font-size: 1.8rem; color: var(--accent);"></i>
+                <span class="brand-text">Trufleet</span>
+            </a>
+
+            <nav class="nav-menu">
+                <a href="dashboard_driver.html" class="nav-item">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span class="brand-text">Dashboard</span>
+                </a>
+                <a href="MyTrips_driver.html" class="nav-item">
+                    <i class="fa-solid fa-route"></i>
+                    <span class="brand-text">My Trips</span>
+                </a>
+                <a href="Vehicle_status_driver.html" class="nav-item">
+                    <i class="fa-solid fa-truck"></i>
+                    <span class="brand-text">Vehicle Status</span>
+                </a>
+                <a href="Documents_driver.html" class="nav-item">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span class="brand-text">Documents</span>
+                </a>
+                <div style="flex-grow: 1;"></div>
+                <a href="support_driver.html" class="nav-item active">
+                    <i class="fa-solid fa-headset"></i>
+                    <span class="brand-text">Support</span>
+                </a>
+                <a href="#" onclick="logout()" class="nav-item" style="color: var(--danger);">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span class="brand-text">Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main>
+            <header>
+                <div class="header-left">
+                    <button class="toggle-btn" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-bars-staggered"></i>
+                    </button>
+                    <span style="font-family: 'Outfit'; font-weight: 600; font-size: 1.25rem;">Help & Support</span>
+                </div>
+                <div class="profile-chip">
+                    <img id="profileImg" src="" class="profile-img" onerror="this.src='https://ui-avatars.com/api/?name=Driver&background=2563EB&color=fff'">
+                    <div>
+                        <span class="profile-name" id="profileName">Loading...</span>
+                        <span class="profile-role" style="display:block;font-size:0.7rem;color:var(--text-muted)">Fleet Pilot</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                
+                <!-- EMERGENCY SOS CARD -->
+                <div class="sos-card">
+                    <div class="sos-info">
+                        <h2>Emergency Assistance</h2>
+                        <p>In case of an accident, breakdown in a hazardous location, or medical emergency, press this button immediately.</p>
+                    </div>
+                    <button class="btn-sos" onclick="triggerSOS()">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Activate SOS
+                    </button>
+                </div>
+
+                <!-- DIRECT CONTACTS -->
+                <h3 class="section-title">Direct Command Lines</h3>
+                <div class="contact-grid" id="contactGrid">
+                    <p style="color:var(--text-muted)">Loading contacts...</p>
+                </div>
+
+                <!-- TICKETING SYSTEM -->
+                <div class="ticket-header">
+                    <h3 class="section-title" style="margin: 0;">Support Tickets</h3>
+                    <button class="btn-new-ticket" onclick="openDrawer()">
+                        <i class="fa-solid fa-plus"></i> Raise Issue
+                    </button>
+                </div>
+
+                <div class="ticket-list" id="ticketList">
+                    <p style="color:var(--text-muted)">Loading tickets...</p>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- DRAWER: NEW TICKET -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target === this) closeDrawer()">
+        <div class="drawer">
+            <div class="drawer-header">
+                <div>
+                    <h2 style="font-family: 'Outfit'; color: var(--primary);">Raise Support Ticket</h2>
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">Non-emergency queries</span>
+                </div>
+                <button onclick="closeDrawer()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="drawer-body">
+                <form id="ticketForm" onsubmit="submitTicket(event)">
+
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="ticketCategory" required>
+                            <option value="" disabled selected>Select an issue type...</option>
+                            <option>Payment / Toll / Fuel Card</option>
+                            <option>App Bug / Navigation Issue</option>
+                            <option>Trip Dispute / Logbook</option>
+                            <option>Vehicle Document Missing</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-input" id="ticketSubject" placeholder="Brief title of the issue" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Details</label>
+                        <textarea class="form-textarea" id="ticketDescription" placeholder="Please provide as much context as possible..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Attachments (Optional)</label>
+                        <div class="upload-zone" onclick="document.getElementById('fileUpload').click()">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 10px;"></i>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">Tap to upload photo or receipt</p>
+                            <input type="file" id="fileUpload" hidden>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="ticketSubmitBtn" style="width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 50px; font-weight: 600; font-family: 'Outfit'; font-size: 1.05rem; cursor: pointer; transition: 0.2s;">
+                        Submit Ticket
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─── Auth Guard ────────────────────────────────────────────────────────
+        const TOKEN = localStorage.getItem('trufleet_token');
+        if (!TOKEN) location.href = '../login.html';
+        function parseJwt(t) { try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; } }
+        const ME = parseJwt(TOKEN);
+        if (!ME || ME.role !== 'driver') { localStorage.clear(); location.href = '../login.html'; }
+
+        async function apiFetch(path, opts = {}) {
+            const res = await fetch(path, {
+                ...opts,
+                headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+            });
+            if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || 'API error'); }
+            return res.json();
+        }
+
+        function logout() { localStorage.clear(); location.href = '../login.html'; }
+
+        // ─── Sidebar ──────────────────────────────────────────────────────────────
+        const appContainer = document.getElementById('appContainer');
+        const sidebar      = document.getElementById('sidebar');
+        function toggleSidebar() {
+            if (window.innerWidth <= 768) appContainer.classList.toggle('mobile-open');
+            else appContainer.classList.toggle('collapsed');
+        }
+        sidebar.addEventListener('mouseenter', () => {
+            if (window.innerWidth > 768 && appContainer.classList.contains('collapsed')) {
+                appContainer.classList.remove('collapsed');
+                sidebar.dataset.autoExpanded = 'true';
+            }
+        });
+        sidebar.addEventListener('mouseleave', () => {
+            if (window.innerWidth > 768 && sidebar.dataset.autoExpanded === 'true') {
+                appContainer.classList.add('collapsed');
+                sidebar.dataset.autoExpanded = 'false';
+            }
+        });
+
+        // ─── Drawer ───────────────────────────────────────────────────────────
+        function openDrawer()  { document.getElementById('drawerOverlay').classList.add('open'); }
+        function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); }
+
+        // ─── Load Profile ────────────────────────────────────────────────────
+        async function loadMe() {
+            try {
+                const data = await apiFetch('/api/driver/me');
+                document.getElementById('profileName').textContent = data.full_name || 'Driver';
+                const img = document.getElementById('profileImg');
+                img.src = data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name || 'D')}&background=2563EB&color=fff`;
+            } catch (e) { console.error('loadMe:', e); }
+        }
+
+        // ─── Load Contacts ────────────────────────────────────────────────────
+        async function loadContacts() {
+            try {
+                const contacts = await apiFetch('/api/driver/support/contacts');
+                const grid = document.getElementById('contactGrid');
+                if (!contacts.length) {
+                    grid.innerHTML = '<p style="color:var(--text-muted)">No contacts found.</p>';
+                    return;
+                }
+                const roleIcon = (role) => role === 'admin'
+                    ? '<i class="fa-solid fa-shield-halved" style="color:var(--accent)"></i>'
+                    : '<i class="fa-solid fa-user-tie" style="color:var(--accent)"></i>';
+                grid.innerHTML = contacts.map(c => `
+                    <div class="contact-card">
+                        <div class="contact-info">
+                            <div class="contact-avatar">${roleIcon(c.role)}</div>
+                            <div class="contact-details">
+                                <h3>${c.full_name || 'Team Member'}</h3>
+                                <p>${c.role.charAt(0).toUpperCase() + c.role.slice(1)}</p>
+                            </div>
+                        </div>
+                        <button class="btn-call" title="Email ${c.full_name}" onclick="window.location.href='mailto:${c.email}'">
+                            <i class="fa-solid fa-envelope"></i>
+                        </button>
+                    </div>`).join('');
+            } catch (e) { console.error('loadContacts:', e); }
+        }
+
+        // ─── Load Tickets ─────────────────────────────────────────────────────
+        async function loadTickets() {
+            try {
+                const tickets = await apiFetch('/api/driver/support/tickets');
+                const list = document.getElementById('ticketList');
+                if (!tickets.length) {
+                    list.innerHTML = '<p style="color:var(--text-muted)">No support tickets yet. Raise one if you need help!</p>';
+                    return;
+                }
+
+                const statusMap = {
+                    open:        { cls: 'st-open',     label: 'Open' },
+                    'in-progress':{ cls: 'st-open',    label: 'In Progress' },
+                    resolved:    { cls: 'st-resolved', label: 'Resolved' },
+                    closed:      { cls: 'st-resolved', label: 'Closed' }
+                };
+                const catIcon = (cat) => {
+                    if (!cat) return 'fa-solid fa-ticket';
+                    const lower = cat.toLowerCase();
+                    if (lower.includes('payment') || lower.includes('toll') || lower.includes('fuel')) return 'fa-solid fa-money-bill-wave';
+                    if (lower.includes('app') || lower.includes('bug') || lower.includes('nav')) return 'fa-solid fa-mobile-screen';
+                    if (lower.includes('sos') || lower.includes('emergency')) return 'fa-solid fa-triangle-exclamation';
+                    if (lower.includes('vehicle') || lower.includes('doc')) return 'fa-solid fa-car';
+                    if (lower.includes('trip')) return 'fa-solid fa-route';
+                    return 'fa-solid fa-ticket';
+                };
+
+                list.innerHTML = tickets.map(t => {
+                    const s       = statusMap[t.status] || { cls: 'st-open', label: t.status };
+                    const isOpen  = !['resolved', 'closed'].includes(t.status);
+                    const date    = t.created_at
+                        ? new Date(t.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                        : '';
+                    return `
+                    <div class="ticket-item" style="${!isOpen ? 'opacity:0.7' : ''}">
+                        <div class="ticket-left">
+                            <div class="ticket-icon" style="${isOpen ? 'color:var(--warning);background:#FFFBEB;' : ''}">
+                                <i class="${catIcon(t.category)}"></i>
+                            </div>
+                            <div class="ticket-data">
+                                <h4>${t.subject || 'Untitled Ticket'}</h4>
+                                <p>${date} &bull; ${t.category || 'Other'}</p>
+                            </div>
+                        </div>
+                        <span class="status-badge ${s.cls}">${s.label}</span>
+                    </div>`;
+                }).join('');
+            } catch (e) { console.error('loadTickets:', e); }
+        }
+
+        // ─── SOS ───────────────────────────────────────────────────────────────
+        async function triggerSOS() {
+            if (!confirm('EMERGENCY SOS: Are you sure you want to alert Central Dispatch and Emergency Services?')) return;
+            try {
+                let location = null;
+                try {
+                    const pos = await new Promise((resolve, reject) =>
+                        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+                    );
+                    location = `Lat ${pos.coords.latitude.toFixed(5)}, Lon ${pos.coords.longitude.toFixed(5)}`;
+                } catch { /* GPS unavailable; proceed without location */ }
+
+                await apiFetch('/api/driver/sos', {
+                    method: 'POST',
+                    body: JSON.stringify({ location })
+                });
+                alert('SOS ACTIVATED. Central Dispatch has been notified. Stay safe.');
+                loadTickets(); // refresh ticket list to show the new SOS ticket
+            } catch (e) {
+                alert('Failed to send SOS: ' + e.message);
+            }
+        }
+
+        // ─── Submit Ticket ────────────────────────────────────────────────────
+        async function submitTicket(e) {
+            e.preventDefault();
+            const btn  = document.getElementById('ticketSubmitBtn');
+            const cat  = document.getElementById('ticketCategory').value;
+            const sub  = document.getElementById('ticketSubject').value.trim();
+            const desc = document.getElementById('ticketDescription').value.trim();
+
+            if (!cat || !sub || !desc) { alert('Please fill all required fields.'); return; }
+
+            btn.disabled    = true;
+            btn.textContent = 'Submitting...';
+            try {
+                await apiFetch('/api/driver/support/tickets', {
+                    method: 'POST',
+                    body: JSON.stringify({ category: cat, subject: sub, description: desc })
+                });
+                closeDrawer();
+                alert('Ticket logged. Support will contact you shortly.');
+                document.getElementById('ticketForm').reset();
+                loadTickets(); // refresh list
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled    = false;
+                btn.textContent = 'Submit Ticket';
+            }
+        }
+
+        // ─── Init ─────────────────────────────────────────────────────────────
+        loadMe();
+        loadContacts();
+        loadTickets();
+    </script>
+</body>
+</html>

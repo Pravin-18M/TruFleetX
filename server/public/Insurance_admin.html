@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Control | Trufleet Insurance</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
+    
+    <!-- FONTS & ICONS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CHARTING -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <style>
+        /* 
+         * DESIGN SYSTEM: "FINTECH-CLEAN"
+         */
+        :root {
+            --primary: #0F172A;
+            --accent: #2563EB;
+            --accent-light: #EFF6FF;
+            --bg-body: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --text-main: #334155;
+            --text-muted: #64748B;
+            
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --danger-soft: #FEF2F2;
+            
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --header-height: 80px;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-float: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            --radius-lg: 16px;
+            --radius-md: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .app-layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            min-height: 100vh;
+            transition: grid-template-columns 0.4s ease;
+        }
+        .app-layout.collapsed { grid-template-columns: var(--sidebar-collapsed) 1fr; }
+        .app-layout.collapsed .brand-text { opacity: 0; display: none; }
+
+        /* SIDEBAR */
+        aside {
+            background: var(--bg-card);
+            border-right: 1px solid #E2E8F0;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 50;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 1rem 2.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: 0.3s;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+        .brand-text { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1rem; }
+
+        /* MAIN CONTENT */
+        main { overflow-y: auto; height: 100vh; padding-bottom: 2rem; }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .toggle-btn:hover { background: #EFF6FF; color: var(--accent); }
+
+        /* HEADER */
+        header {
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #E2E8F0;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .action-btn {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-btn:hover { background: #1E293B; transform: translateY(-2px); }
+
+        /* KPI SECTION */
+        .kpi-row {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid #E2E8F0;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+        }
+
+        .kpi-label { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+
+        /* CRITICAL ALERT SECTION (The "7 Days" View) */
+        .alert-section {
+            padding: 0 2rem 2rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card-container {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid #E2E8F0;
+            box-shadow: var(--shadow-card);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* URGENT LIST STYLING */
+        .urgent-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border: 1px solid #FECACA;
+            background: #FEF2F2;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        .urgent-item:hover { transform: translateX(5px); }
+
+        .urgent-info { display: flex; align-items: center; gap: 15px; }
+        
+        .days-badge {
+            background: white;
+            color: var(--danger);
+            font-weight: 800;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            min-width: 60px;
+        }
+        
+        .days-badge small { display: block; font-size: 0.6rem; text-transform: uppercase; font-weight: 600; color: var(--text-muted); }
+        .days-badge span { font-size: 1.1rem; }
+
+        .vehicle-meta h4 { font-size: 1rem; color: var(--primary); font-weight: 600; margin-bottom: 2px; }
+        .vehicle-meta p { font-size: 0.85rem; color: var(--text-muted); }
+
+        .renew-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* DATA TABLE */
+        .table-wrapper {
+            padding: 0 2rem 2rem;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid #E2E8F0;
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+        
+        th {
+            text-align: left;
+            padding: 16px 24px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 16px 24px;
+            border-bottom: 1px solid #F1F5F9;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #F8FAFC; }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .st-active { background: #ECFDF5; color: #059669; }
+        .st-warning { background: #FFFBEB; color: #D97706; }
+        .st-expired { background: #FEF2F2; color: #DC2626; }
+
+        /* DRAWER FOR RENEWAL */
+        .drawer-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            opacity: 0; visibility: hidden;
+            transition: 0.3s;
+        }
+
+        .drawer {
+            position: absolute;
+            top: 0; right: 0;
+            width: 500px; height: 100%;
+            background: white;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex; flex-direction: column;
+        }
+
+        .drawer-overlay.open { opacity: 1; visibility: visible; }
+        .drawer-overlay.open .drawer { transform: translateX(0); }
+
+        .drawer-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .drawer-body { padding: 2rem; flex: 1; overflow-y: auto; }
+
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 8px; }
+        .form-input { 
+            width: 100%; padding: 12px; border: 1px solid #E2E8F0; 
+            border-radius: 8px; font-family: 'Inter'; 
+        }
+
+        .upload-box {
+            border: 2px dashed #CBD5E1;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .upload-box:hover { border-color: var(--accent); background: var(--accent-light); }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .alert-section { grid-template-columns: 1fr; }
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .app-layout { grid-template-columns: 1fr; }
+            .app-layout aside { position: fixed; left: -280px; top: 0; height: 100%; transition: 0.3s; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+            .app-layout.mobile-open aside { left: 0; }
+            .brand-text { display: block !important; opacity: 1 !important; }
+            .kpi-row { grid-template-columns: 1fr; }
+        }
+
+        /* Animation */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-layout" id="appContainer">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <a href="#" class="brand-logo">
+                <i class="fa-solid fa-cube" style="color: var(--accent);"></i>
+                <span class="brand-text">Trufleet</span>
+            </a>
+            <nav class="nav-menu">
+                <a href="Dasboard_admin.html" class="nav-item">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span class="brand-text">Dashboard</span>
+                </a>
+                <a href="Vehicle_Management_admin.html" class="nav-item">
+                    <i class="fa-solid fa-truck-front"></i>
+                    <span class="brand-text">Fleet Manager</span>
+                </a>
+                <a href="Driver_management_admin.html" class="nav-item">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span class="brand-text">Drivers</span>
+                </a>
+                <a href="Dispatch_Control_admin.html" class="nav-item">
+                    <i class="fa-solid fa-route"></i>
+                    <span class="brand-text">Dispatch Control</span>
+                </a>
+                <a href="#" class="nav-item active">
+                    <i class="fa-solid fa-file-shield"></i>
+                    <span class="brand-text">Insurance</span>
+                </a>
+                <a href="User_Approval_admin.html" class="nav-item">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span class="brand-text">User Approvals</span>
+                </a>
+
+                <div style="flex-grow: 1;"></div>
+
+                <a href="Setting_admin.html" class="nav-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span class="brand-text">Settings</span>
+                </a>
+                <a href="login.html" class="nav-item" style="color: var(--danger);" onclick="localStorage.removeItem('trufleet_token');localStorage.removeItem('trufleet_user');">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span class="brand-text">Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- MAIN -->
+        <main>
+            <header>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></button>
+                    <div class="page-title">Insurance Control</div>
+                </div>
+                <button class="action-btn" onclick="openDrawer()">
+                    <i class="fa-solid fa-plus"></i> Add Policy
+                </button>
+            </header>
+
+            <!-- 1. KPI STATS -->
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #EFF6FF; color: var(--accent);">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <span class="kpi-value" id="statCoverage">--</span>
+                    <span class="kpi-label">Fleet Coverage</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #FEF2F2; color: var(--danger);">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <span class="kpi-value" id="statExpired">--</span>
+                    <span class="kpi-label">Expired / Uninsured</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #FFFBEB; color: var(--warning);">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <span class="kpi-value" id="stat7Days">--</span>
+                    <span class="kpi-label">Expiring in 7 Days</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #F0FDF4; color: var(--success);">
+                        <i class="fa-solid fa-indian-rupee-sign"></i>
+                    </div>
+                    <span class="kpi-value" id="statPremium">--</span>
+                    <span class="kpi-label">Premium Value</span>
+                </div>
+            </div>
+
+            <!-- 2. URGENCY & TRENDS -->
+            <div class="alert-section">
+                
+                <!-- URGENT RENEWALS -->
+                <div class="card-container">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fa-solid fa-bell" style="color: var(--danger);"></i>
+                            Immediate Attention Required
+                        </div>
+                        <a href="#" style="color: var(--accent); font-size: 0.9rem; font-weight: 500;">View All Risks</a>
+                    </div>
+
+                    <div id="urgentContainer">
+                        <p style="text-align:center;padding:1.5rem;color:#94A3B8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading alerts...</p>
+                    </div>
+
+                </div>
+
+                <!-- COVERAGE CHART -->
+                <div class="card-container">
+                    <div class="section-header">
+                        <div class="section-title">Renewal Trends</div>
+                    </div>
+                    <div id="coverageChart"></div>
+                </div>
+            </div>
+
+            <!-- 3. ALL POLICIES TABLE -->
+            <div class="table-wrapper">
+                <div class="table-card">
+                    <div style="padding: 1.5rem; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+                        <span class="section-title">Master Policy Registry</span>
+                        <div style="position: relative;">
+                            <i class="fa-solid fa-search" style="position: absolute; left: 10px; top: 10px; color: #94A3B8;"></i>
+                            <input type="text" placeholder="Search Policy or VIN" style="padding: 8px 10px 8px 35px; border: 1px solid #E2E8F0; border-radius: 6px; font-family: 'Inter';">
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Vehicle Info</th>
+                                <th>Provider</th>
+                                <th>Policy Number</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="policyTableBody">
+                            <tr><td colspan="6" style="text-align:center;padding:2rem;color:#94A3B8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading policies...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- RENEWAL DRAWER -->
+    <div class="drawer-overlay" id="drawerOverlay">
+        <div class="drawer">
+            <div class="drawer-header">
+                <h3 style="font-family: 'Outfit'; color: var(--primary);">Update Policy Details</h3>
+                <button onclick="closeDrawer()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="drawer-body">
+                <form id="renewalForm" onsubmit="handleRenewal(event)">
+                    <div class="form-group">
+                        <label class="form-label">Vehicle ID / Reg No</label>
+                        <input type="text" class="form-input" id="vehicleIdInput" value="KA 01 EQ 9921" readonly style="background: #F1F5F9;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Insurance Provider</label>
+                        <select class="form-input">
+                            <option>HDFC Ergo</option>
+                            <option>ICICI Lombard</option>
+                            <option>Acko General</option>
+                            <option>Digit</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">New Policy Number</label>
+                        <input type="text" class="form-input" placeholder="Enter Policy No">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Valid From</label>
+                        <input type="date" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Valid Until</label>
+                        <input type="date" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Upload Policy Document (PDF)</label>
+                        <div class="upload-box" onclick="document.getElementById('fileUp').click()">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.5rem; color: var(--accent); margin-bottom: 10px;"></i>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">Click to upload new policy</p>
+                            <input type="file" id="fileUp" hidden>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="action-btn" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                        Confirm Renewal
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TOKEN = localStorage.getItem('trufleet_token');
+        if (!TOKEN) { window.location.href = 'login.html'; }
+        const authHeaders = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
+
+        // ── SIDEBAR TOGGLE ──────────────────────────────────────────
+        const appContainer = document.getElementById('appContainer');
+        const sidebar = document.getElementById('sidebar');
+        function toggleSidebar() {
+            if (window.innerWidth <= 768) { appContainer.classList.toggle('mobile-open'); }
+            else { appContainer.classList.toggle('collapsed'); }
+        }
+        sidebar.addEventListener('mouseenter', () => {
+            if (window.innerWidth > 768 && appContainer.classList.contains('collapsed')) {
+                appContainer.classList.remove('collapsed');
+                sidebar.dataset.autoExpanded = 'true';
+            }
+        });
+        sidebar.addEventListener('mouseleave', () => {
+            if (window.innerWidth > 768 && sidebar.dataset.autoExpanded === 'true') {
+                appContainer.classList.add('collapsed');
+                sidebar.dataset.autoExpanded = 'false';
+            }
+        });
+
+        // ─── DRAWER ─────────────────────────────────────────────────
+        function openDrawer(vehicleReg) {
+            document.getElementById('drawerOverlay').classList.add('open');
+            if (vehicleReg) document.getElementById('vehicleIdInput').value = vehicleReg;
+        }
+        function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); }
+        document.getElementById('drawerOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeDrawer();
+        });
+
+        // ─── HELPERS ────────────────────────────────────────────────
+        function daysLeft(expiry) {
+            return Math.ceil((new Date(expiry) - new Date()) / 86400000);
+        }
+        function pillHtml(days) {
+            if (days < 0)  return '<span class="status-pill" style="background:#FEF2F2;color:#DC2626">Expired</span>';
+            if (days <= 7) return '<span class="status-pill" style="background:#FEF2F2;color:#DC2626">Critical</span>';
+            if (days <= 30) return '<span class="status-pill st-warning">Expiring Soon</span>';
+            return '<span class="status-pill st-active">Active</span>';
+        }
+        function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) : '—'; }
+
+        // ─── LOAD KPI STATS ─────────────────────────────────────────
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/insurance/stats', { headers: authHeaders });
+                if (!res.ok) return;
+                const s = await res.json();
+                const total = (s.total || 1);
+                const covered = total - (s.expired || 0);
+                document.getElementById('statCoverage').textContent = ((covered/total)*100).toFixed(1) + '%';
+                document.getElementById('statExpired').textContent = String(s.expired || 0).padStart(2,'0');
+                document.getElementById('stat7Days').textContent = String(s.expiring7 || 0).padStart(2,'0');
+                document.getElementById('statPremium').textContent = s.totalPremium
+                    ? '₹ ' + (s.totalPremium/1000000).toFixed(1) + 'M' : '—';
+            } catch {}
+        }
+
+        // ─── LOAD URGENT ITEMS ──────────────────────────────────────
+        async function loadUrgent() {
+            const box = document.getElementById('urgentContainer');
+            try {
+                const res = await fetch('/api/insurance/urgent', { headers: authHeaders });
+                if (!res.ok) throw new Error();
+                const items = await res.json();
+                if (!items.length) {
+                    box.innerHTML = '<p style="text-align:center;padding:1.5rem;color:var(--success);"><i class="fa-solid fa-circle-check"></i> No urgent renewals</p>';
+                    return;
+                }
+                box.innerHTML = items.map(p => {
+                    const days = daysLeft(p.expiry_date);
+                    const expired = days < 0;
+                    return `
+                    <div class="urgent-item" style="${expired?'border-color:#EF4444;background:#FEF2F2;':''}">
+                        <div class="urgent-info">
+                            <div class="days-badge" style="${expired?'background:#EF4444;color:white;':''}">
+                                <span>${expired ? 'EXP' : String(days).padStart(2,'0')}</span>
+                                <small>${expired ? '! ! !' : 'Days'}</small>
+                            </div>
+                            <div class="vehicle-meta">
+                                <h4>${p.vehicle_reg || p.vehicle_id} • ${p.provider || '—'}</h4>
+                                <p style="${expired?'color:#DC2626;font-weight:600;':''}">Policy #${p.policy_number || '—'}</p>
+                            </div>
+                        </div>
+                        <button class="renew-btn" style="${expired?'background:#DC2626;':''}" onclick="openDrawer('${p.vehicle_reg || ''}')">Renew Now</button>
+                    </div>`;
+                }).join('');
+            } catch {
+                box.innerHTML = '<p style="text-align:center;padding:1rem;color:var(--danger);">Failed to load alerts.</p>';
+            }
+        }
+
+        // ─── LOAD POLICY TABLE ──────────────────────────────────────
+        async function loadPolicies() {
+            const tbody = document.getElementById('policyTableBody');
+            try {
+                const res = await fetch('/api/insurance', { headers: authHeaders });
+                if (!res.ok) throw new Error();
+                const policies = await res.json();
+                if (!policies.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#94A3B8;">No policies found.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = policies.map(p => {
+                    const days = daysLeft(p.expiry_date);
+                    return `
+                    <tr>
+                        <td><strong>${p.vehicle_reg || '—'}</strong><br><span style="color:#64748B;font-size:0.8rem;">${p.vehicle_name || ''}</span></td>
+                        <td><div style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-building-columns" style="color:#2563EB;"></i>${p.provider || '—'}</div></td>
+                        <td>${p.policy_number || '—'}</td>
+                        <td>${fmtDate(p.expiry_date)}</td>
+                        <td>${pillHtml(days)}</td>
+                        <td><button style="background:none;border:none;cursor:pointer;color:#94A3B8;" onclick="openDrawer('${p.vehicle_reg||''}', ${p.id})"><i class="fa-solid fa-pen"></i></button></td>
+                    </tr>`;
+                }).join('');
+            } catch {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--danger);">Failed to load policies.</td></tr>';
+            }
+        }
+
+        // ─── FORM SUBMIT (ADD / UPDATE POLICY) ──────────────────────
+        async function handleRenewal(e) {
+            e.preventDefault();
+            const form = e.target;
+            const inputs = form.querySelectorAll('input, select');
+            const vehicleReg = inputs[0]?.value;
+            const provider   = inputs[1]?.value;
+            const policyNo   = inputs[2]?.value;
+            const startDate  = inputs[3]?.value;
+            const expiryDate = inputs[4]?.value;
+            const btn = form.querySelector('button[type="submit"]');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/insurance', {
+                    method: 'POST',
+                    headers: authHeaders,
+                    body: JSON.stringify({ vehicle_reg: vehicleReg, provider, policy_number: policyNo, start_date: startDate, expiry_date: expiryDate })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Failed');
+                closeDrawer();
+                form.reset();
+                await Promise.all([loadStats(), loadUrgent(), loadPolicies()]);
+            } catch (err) {
+                alert(err.message || 'Failed to save policy.');
+            } finally {
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            }
+        }
+
+        // ─── CHART (fetched data, falls back to empty) ───────────────
+        async function renderChart() {
+            let seriesData = [0,0,0,0,0,0,0];
+            let categories = ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
+            try {
+                const res = await fetch('/api/insurance/upcoming?limit=50', { headers: authHeaders });
+                if (res.ok) {
+                    const rows = await res.json();
+                    const counts = {};
+                    rows.forEach(p => {
+                        const m = new Date(p.expiry_date).toLocaleString('en', {month:'short'});
+                        counts[m] = (counts[m] || 0) + 1;
+                    });
+                    categories = Object.keys(counts);
+                    seriesData = Object.values(counts);
+                }
+            } catch {}
+            new ApexCharts(document.querySelector('#coverageChart'), {
+                series: [{ name: 'Renewals', data: seriesData }],
+                chart: { height: 250, type: 'bar', toolbar: { show: false }, fontFamily: 'Inter' },
+                colors: ['#2563EB'],
+                plotOptions: { bar: { borderRadius: 4, columnWidth: '45%' } },
+                dataLabels: { enabled: false },
+                xaxis: { categories, axisBorder: { show: false }, axisTicks: { show: false } },
+                grid: { borderColor: '#F1F5F9', strokeDashArray: 4 },
+                noData: { text: 'No renewal data', style: { color: '#94A3B8' } }
+            }).render();
+        }
+
+        // ─── INIT ────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadUrgent();
+            loadPolicies();
+            renderChart();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Control | Trufleet Admin</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
+    
+    <!-- FONTS & ICONS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* 
+         * DESIGN SYSTEM: "SECURITY-CLEAR"
+         */
+        :root {
+            --primary: #0F172A;
+            --accent: #2563EB;
+            --accent-soft: #EFF6FF;
+            --bg-body: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --text-main: #334155;
+            --text-muted: #64748B;
+            
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --header-height: 80px;
+            
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            --radius-xl: 20px;
+            --radius-md: 12px;
+            
+            --anim-speed: 0.4s;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .app-layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            min-height: 100vh;
+            transition: grid-template-columns 0.4s ease;
+        }
+        .app-layout.collapsed { grid-template-columns: var(--sidebar-collapsed) 1fr; }
+        .app-layout.collapsed .brand-text { opacity: 0; display: none; }
+
+        /* SIDEBAR */
+        aside {
+            background: #FFFFFF;
+            border-right: 1px solid #E2E8F0;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 50;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 1rem 2.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: 0.3s;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: #EFF6FF;
+            color: var(--accent);
+        }
+
+        .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+        .brand-text { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1rem; }
+
+        /* MAIN CONTENT */
+        main {
+            padding: 0;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .toggle-btn:hover { background: #EFF6FF; color: var(--accent); }
+
+        header {
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #E2E8F0;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+
+        .page-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .page-header p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* TABS */
+        .tabs-container {
+            padding: 2rem 2rem 0;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding-bottom: 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active { color: var(--accent); }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; width: 100%; height: 2px;
+            background: var(--accent);
+        }
+
+        .badge-count {
+            background: var(--danger);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* CARD GRID (PENDING) */
+        .content-area { padding: 2rem; }
+
+        .request-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .user-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            border: 1px solid #F1F5F9;
+            box-shadow: var(--shadow-card);
+            transition: var(--anim-speed);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .role-badge {
+            position: absolute;
+            top: 1.5rem; right: 1.5rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .role-admin { background: #F3E8FF; color: #9333EA; }
+        .role-manager { background: #DBEAFE; color: #2563EB; }
+        .role-driver { background: #FFEDD5; color: #EA580C; }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .user-avatar {
+            width: 64px; height: 64px;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 2px solid #F1F5F9;
+        }
+
+        .user-meta h3 {
+            font-family: 'Outfit';
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .user-meta p { font-size: 0.9rem; color: var(--text-muted); }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #F8FAFC;
+        }
+
+        .info-label { font-size: 0.8rem; color: var(--text-muted); }
+        .info-val { font-size: 0.9rem; font-weight: 500; color: var(--text-main); }
+
+        .ai-score {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            background: #F0FDF4;
+            color: #166534;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .action-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: auto;
+        }
+
+        .btn-reject {
+            background: white;
+            border: 1px solid #E2E8F0;
+            color: var(--text-muted);
+            padding: 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-reject:hover { border-color: var(--danger); color: var(--danger); }
+
+        .btn-approve {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+        }
+        .btn-approve:hover { background: #1E293B; transform: translateY(-2px); }
+
+        /* LOGS TABLE (Initially Hidden) */
+        .logs-container {
+            display: none;
+            background: white;
+            border-radius: var(--radius-xl);
+            border: 1px solid #E2E8F0;
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+            animation: fadeIn 0.4s ease;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1.2rem; background: #F8FAFC; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; }
+        td { padding: 1.2rem; border-bottom: 1px solid #F1F5F9; color: var(--text-main); font-size: 0.95rem; }
+        
+        .status-pill {
+            padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+        }
+        .st-approved { background: #ECFDF5; color: #059669; }
+        .st-rejected { background: #FEF2F2; color: #DC2626; }
+
+        /* TOAST */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--primary); color: white;
+            padding: 15px 25px; border-radius: 12px;
+            display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transform: translateY(100px); opacity: 0;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleOut { to { transform: scale(0.9); opacity: 0; } }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .app-layout { grid-template-columns: 1fr; }
+            .app-layout aside { position: fixed; left: -280px; top: 0; height: 100%; transition: 0.3s; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+            .app-layout.mobile-open aside { left: 0; }
+            .brand-text { display: block !important; opacity: 1 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-layout" id="appContainer">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <a href="#" class="brand-logo">
+                <i class="fa-solid fa-cube" style="color: var(--accent);"></i>
+                <span class="brand-text">Trufleet</span>
+            </a>
+            <nav class="nav-menu">
+                <a href="Dasboard_admin.html" class="nav-item">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span class="brand-text">Dashboard</span>
+                </a>
+                <a href="Vehicle_Management_admin.html" class="nav-item">
+                    <i class="fa-solid fa-truck-front"></i>
+                    <span class="brand-text">Fleet Manager</span>
+                </a>
+                <a href="Driver_management_admin.html" class="nav-item">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span class="brand-text">Drivers</span>
+                </a>
+                <a href="Dispatch_Control_admin.html" class="nav-item">
+                    <i class="fa-solid fa-route"></i>
+                    <span class="brand-text">Dispatch Control</span>
+                </a>
+                <a href="Insurance_admin.html" class="nav-item">
+                    <i class="fa-solid fa-file-shield"></i>
+                    <span class="brand-text">Insurance</span>
+                </a>
+                <a href="#" class="nav-item active">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span class="brand-text">User Approvals</span>
+                </a>
+
+                <div style="flex-grow: 1;"></div>
+
+                <a href="Setting_admin.html" class="nav-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span class="brand-text">Settings</span>
+                </a>
+                <a href="login.html" class="nav-item" style="color: var(--danger);" onclick="localStorage.removeItem('trufleet_token');localStorage.removeItem('trufleet_user');">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span class="brand-text">Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- MAIN -->
+        <main>
+            <header>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></button>
+                    <div class="page-header">
+                        <h1>Identity Verification</h1>
+                        <p>Manage access requests and security clearances.</p>
+                    </div>
+                </div>
+                
+                <div style="font-size: 0.9rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-shield-halved" style="color: var(--success);"></i> System Secure
+                </div>
+            </header>
+
+            <div class="tabs-container">
+                <button class="tab-btn active" onclick="switchTab('pending')">
+                    Pending Requests <span class="badge-count" id="pendingCount">...</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('logs')">
+                    Access Logs
+                </button>
+            </div>
+
+            <div class="content-area">
+                
+                <!-- PENDING VIEW -->
+                <div class="request-grid" id="pendingView">
+                    <div id="pendingGridContent" style="display:contents;"></div>
+                </div>
+
+                <!-- LOGS VIEW -->
+                <div class="logs-container" id="logsView">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Date Processed</th>
+                                <th>Processed By</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr><td colspan="5" style="text-align:center;padding:1.5rem;color:#94A3B8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast" id="toast">
+        <i class="fa-solid fa-circle-check" style="font-size: 1.2rem;"></i>
+        <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 600; font-size: 0.9rem;" id="toastTitle">Success</span>
+            <span style="font-size: 0.8rem; opacity: 0.9;" id="toastMsg">Action completed.</span>
+        </div>
+    </div>
+
+    <script>
+        // ── AUTH GUARD ─────────────────────────────────────────────
+        const token = localStorage.getItem('trufleet_token');
+        if (!token) window.location.href = 'login.html';
+
+        const authHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+
+        // ── SIDEBAR TOGGLE ──────────────────────────────────────────
+        const appContainer = document.getElementById('appContainer');
+        const sidebar = document.getElementById('sidebar');
+        function toggleSidebar() {
+            if (window.innerWidth <= 768) { appContainer.classList.toggle('mobile-open'); }
+            else { appContainer.classList.toggle('collapsed'); }
+        }
+        sidebar.addEventListener('mouseenter', () => {
+            if (window.innerWidth > 768 && appContainer.classList.contains('collapsed')) {
+                appContainer.classList.remove('collapsed');
+                sidebar.dataset.autoExpanded = 'true';
+            }
+        });
+        sidebar.addEventListener('mouseleave', () => {
+            if (window.innerWidth > 768 && sidebar.dataset.autoExpanded === 'true') {
+                appContainer.classList.add('collapsed');
+                sidebar.dataset.autoExpanded = 'false';
+            }
+        });
+
+        // ── API HELPER ──────────────────────────────────────────────
+        async function apiFetch(url, method = 'GET', body = null) {
+            const opts = { method, headers: authHeaders };
+            if (body) opts.body = JSON.stringify(body);
+            const res = await fetch(url, opts);
+            if (res.status === 401 || res.status === 403) window.location.href = 'login.html';
+            return res.json();
+        }
+
+        // ── RENDER PENDING USER CARDS ───────────────────────────────
+        function roleBadgeClass(role) {
+            return role === 'admin' ? 'role-admin' : role === 'manager' ? 'role-manager' : 'role-driver';
+        }
+
+        function buildCard(u) {
+            const initials = (u.full_name || u.email).substring(0, 2).toUpperCase();
+            const avatarUrl = u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name || u.email)}&background=EFF6FF&color=2563EB&bold=true`;
+            const appliedOn = new Date(u.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+
+            return `
+            <div class="user-card" id="card-${u.id}">
+                <span class="role-badge ${roleBadgeClass(u.role)}">${u.role.charAt(0).toUpperCase() + u.role.slice(1)}</span>
+                <div class="user-header">
+                    <img src="${avatarUrl}" class="user-avatar" alt="Profile" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.email)}&background=EFF6FF&color=2563EB'">
+                    <div class="user-meta">
+                        <h3>${u.full_name || u.email.split('@')[0]}</h3>
+                        <p>${u.email}</p>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Company</span>
+                    <span class="info-val">${u.company_name || '—'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Applied On</span>
+                    <span class="info-val">${appliedOn}</span>
+                </div>
+                <div class="ai-score">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span><strong>System Check:</strong> Registration request received.</span>
+                </div>
+                <div class="action-group">
+                    <button class="btn-reject" onclick="handleDecision('${u.id}', 'reject', '${u.full_name || u.email}')">Reject</button>
+                    <button class="btn-approve" onclick="handleDecision('${u.id}', 'approve', '${u.full_name || u.email}')">Approve Access</button>
+                </div>
+            </div>`;
+        }
+
+        // ── LOAD PENDING USERS ──────────────────────────────────────
+        async function loadPending() {
+            const users = await apiFetch('/api/users/pending');
+            const container = document.getElementById('pendingGridContent');
+            const badge = document.getElementById('pendingCount');
+
+            badge.textContent = users.length;
+
+            if (users.length === 0) {
+                container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:4rem;color:#94A3B8;">
+                    <i class="fa-solid fa-check-circle" style="font-size:3rem;margin-bottom:1rem;color:#10B981;display:block;"></i>
+                    All requests have been processed. No pending approvals.
+                </div>`;
+                return;
+            }
+            container.innerHTML = users.map(buildCard).join('');
+        }
+
+        // ── LOAD ACCESS LOGS (APPROVED USERS) ──────────────────────
+        async function loadLogs() {
+            const users = await apiFetch('/api/users/approved');
+            const tbody = document.getElementById('logsTableBody');
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:#94A3B8;">No approved users yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = users.map(u => {
+                const date = new Date(u.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+                return `<tr>
+                    <td>
+                        <strong>${u.full_name || u.email.split('@')[0]}</strong><br>
+                        <span style="color:#64748B;font-size:0.8rem;">${u.email}</span>
+                    </td>
+                    <td>${u.role.charAt(0).toUpperCase() + u.role.slice(1)}</td>
+                    <td>${date}</td>
+                    <td>${u.company_name || '—'}</td>
+                    <td><span class="status-pill st-approved">Approved</span></td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ── TAB SWITCHING ────────────────────────────────────────────
+        function switchTab(tab) {
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const pending = document.getElementById('pendingView');
+            const logs    = document.getElementById('logsView');
+
+            if (tab === 'pending') {
+                pending.style.display = 'grid';
+                logs.style.display    = 'none';
+            } else {
+                pending.style.display = 'none';
+                logs.style.display    = 'block';
+                loadLogs();
+            }
+        }
+
+        // ── APPROVE / REJECT ─────────────────────────────────────────
+        async function handleDecision(userId, action, userName) {
+            const card   = document.getElementById(`card-${userId}`);
+            const appBtn = card.querySelector('.btn-approve');
+            const rejBtn = card.querySelector('.btn-reject');
+            const btn    = action === 'approve' ? appBtn : rejBtn;
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled  = true;
+            if (action === 'approve') rejBtn.disabled = true;
+            else appBtn.disabled = true;
+
+            try {
+                let res;
+                if (action === 'approve') {
+                    res = await fetch(`/api/users/approve/${userId}`, { method: 'PUT', headers: authHeaders });
+                } else {
+                    res = await fetch(`/api/users/reject/${userId}`, { method: 'DELETE', headers: authHeaders });
+                }
+
+                const data = await res.json();
+                if (!res.ok) { alert(data.error || 'Action failed.'); btn.innerHTML = originalText; btn.disabled = false; return; }
+
+                showToast(
+                    action === 'approve' ? 'Access Granted' : 'Request Rejected',
+                    `${userName} has been ${action === 'approve' ? 'approved' : 'rejected'}.`
+                );
+
+                card.style.animation = 'scaleOut 0.4s forwards';
+                setTimeout(() => {
+                    card.remove();
+                    const count = parseInt(document.getElementById('pendingCount').textContent) - 1;
+                    document.getElementById('pendingCount').textContent = Math.max(count, 0);
+                    if (count <= 0) document.getElementById('pendingCount').style.display = 'none';
+                }, 400);
+
+            } catch (err) {
+                btn.innerHTML = originalText;
+                btn.disabled  = false;
+                alert('Network error.');
+            }
+        }
+
+        // ── TOAST ────────────────────────────────────────────────────
+        function showToast(title, msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMsg').innerText   = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ── INIT ─────────────────────────────────────────────────────
+        loadPending();
+    </script>
+</body>
+</html>

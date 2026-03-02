@@ -1,0 +1,537 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trufleet | Confidence in Every Mile</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary:     #0A0F1E;
+            --accent:      #2563EB;
+            --accent-warm: #F59E0B;
+            --text-main:   #1E293B;
+            --text-light:  #64748B;
+            --bg-pure:     #FFFFFF;
+            --bg-off:      #F8FAFC;
+            --border:      #E2E8F0;
+            --shadow-xl:   0 24px 48px -12px rgba(0,0,0,0.18);
+            --radius-card: 20px;
+            --container:   1320px;
+        }
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-pure); color: var(--text-main); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        h1,h2,h3,h4 { font-family: 'Outfit', sans-serif; line-height: 1.15; }
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        /* NAVBAR */
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: 1.5rem 5%; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+        }
+        .navbar.scrolled {
+            padding: 1rem 5%;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(226,232,240,0.8);
+            box-shadow: 0 1px 20px rgba(0,0,0,0.06);
+        }
+        .brand {
+            font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.75rem;
+            letter-spacing: -0.5px; color: #fff;
+            display: flex; align-items: center; gap: 10px; transition: color 0.4s;
+        }
+        .navbar.scrolled .brand { color: var(--primary); }
+        .brand-icon {
+            width: 36px; height: 36px; background: var(--accent); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1rem; flex-shrink: 0;
+        }
+        .nav-links { display: flex; gap: 2.5rem; align-items: center; }
+        .nav-links a { font-size: 0.9rem; font-weight: 500; color: rgba(255,255,255,0.85); transition: color 0.3s; }
+        .navbar.scrolled .nav-links a { color: var(--text-light); }
+        .nav-links a:hover { color: var(--accent) !important; }
+        .nav-actions { display: flex; gap: 1rem; align-items: center; }
+        .btn {
+            padding: 0.7rem 1.75rem; border-radius: 50px; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; border: none; transition: all 0.25s ease;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-ghost { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); }
+        .navbar.scrolled .btn-ghost { color: var(--text-main); background: transparent; border-color: var(--border); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.2); }
+        .navbar.scrolled .btn-ghost:hover { background: var(--bg-off); }
+        .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 20px rgba(37,99,235,0.4); }
+        .btn-primary:hover { background: #1D4ED8; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(37,99,235,0.5); }
+
+        /* HERO - PURE VIDEO */
+        .hero { position: relative; height: 100vh; width: 100%; overflow: hidden; background: #0a0f1e; }
+        .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+        .hero-vignette {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom,
+                rgba(10,15,30,0.3) 0%,
+                rgba(10,15,30,0.0) 35%,
+                rgba(10,15,30,0.0) 60%,
+                rgba(255,255,255,1) 100%);
+            z-index: 1;
+        }
+        .scroll-hint {
+            position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+            z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px;
+            color: rgba(255,255,255,0.7); font-size: 0.75rem; font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase;
+            animation: fadeInUp 1s ease 1.5s both;
+        }
+        .scroll-mouse { width: 24px; height: 38px; border: 2px solid rgba(255,255,255,0.5); border-radius: 12px; display: flex; justify-content: center; padding-top: 6px; }
+        .scroll-wheel { width: 3px; height: 8px; background: rgba(255,255,255,0.8); border-radius: 2px; animation: scrollWheel 1.8s ease infinite; }
+
+        /* TAGLINE SECTION */
+        .tagline-section { padding: 9rem 5% 7rem; background: var(--bg-pure); overflow: hidden; }
+        .tagline-wrap { max-width: var(--container); margin: 0 auto; }
+        .tagline-eyebrow {
+            display: flex; align-items: center; gap: 12px;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+            color: var(--accent); margin-bottom: 2rem;
+            opacity: 0; transform: translateX(60px);
+            transition: all 0.8s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .tagline-eyebrow.active { opacity: 1; transform: translateX(0); }
+        .tagline-eyebrow::before { content: ''; display: inline-block; width: 32px; height: 2px; background: var(--accent); }
+        .swing-line { display: flex; flex-wrap: wrap; gap: 0 1.5rem; line-height: 1; margin-bottom: 0.4rem; }
+        .swing-word {
+            font-family: 'Outfit', sans-serif; font-weight: 800;
+            font-size: clamp(3.5rem, 7vw, 7.5rem); color: var(--primary);
+            display: inline-block; opacity: 0;
+            transform: translateX(100px) rotate(6deg);
+            transform-origin: left center;
+            transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.34,1.4,0.64,1);
+            letter-spacing: -3px;
+        }
+        .swing-word.accent-word { color: var(--accent); }
+        .swing-word.active { opacity: 1; transform: translateX(0) rotate(0deg); }
+        .tagline-sub {
+            margin-top: 3rem; display: grid; grid-template-columns: 1fr 1fr;
+            gap: 3rem; align-items: start; padding-top: 3rem; border-top: 1px solid var(--border);
+        }
+        .tagline-desc {
+            font-size: 1.15rem; color: var(--text-light); line-height: 1.8;
+            opacity: 0; transform: translateY(24px); transition: all 0.8s ease 0.3s;
+        }
+        .tagline-desc.active { opacity: 1; transform: translateY(0); }
+        .tagline-actions {
+            display: flex; gap: 1rem; align-items: center; justify-content: flex-end;
+            opacity: 0; transform: translateY(24px); transition: all 0.8s ease 0.5s;
+        }
+        .tagline-actions.active { opacity: 1; transform: translateY(0); }
+        .btn-lg {
+            padding: 1rem 2.5rem; font-size: 1rem; border-radius: 50px; font-weight: 600;
+            cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 10px;
+            transition: all 0.25s ease; font-family: 'Inter', sans-serif;
+        }
+        .btn-lg.primary { background: var(--accent); color: white; box-shadow: 0 6px 24px rgba(37,99,235,0.35); }
+        .btn-lg.primary:hover { background: #1D4ED8; transform: translateY(-3px); box-shadow: 0 10px 32px rgba(37,99,235,0.45); }
+        .btn-lg.outline { background: transparent; color: var(--primary); border: 2px solid var(--border); }
+        .btn-lg.outline:hover { border-color: var(--accent); color: var(--accent); background: #EFF6FF; }
+
+        /* ZOOM SECTION */
+        .zoom-section { padding: 0 5% 8rem; background: var(--bg-pure); }
+        .zoom-card {
+            max-width: var(--container); margin: 0 auto;
+            background: var(--primary); border-radius: 32px; overflow: hidden; position: relative;
+            opacity: 0; transform: scale(0.88);
+            transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.34,1.2,0.64,1);
+        }
+        .zoom-card.active { opacity: 1; transform: scale(1); }
+        .zoom-card-inner { padding: 6rem 5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+        .zoom-label {
+            font-size: 0.75rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+            color: var(--accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;
+        }
+        .zoom-label::before { content: ''; width: 24px; height: 2px; background: var(--accent); }
+        .zoom-heading { font-size: clamp(2.2rem,3.5vw,3.2rem); font-weight: 800; color: #fff; letter-spacing: -1px; margin-bottom: 1.5rem; }
+        .zoom-heading span { color: var(--accent-warm); }
+        .zoom-desc { font-size: 1.05rem; color: rgba(255,255,255,0.6); line-height: 1.8; }
+        .zoom-pills { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
+        .pill { padding: 0.5rem 1.25rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .pill-blue  { background: rgba(37,99,235,0.2);   color: #93C5FD; }
+        .pill-warm  { background: rgba(245,158,11,0.15); color: #FCD34D; }
+        .pill-green { background: rgba(16,185,129,0.15); color: #6EE7B7; }
+        .zoom-right { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+        .metric-box { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.75rem 1.5rem; transition: background 0.3s; }
+        .metric-box:hover { background: rgba(255,255,255,0.09); }
+        .metric-box:first-child { grid-column: span 2; display: flex; align-items: center; gap: 2rem; }
+        .metric-val { font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; color: #fff; line-height: 1; }
+        .metric-val-sm { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; }
+        .metric-val span, .metric-val-sm span { color: var(--accent-warm); }
+        .metric-label { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 0.35rem; }
+        .metric-icon { font-size: 2rem; color: var(--accent); }
+        .zoom-card::before { content: ''; position: absolute; top: -80px; right: -80px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%); pointer-events: none; }
+        .zoom-card::after { content: ''; position: absolute; bottom: -60px; left: 200px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%); pointer-events: none; }
+
+        /* FEATURES */
+        .features-section { padding: 8rem 5%; background: var(--bg-off); }
+        .section-header { text-align: center; max-width: 680px; margin: 0 auto 5rem; }
+        .tag { display: inline-block; padding: 0.4rem 1.2rem; background: #EFF6FF; color: var(--accent); border-radius: 50px; font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 1.25rem; }
+        .section-title { font-size: clamp(2rem,3.5vw,3rem); font-weight: 800; color: var(--primary); letter-spacing: -1px; margin-bottom: 1rem; }
+        .section-desc { font-size: 1.05rem; color: var(--text-light); line-height: 1.8; }
+        .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; max-width: var(--container); margin: 0 auto; }
+        .feature-card {
+            background: white; border-radius: var(--radius-card); padding: 2.5rem 2rem;
+            border: 1px solid var(--border); transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            opacity: 0; transform: translateY(32px); cursor: default;
+        }
+        .feature-card.active { opacity: 1; transform: translateY(0); }
+        .feature-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-xl); border-color: transparent; }
+        .feature-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1.5rem; transition: all 0.3s; }
+        .feature-card:hover .feature-icon { transform: scale(1.1) rotate(-5deg); }
+        .fi-blue   { background: #EFF6FF; color: var(--accent); }
+        .fi-green  { background: #F0FDF4; color: #10B981; }
+        .fi-amber  { background: #FFFBEB; color: #F59E0B; }
+        .fi-red    { background: #FEF2F2; color: #EF4444; }
+        .fi-purple { background: #F5F3FF; color: #8B5CF6; }
+        .fi-teal   { background: #F0FDFA; color: #14B8A6; }
+        .feature-title { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 0.75rem; }
+        .feature-text  { font-size: 0.95rem; color: var(--text-light); line-height: 1.7; }
+
+        /* STATS BELT */
+        .stats-belt { padding: 5rem 5%; background: var(--bg-pure); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .stats-inner { max-width: var(--container); margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 0; }
+        .stat-item { text-align: center; padding: 2rem; border-right: 1px solid var(--border); opacity: 0; transform: translateY(24px); transition: all 0.7s ease; }
+        .stat-item:last-child { border-right: none; }
+        .stat-item.active { opacity: 1; transform: translateY(0); }
+        .stat-num { font-family: 'Outfit', sans-serif; font-size: clamp(2.5rem,4vw,4rem); font-weight: 800; color: var(--primary); line-height: 1; margin-bottom: 0.5rem; display: block; }
+        .stat-num-accent { color: var(--accent); }
+        .stat-label { font-size: 0.9rem; color: var(--text-light); font-weight: 500; }
+
+        /* CTA */
+        .cta-section { padding: 9rem 5%; background: var(--bg-off); text-align: center; }
+        .cta-inner { max-width: 800px; margin: 0 auto; opacity: 0; transform: translateY(32px); transition: all 0.9s ease; }
+        .cta-inner.active { opacity: 1; transform: translateY(0); }
+        .cta-title { font-size: clamp(2.5rem,5vw,4.5rem); font-weight: 800; color: var(--primary); letter-spacing: -2px; margin-bottom: 1.5rem; line-height: 1.1; }
+        .cta-title span { color: var(--accent); }
+        .cta-sub { font-size: 1.1rem; color: var(--text-light); margin-bottom: 3rem; line-height: 1.7; }
+        .cta-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+        /* FOOTER */
+        footer { background: var(--primary); color: white; padding: 5rem 5% 2.5rem; }
+        .footer-top { max-width: var(--container); margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .footer-brand-name { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.6rem; color: white; display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
+        .footer-brand-desc { color: #64748B; font-size: 0.95rem; line-height: 1.75; max-width: 280px; margin-bottom: 2rem; }
+        .footer-social { display: flex; gap: 0.75rem; }
+        .social-btn { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: #94A3B8; font-size: 0.85rem; transition: all 0.2s; cursor: pointer; }
+        .social-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+        .footer-col h4 { color: white; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 1.5rem; }
+        .footer-col ul li { margin-bottom: 0.9rem; }
+        .footer-col ul a { color: #64748B; font-size: 0.9rem; transition: color 0.2s; }
+        .footer-col ul a:hover { color: white; }
+        .footer-bottom { max-width: var(--container); margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding-top: 2rem; color: #475569; font-size: 0.85rem; }
+
+        /* KEYFRAMES */
+        @keyframes scrollWheel { 0% { transform: translateY(0); opacity: 1; } 80% { transform: translateY(12px); opacity: 0; } 100% { transform: translateY(0); opacity: 0; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .features-grid { grid-template-columns: repeat(2,1fr); }
+            .stats-inner { grid-template-columns: repeat(2,1fr); }
+            .stat-item:nth-child(2) { border-right: none; }
+            .stat-item:nth-child(3) { border-right: 1px solid var(--border); }
+            .zoom-card-inner { grid-template-columns: 1fr; gap: 3rem; padding: 4rem 3rem; }
+            .zoom-right { grid-template-columns: repeat(3,1fr); }
+            .metric-box:first-child { grid-column: span 3; }
+            .tagline-sub { grid-template-columns: 1fr; }
+            .tagline-actions { justify-content: flex-start; }
+        }
+        @media (max-width: 768px) {
+            .features-grid { grid-template-columns: 1fr; }
+            .footer-top { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+            .stats-inner { grid-template-columns: 1fr 1fr; }
+            .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
+            .stat-item:last-child { border-bottom: none; }
+            .nav-links { display: none; }
+            .swing-word { font-size: clamp(2.5rem,10vw,4rem); letter-spacing: -1px; }
+            .zoom-card-inner { padding: 3rem 2rem; }
+            .zoom-right { grid-template-columns: 1fr 1fr; }
+            .metric-box:first-child { grid-column: span 2; }
+            .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <a href="#" class="brand">
+            <div class="brand-icon"><i class="fa-solid fa-truck-fast"></i></div>
+            Trufleet
+        </a>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#platform">Platform</a>
+            <a href="#company">Company</a>
+        </div>
+        <div class="nav-actions">
+            <a href="login.html" class="btn btn-ghost">Log In</a>
+            <a href="signup.html" class="btn btn-primary"><i class="fa-solid fa-arrow-right"></i> Get Started</a>
+        </div>
+    </nav>
+
+    <!-- HERO: PURE CINEMATIC VIDEO -->
+    <header class="hero">
+        <video class="hero-video" autoplay muted loop playsinline>
+            <source src="Trufleet.mp4" type="video/mp4">
+            <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop" alt="Fleet" style="width:100%;height:100%;object-fit:cover;">
+        </video>
+        <div class="hero-vignette"></div>
+        <div class="scroll-hint">
+            <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+            <span>Scroll</span>
+        </div>
+    </header>
+
+    <main>
+
+        <!-- TAGLINE: SWING-IN PER WORD -->
+        <section class="tagline-section" id="tagline">
+            <div class="tagline-wrap">
+                <p class="tagline-eyebrow" id="eyebrow">Fleet Intelligence Redefined</p>
+                <div class="swing-line">
+                    <span class="swing-word" data-delay="80">Confidence</span>
+                </div>
+                <div class="swing-line">
+                    <span class="swing-word accent-word" data-delay="210">in Every</span>
+                </div>
+                <div class="swing-line">
+                    <span class="swing-word" data-delay="340">Mile.</span>
+                </div>
+                <div class="tagline-sub">
+                    <p class="tagline-desc" id="tagline-desc">
+                        Trufleet is the world&rsquo;s first AI-powered logistics operating system &mdash; 
+                        engineered for enterprises that move at the speed of ambition. 
+                        From real-time dispatch to predictive risk intelligence, 
+                        every feature is built to transform how fleets operate.
+                    </p>
+                    <div class="tagline-actions" id="tagline-actions">
+                        <a href="signup.html" class="btn-lg primary">
+                            Start Free Trial <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                        <a href="#features" class="btn-lg outline">
+                            See How It Works
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ZOOM SECTION: ZOOMS IN ON SCROLL -->
+        <section class="zoom-section">
+            <div class="zoom-card" id="zoomCard">
+                <div class="zoom-card-inner">
+                    <div class="zoom-left">
+                        <div class="zoom-label">Platform Overview</div>
+                        <h2 class="zoom-heading">The Operating System for <span>Modern Fleets</span></h2>
+                        <p class="zoom-desc">Purpose-built for fleet operators, logistics leaders, and enterprise teams who demand absolute clarity over every vehicle, every driver, every route &mdash; in real time.</p>
+                        <div class="zoom-pills">
+                            <span class="pill pill-blue"><i class="fa-solid fa-bolt"></i> Real-Time Dispatch</span>
+                            <span class="pill pill-warm"><i class="fa-solid fa-brain"></i> AI Predictive Routes</span>
+                            <span class="pill pill-green"><i class="fa-solid fa-shield-halved"></i> Risk Intelligence</span>
+                        </div>
+                    </div>
+                    <div class="zoom-right">
+                        <div class="metric-box">
+                            <div>
+                                <div class="metric-val">100<span>k+</span></div>
+                                <div class="metric-label">Active Vehicles Managed</div>
+                            </div>
+                            <div class="metric-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-val-sm">99.9<span>%</span></div>
+                            <div class="metric-label">Uptime SLA</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-val-sm">30<span>%</span></div>
+                            <div class="metric-label">Cost Reduction</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-val-sm">24<span>/7</span></div>
+                            <div class="metric-label">AI Monitoring</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-val-sm"><span>$</span>500M</div>
+                            <div class="metric-label">Fuel Costs Saved</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES -->
+        <section class="features-section" id="features">
+            <div class="section-header">
+                <span class="tag">What&rsquo;s Inside</span>
+                <h2 class="section-title">Every Tool Your Fleet Needs</h2>
+                <p class="section-desc">One platform that replaces five disconnected tools. Built for scale, designed for clarity.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card" data-delay="0">
+                    <div class="feature-icon fi-blue"><i class="fa-solid fa-gauge-high"></i></div>
+                    <h3 class="feature-title">Live Fleet Dashboard</h3>
+                    <p class="feature-text">A mission-control view of your entire fleet &mdash; vehicle status, driver locations, and KPIs updated in real time.</p>
+                </div>
+                <div class="feature-card" data-delay="100">
+                    <div class="feature-icon fi-green"><i class="fa-solid fa-route"></i></div>
+                    <h3 class="feature-title">Intelligent Dispatch</h3>
+                    <p class="feature-text">AI-optimized routing that accounts for traffic, load capacity, and driver availability. Approve trips in a single click.</p>
+                </div>
+                <div class="feature-card" data-delay="200">
+                    <div class="feature-icon fi-amber"><i class="fa-solid fa-id-card"></i></div>
+                    <h3 class="feature-title">Driver Management</h3>
+                    <p class="feature-text">Complete pilot profiles, safety scoring, license tracking, and onboarding &mdash; all in one streamlined roster.</p>
+                </div>
+                <div class="feature-card" data-delay="300">
+                    <div class="feature-icon fi-red"><i class="fa-solid fa-file-shield"></i></div>
+                    <h3 class="feature-title">Insurance Intelligence</h3>
+                    <p class="feature-text">Automated policy tracking, expiry alerts, and premium analytics. Never let a vehicle run uninsured again.</p>
+                </div>
+                <div class="feature-card" data-delay="400">
+                    <div class="feature-icon fi-purple"><i class="fa-solid fa-users-gear"></i></div>
+                    <h3 class="feature-title">Access &amp; Approvals</h3>
+                    <p class="feature-text">Role-based access control with real-time identity verification. Full audit trail on every permission change.</p>
+                </div>
+                <div class="feature-card" data-delay="500">
+                    <div class="feature-icon fi-teal"><i class="fa-solid fa-brain"></i></div>
+                    <h3 class="feature-title">Predictive Analytics</h3>
+                    <p class="feature-text">Neural-network models surface maintenance risks, fuel inefficiencies, and route anomalies before they become incidents.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- STATS BELT -->
+        <section class="stats-belt">
+            <div class="stats-inner">
+                <div class="stat-item" data-delay="0">
+                    <span class="stat-num"><span class="stat-num-accent">100</span>k+</span>
+                    <span class="stat-label">Active Vehicles</span>
+                </div>
+                <div class="stat-item" data-delay="100">
+                    <span class="stat-num">99.9<span class="stat-num-accent">%</span></span>
+                    <span class="stat-label">System Uptime</span>
+                </div>
+                <div class="stat-item" data-delay="200">
+                    <span class="stat-num"><span class="stat-num-accent">$500</span>M+</span>
+                    <span class="stat-label">Fuel Costs Saved</span>
+                </div>
+                <div class="stat-item" data-delay="300">
+                    <span class="stat-num">24<span class="stat-num-accent">/7</span></span>
+                    <span class="stat-label">AI Monitoring</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section">
+            <div class="cta-inner" id="ctaInner">
+                <span class="tag">Ready to Transform?</span>
+                <h2 class="cta-title">Your Fleet Deserves<br><span>Better Intelligence.</span></h2>
+                <p class="cta-sub">Join enterprise fleets already running on Trufleet. Set up in minutes, scale to thousands of vehicles.</p>
+                <div class="cta-actions">
+                    <a href="signup.html" class="btn-lg primary">Start Free Trial &nbsp;<i class="fa-solid fa-arrow-right"></i></a>
+                    <a href="login.html" class="btn-lg outline"><i class="fa-solid fa-right-to-bracket"></i>&nbsp; Log Into Portal</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-top">
+            <div>
+                <div class="footer-brand-name">
+                    <div class="brand-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                    Trufleet
+                </div>
+                <p class="footer-brand-desc">Empowering the world&rsquo;s most sophisticated logistics networks with intelligence, clarity, and speed.</p>
+                <div class="footer-social">
+                    <div class="social-btn"><i class="fa-brands fa-linkedin-in"></i></div>
+                    <div class="social-btn"><i class="fa-brands fa-x-twitter"></i></div>
+                    <div class="social-btn"><i class="fa-brands fa-github"></i></div>
+                </div>
+            </div>
+            <div class="footer-col" id="platform">
+                <h4>Platform</h4>
+                <ul>
+                    <li><a href="#">Fleet Admin</a></li>
+                    <li><a href="#">Driver App</a></li>
+                    <li><a href="#">Manager Portal</a></li>
+                    <li><a href="#">Dispatch Console</a></li>
+                </ul>
+            </div>
+            <div class="footer-col" id="company">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Security</a></li>
+                    <li><a href="#">Compliance</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>&copy; 2026 Trufleet Technologies Inc. All rights reserved.</span>
+            <span style="color: #334155;">Built for the Billion-Dollar Ambition.</span>
+        </div>
+    </footer>
+
+    <script>
+        // Navbar glassmorphism on scroll
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 60);
+        }, { passive: true });
+
+        // Universal scroll-driven animation observer
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                const delay = parseInt(entry.target.dataset.delay || 0);
+                setTimeout(() => entry.target.classList.add('active'), delay);
+                io.unobserve(entry.target);
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+        // Observe all animated elements
+        [
+            '#eyebrow',
+            '.swing-word',
+            '#tagline-desc',
+            '#tagline-actions',
+            '#zoomCard',
+            '.feature-card',
+            '.stat-item',
+            '#ctaInner'
+        ].forEach(sel => document.querySelectorAll(sel).forEach(el => io.observe(el)));
+    </script>
+
+</body>
+</html>

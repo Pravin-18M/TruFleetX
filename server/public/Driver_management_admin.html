@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleet Pilots | Trufleet Admin</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
+    
+    <!-- FONTS & ICONS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CHART ENGINE -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <style>
+        /* 
+         * DESIGN SYSTEM: "HUMAN-CENTRIC"
+         */
+        :root {
+            --primary: #0F172A;
+            --accent: #2563EB;
+            --accent-subtle: #DBEAFE;
+            --bg-body: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --text-main: #334155;
+            --text-muted: #64748B;
+            
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --header-height: 80px;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+            
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+            --radius-md: 8px;
+            
+            --transition-hover: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* LAYOUT ARCHITECTURE */
+        .app-layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            min-height: 100vh;
+            transition: grid-template-columns 0.4s ease;
+        }
+        .app-layout.collapsed { grid-template-columns: var(--sidebar-collapsed) 1fr; }
+        .app-layout.collapsed .brand-text { opacity: 0; display: none; }
+
+        /* SIDEBAR */
+        aside {
+            background: var(--bg-card);
+            border-right: 1px solid #E2E8F0;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 50;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 1rem 2.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: 0.3s;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: #EFF6FF;
+            color: var(--accent);
+        }
+
+        .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+        .brand-text { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1rem; }
+
+        /* MAIN AREA */
+        main { overflow-y: auto; height: 100vh; }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .toggle-btn:hover { background: #EFF6FF; color: var(--accent); }
+
+        /* HEADER */
+        header {
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #E2E8F0;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .page-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* FILTER BAR */
+        .filter-bar {
+            padding: 2rem 2rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 320px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 1px solid #E2E8F0;
+            border-radius: 50px;
+            background: white;
+            font-family: 'Inter', sans-serif;
+            transition: var(--transition-hover);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .btn-add {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-hover);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            background-color: #1E293B;
+        }
+
+        /* DRIVER GRID - THE "AURA" UI */
+        .grid-container {
+            padding: 0 2rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .driver-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            border: 1px solid #F1F5F9;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-hover);
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .driver-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: transparent;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .driver-avatar-wrapper {
+            position: relative;
+        }
+
+        .driver-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 2px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Pulsing Status Dot */
+        .status-dot {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: var(--success);
+            border: 2px solid white;
+            border-radius: 50%;
+        }
+
+        .status-dot.busy { background: var(--warning); }
+        .status-dot.offline { background: var(--text-muted); }
+
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            border-radius: 50%;
+            border: 2px solid var(--success);
+            opacity: 0.4;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.busy::after { border-color: var(--warning); }
+        .status-dot.offline::after { display: none; }
+
+        .rating-badge {
+            background: #FFFBEB;
+            color: #B45309;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .driver-info h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .driver-info p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid #F8FAFC;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* 
+         * SLIDE-OVER DRAWER (PROFILE)
+         */
+        .drawer-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.4s ease;
+        }
+
+        .drawer {
+            position: absolute;
+            top: 0; right: 0;
+            width: 500px;
+            height: 100%;
+            background: white;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-overlay.open { opacity: 1; visibility: visible; }
+        .drawer-overlay.open .drawer { transform: translateX(0); }
+
+        .profile-header {
+            padding: 2rem;
+            background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .profile-lg-img {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .profile-body {
+            padding: 2rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-box label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .info-box span {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .doc-card {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .doc-icon {
+            width: 40px; height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* ANIMATIONS */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .app-layout { grid-template-columns: 1fr; }
+            .app-layout aside { position: fixed; left: -280px; top: 0; height: 100%; transition: 0.3s; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+            .app-layout.mobile-open aside { left: 0; }
+            .brand-text { display: block !important; opacity: 1 !important; }
+            .grid-container { grid-template-columns: 1fr; }
+            .drawer { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-layout" id="appContainer">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <a href="#" class="brand-logo">
+                <i class="fa-solid fa-cube" style="color: var(--accent);"></i>
+                <span class="brand-text">Trufleet</span>
+            </a>
+
+            <nav class="nav-menu">
+                <a href="Dasboard_admin.html" class="nav-item">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span class="brand-text">Dashboard</span>
+                </a>
+                <a href="Vehicle_Management_admin.html" class="nav-item">
+                    <i class="fa-solid fa-truck-front"></i>
+                    <span class="brand-text">Fleet Manager</span>
+                </a>
+                <a href="#" class="nav-item active">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span class="brand-text">Drivers</span>
+                </a>
+                <a href="Dispatch_Control_admin.html" class="nav-item">
+                    <i class="fa-solid fa-route"></i>
+                    <span class="brand-text">Dispatch Control</span>
+                </a>
+                <a href="Insurance_admin.html" class="nav-item">
+                    <i class="fa-solid fa-file-shield"></i>
+                    <span class="brand-text">Insurance</span>
+                </a>
+                <a href="User_Approval_admin.html" class="nav-item">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span class="brand-text">User Approvals</span>
+                </a>
+
+                <div style="flex-grow: 1;"></div>
+
+                <a href="Setting_admin.html" class="nav-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span class="brand-text">Settings</span>
+                </a>
+                <a href="login.html" class="nav-item" style="color: var(--danger);" onclick="localStorage.removeItem('trufleet_token');localStorage.removeItem('trufleet_user');">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span class="brand-text">Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- MAIN -->
+        <main>
+            <header>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></button>
+                    <div class="page-header">
+                        <h1 class="page-title">Pilot Roster</h1>
+                        <span class="page-subtitle">Managing <strong id="activeDriverCount">--</strong> Active Drivers</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <!-- Quick Toggle View (Visual Only) -->
+                    <div style="background: #F1F5F9; padding: 4px; border-radius: 8px; display: flex;">
+                        <button style="padding: 6px 10px; border: none; background: white; border-radius: 6px; box-shadow: var(--shadow-sm); cursor: pointer;"><i class="fa-solid fa-grid"></i></button>
+                        <button style="padding: 6px 10px; border: none; background: transparent; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-list"></i></button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="filter-bar">
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Find driver by name or ID...">
+                </div>
+                
+                <button class="btn-add" onclick="openDrawer('new')">
+                    <i class="fa-solid fa-user-plus"></i> Onboard Pilot
+                </button>
+            </div>
+
+            <!-- DRIVER GRID -->
+            <div class="grid-container" id="driverGrid">
+                <div style="grid-column:1/-1;text-align:center;padding:2rem;color:#94A3B8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading pilot roster...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- DRIVER DOSSIER DRAWER -->
+    <div class="drawer-overlay" id="drawerOverlay">
+        <div class="drawer">
+            <!-- Header with Gradient -->
+            <div class="profile-header">
+                <img id="drawerImg" src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=2080&auto=format&fit=crop" class="profile-lg-img">
+                <div>
+                    <h2 id="drawerName" style="font-family: 'Outfit'; font-size: 1.5rem; color: var(--primary);">--</h2>
+                    <span style="font-size: 0.9rem; color: var(--text-muted); display: block;">ID: <span id="drawerDriverId">--</span></span>
+                    <span class="rating-badge" style="margin-top: 8px; display: inline-flex;">Elite Pilot</span>
+                </div>
+                <button onclick="closeDrawer()" style="margin-left: auto; border: none; background: transparent; cursor: pointer; font-size: 1.2rem; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="profile-body">
+                
+                <!-- Performance Chart -->
+                <div class="section-title">
+                    <span>Performance Analytics</span>
+                </div>
+                <div id="safetyChart" style="margin-bottom: 2rem; min-height: 200px;"></div>
+
+                <!-- Personal Info -->
+                <div class="section-title"><span>Contact & License</span></div>
+                <div class="info-grid">
+                    <div class="info-box">
+                        <label>Phone Number</label>
+                        <span id="drawerPhone">--</span>
+                    </div>
+                    <div class="info-box">
+                        <label>License Type</label>
+                        <span id="drawerLicense">--</span>
+                    </div>
+                    <div class="info-box">
+                        <label>Joined Date</label>
+                        <span id="drawerJoined">--</span>
+                    </div>
+                    <div class="info-box">
+                        <label>Total Incidents</label>
+                        <span id="drawerIncidents" style="color: var(--success);">--</span>
+                    </div>
+                </div>
+
+                <!-- Documents -->
+                <div class="section-title"><span>Verified Documents</span></div>
+                <div class="doc-card">
+                    <div class="doc-icon"><i class="fa-solid fa-id-card"></i></div>
+                    <div>
+                        <div style="font-weight: 500; font-size: 0.9rem;">Commercial Driving License</div>
+                        <div style="font-size: 0.75rem; color: var(--success);">Verified • Exp 2028</div>
+                    </div>
+                    <button style="margin-left: auto; border: 1px solid #E2E8F0; background: white; padding: 4px 10px; border-radius: 6px; cursor: pointer;">View</button>
+                </div>
+                
+                <div class="doc-card">
+                    <div class="doc-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+                    <div>
+                        <div style="font-weight: 500; font-size: 0.9rem;">Medical Fitness Cert</div>
+                        <div style="font-size: 0.75rem; color: var(--warning);">Expiring in 30 Days</div>
+                    </div>
+                    <button style="margin-left: auto; border: 1px solid #E2E8F0; background: white; padding: 4px 10px; border-radius: 6px; cursor: pointer;">View</button>
+                </div>
+
+                <!-- Actions -->
+                <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <button style="padding: 12px; border: 1px solid #E2E8F0; background: white; border-radius: 50px; font-weight: 600; color: var(--text-main); cursor: pointer;">Message</button>
+                    <button style="padding: 12px; border: none; background: var(--primary); border-radius: 50px; font-weight: 600; color: white; cursor: pointer;">Assign Route</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TOKEN = localStorage.getItem('trufleet_token');
+        if (!TOKEN) { window.location.href = 'login.html'; }
+        const authHeaders = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
+
+        // ── SIDEBAR TOGGLE ──────────────────────────────────────────
+        const appContainer = document.getElementById('appContainer');
+        const sidebar = document.getElementById('sidebar');
+        function toggleSidebar() {
+            if (window.innerWidth <= 768) { appContainer.classList.toggle('mobile-open'); }
+            else { appContainer.classList.toggle('collapsed'); }
+        }
+        sidebar.addEventListener('mouseenter', () => {
+            if (window.innerWidth > 768 && appContainer.classList.contains('collapsed')) {
+                appContainer.classList.remove('collapsed');
+                sidebar.dataset.autoExpanded = 'true';
+            }
+        });
+        sidebar.addEventListener('mouseleave', () => {
+            if (window.innerWidth > 768 && sidebar.dataset.autoExpanded === 'true') {
+                appContainer.classList.add('collapsed');
+                sidebar.dataset.autoExpanded = 'false';
+            }
+        });
+
+        let safetyChart = null;
+
+        // ─── DRAWER ────────────────────────────────────────────────────
+        async function openDrawer(mode, driverId) {
+            document.getElementById('drawerOverlay').classList.add('open');
+            if (mode === 'view' && driverId) {
+                try {
+                    const res = await fetch(`/api/drivers/${driverId}`, { headers: authHeaders });
+                    if (!res.ok) throw new Error();
+                    const d = await res.json();
+                    const p = d.driver_profile || {};
+                    document.getElementById('drawerName').textContent = d.full_name || d.email || '--';
+                    document.getElementById('drawerDriverId').textContent = 'TRU-' + String(d.id).padStart(5, '0');
+                    document.getElementById('drawerImg').src = d.avatar_url
+                        || `https://ui-avatars.com/api/?name=${encodeURIComponent(d.full_name||'Driver')}&background=random&size=80`;
+                    document.getElementById('drawerPhone').textContent = p.phone || '--';
+                    document.getElementById('drawerLicense').textContent = p.license_type || '--';
+                    document.getElementById('drawerJoined').textContent = d.created_at
+                        ? new Date(d.created_at).toLocaleDateString('en-IN', {day:'2-digit',month:'long',year:'numeric'}) : '--';
+                    document.getElementById('drawerIncidents').textContent = p.incidents ?? '--';
+                    const score = p.safety_score || 0;
+                    if (safetyChart) { safetyChart.updateSeries([score]); }
+                } catch { document.getElementById('drawerName').textContent = 'Failed to load'; }
+            }
+        }
+
+        function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); }
+        document.getElementById('drawerOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('drawerOverlay')) closeDrawer();
+        });
+
+        // ─── RENDER DRIVER CARDS ──────────────────────────────────────
+        function statusDotClass(status) {
+            if (status === 'on_trip' || status === 'active') return 'status-dot busy';
+            if (status === 'inactive' || status === 'offline') return 'status-dot offline';
+            return 'status-dot';
+        }
+        function vehicleLabel(d) {
+            if (d.vehicle) return `<i class="fa-solid fa-truck"></i> ${d.vehicle.make} ${d.vehicle.model} (${d.vehicle.registration_number || ''})`;
+            return `<i class="fa-solid fa-ban" style="color:var(--danger);"></i> Unassigned`;
+        }
+
+        function renderDrivers(drivers) {
+            const grid = document.getElementById('driverGrid');
+            const active = drivers.filter(d => (d.status||'active') !== 'inactive').length;
+            document.getElementById('activeDriverCount').textContent = active.toLocaleString();
+            if (!drivers.length) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#94A3B8;">No drivers onboarded yet.</div>';
+                return;
+            }
+            const p = d => (d.driver_profile || {});
+            grid.innerHTML = drivers.map(d => `
+                <div class="driver-card" onclick="openDrawer('view', ${d.id})">
+                    <div class="card-header">
+                        <div class="driver-avatar-wrapper">
+                            <img src="${d.avatar_url || 'https://ui-avatars.com/api/?name='+encodeURIComponent(d.full_name||'Driver')+'&background=random&size=60'}" class="driver-avatar" alt="Driver">
+                            <div class="${statusDotClass(d.status)}"></div>
+                        </div>
+                        <div class="rating-badge"><i class="fa-solid fa-star"></i> ${p(d).rating || '--'}</div>
+                    </div>
+                    <div class="driver-info">
+                        <h3>${d.full_name || d.email}</h3>
+                        <p>${vehicleLabel(d)}</p>
+                    </div>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Safety Score</span>
+                            <span class="stat-value" style="color:var(--success);">${p(d).safety_score != null ? p(d).safety_score+'%' : '--'}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Trips (Mo)</span>
+                            <span class="stat-value">${p(d).monthly_trips || '--'}</span>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        // ─── LOAD DRIVERS ────────────────────────────────────────────
+        async function loadDrivers() {
+            try {
+                const res = await fetch('/api/drivers', { headers: authHeaders });
+                if (res.status === 401 || res.status === 403) { window.location.href = 'login.html'; return; }
+                const data = await res.json();
+                renderDrivers(data.drivers || data);
+            } catch {
+                document.getElementById('driverGrid').innerHTML =
+                    '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--danger);">Failed to load drivers.</div>';
+            }
+        }
+
+        // ─── SEARCH FILTER ───────────────────────────────────────────
+        document.querySelector('.search-input').addEventListener('input', function() {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('.driver-card').forEach(card => {
+                const name = card.querySelector('h3')?.textContent?.toLowerCase() || '';
+                card.style.display = name.includes(q) ? '' : 'none';
+            });
+        });
+
+        // ─── RADIAL CHART ──────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            safetyChart = new ApexCharts(document.querySelector('#safetyChart'), {
+                series: [0],
+                chart: { height: 250, type: 'radialBar', fontFamily: 'Inter' },
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -135, endAngle: 135,
+                        hollow: { margin: 15, size: '60%' },
+                        track: { background: '#F1F5F9', strokeWidth: '100%' },
+                        dataLabels: {
+                            show: true,
+                            name: { offsetY: -10, show: true, color: '#64748B', fontSize: '14px' },
+                            value: { offsetY: 5, color: '#0F172A', fontSize: '30px', fontWeight: '700', show: true }
+                        }
+                    }
+                },
+                fill: { type: 'gradient', gradient: { shade: 'dark', type: 'horizontal', gradientToColors: ['#10B981'], stops: [0, 100] } },
+                stroke: { lineCap: 'round' },
+                labels: ['Driving Score'],
+                colors: ['#2563EB'],
+                noData: { text: 'No score available', style: { color: '#94A3B8' } }
+            });
+            safetyChart.render();
+            loadDrivers();
+        });
+    </script>
+</body>
+</html>

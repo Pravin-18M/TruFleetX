@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trufleet | Secure Access</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
+    
+    <!-- External Dependencies: Premium Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase SDK (Ready for Integration) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* 
+         * DESIGN SYSTEM & TOKENS 
+         */
+        :root {
+            --bg-pure: #FFFFFF;
+            --bg-off: #F8FAFC;
+            --primary: #0F172A; /* Slate 900 */
+            --accent: #2563EB; /* Royal Blue */
+            --accent-hover: #1D4ED8;
+            --text-main: #334155;
+            --text-light: #64748B;
+            --border: #E2E8F0;
+            
+            --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --transition-smooth: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-pure);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* 
+         * LEFT SIDE - CONTEXTUAL VISUALS 
+         * Logic: Absolute positioning allows stacking for opacity transitions
+         */
+        .visual-side {
+            width: 50%;
+            background-color: var(--bg-off);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .role-visual-container {
+            position: absolute;
+            width: 70%; 
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            transition: var(--transition-smooth);
+            pointer-events: none; /* Prevent interaction when hidden */
+        }
+
+        .role-visual-container.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* The "Figma Style" Image Card */
+        .visual-card {
+            background: white;
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-card);
+            margin-bottom: 2rem;
+            transform: rotate(-2deg); /* Artistic tilt */
+            transition: transform 0.6s ease;
+        }
+
+        .role-visual-container.active .visual-card {
+            transform: rotate(0deg);
+        }
+
+        .visual-card img {
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+            height: 350px;
+            object-fit: cover;
+        }
+
+        .visual-caption h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .visual-caption p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            max-width: 80%;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* 
+         * RIGHT SIDE - LOGIN FORM 
+         */
+        .login-side {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            background: white;
+        }
+
+        .login-wrapper {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .brand-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .brand-logo {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.8rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-logo i { color: var(--accent); }
+
+        .brand-tagline {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* Segmented Control for Roles */
+        .role-tabs {
+            background: var(--bg-off);
+            padding: 4px;
+            border-radius: 12px;
+            display: flex;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .role-tab-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            cursor: pointer;
+            z-index: 2;
+            transition: color 0.3s;
+            border-radius: 8px;
+        }
+
+        .role-tab-btn.active {
+            color: var(--primary);
+            font-weight: 600;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+            background: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .input-label {
+            position: absolute;
+            left: 1rem;
+            top: 1rem;
+            color: var(--text-light);
+            pointer-events: none;
+            transition: 0.2s ease all;
+            background: white;
+            padding: 0 4px;
+        }
+
+        .input-field:focus ~ .input-label,
+        .input-field:not(:placeholder-shown) ~ .input-label {
+            top: -0.6rem;
+            left: 0.8rem;
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--text-main);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.15);
+        }
+
+        .utility-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .utility-links a {
+            text-decoration: none;
+            color: var(--text-light);
+            transition: 0.3s;
+        }
+
+        .utility-links a:hover {
+            color: var(--accent);
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            display: none; /* Hidden by default */
+        }
+
+        .status-pending {
+            background-color: #FFF7ED;
+            color: #C2410C;
+            border: 1px solid #FFEDD5;
+        }
+
+        .status-success {
+            background-color: #ECFDF5;
+            color: #047857;
+            border: 1px solid #D1FAE5;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            body { flex-direction: column-reverse; overflow-y: auto; height: auto; }
+            .visual-side { width: 100%; height: 400px; padding: 2rem; }
+            .login-side { width: 100%; padding: 3rem 1.5rem; }
+            .visual-card img { height: 200px; }
+            .visual-caption h2 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LEFT SIDE: DYNAMIC ROLE VISUALS -->
+    <div class="visual-side">
+        
+        <!-- Admin Visual -->
+        <div class="role-visual-container active" id="visual-admin">
+            <div class="visual-card">
+                <!-- Strategic/Map View -->
+                <img src="admin.png" alt="Admin Dashboard">
+            </div>
+            <div class="visual-caption">
+                <h2>Fleet Admin</h2>
+                <p>Command the fleet that powers India's future.</p>
+            </div>
+        </div>
+
+        <!-- Manager Visual -->
+        <div class="role-visual-container" id="visual-manager">
+            <div class="visual-card">
+                <!-- Analytics/Team View -->
+                <img src="manager.png" alt="Manager Analytics">
+            </div>
+            <div class="visual-caption">
+                <h2>Fleet Manager</h2>
+                <p>Every route decision shapes a thousand journeys.</p>
+            </div>
+        </div>
+
+        <!-- Driver Visual -->
+        <div class="role-visual-container" id="visual-driver">
+            <div class="visual-card">
+                <!-- Driver Perspective -->
+                <img src="driver.png" alt="Driver View">
+            </div>
+            <div class="visual-caption">
+                <h2>Fleet Pilot</h2>
+                <p>Every kilometer tells a story of pride.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE: LOGIN FORM -->
+    <div class="login-side">
+        <div class="login-wrapper">
+            
+            <div class="brand-header">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-cube"></i> Trufleet
+                </div>
+                <p class="brand-tagline">Confidence in Every Mile</p>
+            </div>
+
+            <!-- Pending Approval Notification (Hidden Logic) -->
+            <div id="pendingAlert" class="status-message status-pending">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span><strong>Approval Pending:</strong> Your request has been sent to the Fleet Admin. Please wait for verification.</span>
+            </div>
+
+            <!-- Role Tabs -->
+            <div class="role-tabs">
+                <button class="role-tab-btn active" onclick="switchRole('admin')">Admin</button>
+                <button class="role-tab-btn" onclick="switchRole('manager')">Manager</button>
+                <button class="role-tab-btn" onclick="switchRole('driver')">Driver</button>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="email" class="input-field" id="email" placeholder=" " required>
+                    <label class="input-label">Email Address</label>
+                </div>
+
+                <div class="form-group">
+                    <input type="password" class="input-field" id="password" placeholder=" " required>
+                    <label class="input-label">Password</label>
+                </div>
+
+                <button type="submit" class="btn-primary" id="loginBtn">
+                    Access Dashboard <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>
+                </button>
+
+                <div class="utility-links">
+                    <a href="Signup.html">Create New Account</a>
+                    <a href="#">Forgot Password?</a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- LOGIC CONTROLLER -->
+    <script>
+        // --- 1. CONFIGURATION ---
+        let currentRole = 'admin';
+
+        // --- 2. ROLE SWITCHER ANIMATION LOGIC ---
+        function switchRole(role) {
+            currentRole = role;
+
+            const buttons = document.querySelectorAll('.role-tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            if(role === 'admin') buttons[0].classList.add('active');
+            if(role === 'manager') buttons[1].classList.add('active');
+            if(role === 'driver') buttons[2].classList.add('active');
+
+            const visuals = document.querySelectorAll('.role-visual-container');
+            visuals.forEach(v => v.classList.remove('active'));
+            const targetVisual = document.getElementById(`visual-${role}`);
+            if(targetVisual) targetVisual.classList.add('active');
+
+            document.getElementById('pendingAlert').style.display = 'none';
+        }
+
+        // --- 3. LOGIN - CONNECTED TO BACKEND ---
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('loginBtn');
+            const originalText = btn.innerHTML;
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Loading State
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Authenticating...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, role: currentRole })
+                });
+
+                const data = await response.json();
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                if (!response.ok) {
+                    if (data.error && data.error.toLowerCase().includes('pending approval')) {
+                        document.getElementById('pendingAlert').style.display = 'flex';
+                    } else {
+                        alert(data.error || 'Login failed. Please check your credentials.');
+                    }
+                    return;
+                }
+
+                // Persist auth to localStorage
+                localStorage.setItem('trufleet_token', data.token);
+                localStorage.setItem('trufleet_user', JSON.stringify(data.user));
+
+                // RBAC-based redirect — each role goes to its own portal
+                const redirectMap = {
+                    admin:   'Dasboard_admin.html',
+                    manager: 'manager/Dashboard_manager.html',
+                    driver:  'driver/dashboard_driver.html'
+                };
+                window.location.href = redirectMap[data.user.role] || 'Dasboard_admin.html';
+
+            } catch (err) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert('Network error. Please ensure the server is running.');
+            }
+        });
+
+        // Initialize default view
+        window.onload = () => {
+            // Clear any old session when visiting login
+            localStorage.removeItem('trufleet_token');
+            localStorage.removeItem('trufleet_user');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('registered') === 'true') {
+                document.getElementById('pendingAlert').style.display = 'flex';
+            }
+        };
+    </script>
+</body>
+</html>
