@@ -550,56 +550,65 @@
         </main>
     </div>
 
-    <!-- RENEWAL DRAWER -->
+    <!-- ADD / UPDATE POLICY DRAWER -->
     <div class="drawer-overlay" id="drawerOverlay">
         <div class="drawer">
             <div class="drawer-header">
-                <h3 style="font-family: 'Outfit'; color: var(--primary);">Update Policy Details</h3>
+                <h3 id="drawerTitle" style="font-family: 'Outfit'; color: var(--primary);">Add Policy</h3>
                 <button onclick="closeDrawer()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="drawer-body">
                 <form id="renewalForm" onsubmit="handleRenewal(event)">
+                    <!-- hidden: policy UUID when editing -->
+                    <input type="hidden" id="f-pid">
+
                     <div class="form-group">
-                        <label class="form-label">Vehicle ID / Reg No</label>
-                        <input type="text" class="form-input" id="vehicleIdInput" value="KA 01 EQ 9921" readonly style="background: #F1F5F9;">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Insurance Provider</label>
-                        <select class="form-input">
-                            <option>HDFC Ergo</option>
-                            <option>ICICI Lombard</option>
-                            <option>Acko General</option>
-                            <option>Digit</option>
+                        <label class="form-label">Vehicle</label>
+                        <select class="form-input" id="f-vehicle-id" required>
+                            <option value="">-- Select Vehicle --</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">New Policy Number</label>
-                        <input type="text" class="form-input" placeholder="Enter Policy No">
+                        <label class="form-label">Insurance Provider</label>
+                        <select class="form-input" id="f-provider" required>
+                            <option value="">-- Select Provider --</option>
+                            <option>HDFC Ergo</option>
+                            <option>ICICI Lombard</option>
+                            <option>Acko General</option>
+                            <option>Digit Insurance</option>
+                            <option>New India Assurance</option>
+                            <option>Bajaj Allianz</option>
+                            <option>Reliance General</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Policy Number</label>
+                        <input type="text" class="form-input" id="f-policy-no" placeholder="e.g. HDFC-2024-001234" required>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Valid From</label>
-                        <input type="date" class="form-input">
+                        <input type="date" class="form-input" id="f-start-date">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Valid Until</label>
-                        <input type="date" class="form-input">
+                        <input type="date" class="form-input" id="f-expiry-date" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Upload Policy Document (PDF)</label>
+                        <label class="form-label">Upload Policy Document (PDF) <span style="color:#94A3B8;font-weight:400;">(optional)</span></label>
                         <div class="upload-box" onclick="document.getElementById('fileUp').click()">
                             <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.5rem; color: var(--accent); margin-bottom: 10px;"></i>
-                            <p style="font-size: 0.9rem; color: var(--text-muted);">Click to upload new policy</p>
-                            <input type="file" id="fileUp" hidden>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">Click to upload policy PDF</p>
+                            <input type="file" id="fileUp" accept=".pdf" hidden>
                         </div>
                     </div>
 
-                    <button type="submit" class="action-btn" style="width: 100%; justify-content: center; margin-top: 1rem;">
-                        Confirm Renewal
+                    <button type="submit" id="drawerSubmitBtn" class="action-btn" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Policy
                     </button>
                 </form>
             </div>
@@ -607,6 +616,7 @@
     </div>
 
     <script>
+        // ── AUTH GUARD ───────────────────────────────────────────────
         const TOKEN = localStorage.getItem('trufleet_token');
         if (!TOKEN) { window.location.href = 'login.html'; }
         const authHeaders = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
@@ -631,45 +641,112 @@
             }
         });
 
-        // ─── DRAWER ─────────────────────────────────────────────────
-        function openDrawer(vehicleReg) {
-            document.getElementById('drawerOverlay').classList.add('open');
-            if (vehicleReg) document.getElementById('vehicleIdInput').value = vehicleReg;
-        }
-        function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); }
-        document.getElementById('drawerOverlay').addEventListener('click', function(e) {
-            if (e.target === this) closeDrawer();
-        });
-
-        // ─── HELPERS ────────────────────────────────────────────────
+        // ── HELPERS ─────────────────────────────────────────────────
         function daysLeft(expiry) {
             return Math.ceil((new Date(expiry) - new Date()) / 86400000);
         }
         function pillHtml(days) {
-            if (days < 0)  return '<span class="status-pill" style="background:#FEF2F2;color:#DC2626">Expired</span>';
-            if (days <= 7) return '<span class="status-pill" style="background:#FEF2F2;color:#DC2626">Critical</span>';
+            if (days < 0)   return '<span class="status-pill" style="background:#FEF2F2;color:#DC2626">Expired</span>';
+            if (days <= 7)  return '<span class="status-pill" style="background:#FEF2F2;color:#DC2626">Critical</span>';
             if (days <= 30) return '<span class="status-pill st-warning">Expiring Soon</span>';
             return '<span class="status-pill st-active">Active</span>';
         }
-        function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) : '—'; }
+        function fmtDate(d) {
+            return d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+        }
+        // Safe vehicle reg from Supabase joined row
+        function vehicleReg(p)  { return p.vehicle?.registration_number || p.vehicle_id || '—'; }
+        function vehicleName(p) {
+            if (!p.vehicle) return '';
+            return [p.vehicle.make, p.vehicle.model].filter(Boolean).join(' ');
+        }
 
-        // ─── LOAD KPI STATS ─────────────────────────────────────────
+        // ── DRAWER ───────────────────────────────────────────────────
+        // Cache vehicles list so we don't re-fetch every open
+        let _vehicles = [];
+
+        async function ensureVehicles() {
+            if (_vehicles.length) return;
+            try {
+                const r = await fetch('/api/vehicles', { headers: authHeaders });
+                if (r.ok) _vehicles = await r.json();
+            } catch {}
+        }
+
+        function populateVehicleSelect(selectedId) {
+            const sel = document.getElementById('f-vehicle-id');
+            sel.innerHTML = '<option value="">-- Select Vehicle --</option>';
+            _vehicles.forEach(v => {
+                const label = [v.registration_number, v.make, v.model].filter(Boolean).join(' • ');
+                sel.insertAdjacentHTML('beforeend',
+                    `<option value="${v.id}" ${v.id === selectedId ? 'selected' : ''}>${label}</option>`);
+            });
+        }
+
+        async function openDrawer(policyObj) {
+            await ensureVehicles();
+            document.getElementById('drawerOverlay').classList.add('open');
+
+            const isEdit = policyObj && policyObj.id;
+            document.getElementById('drawerTitle').textContent = isEdit ? 'Update Policy' : 'Add Policy';
+            document.getElementById('drawerSubmitBtn').innerHTML = isEdit
+                ? '<i class="fa-solid fa-rotate"></i> Update Policy'
+                : '<i class="fa-solid fa-floppy-disk"></i> Save Policy';
+
+            document.getElementById('f-pid').value        = isEdit ? policyObj.id : '';
+            document.getElementById('f-policy-no').value  = isEdit ? (policyObj.policy_number || '') : '';
+            document.getElementById('f-start-date').value = isEdit ? (policyObj.start_date || '') : '';
+            document.getElementById('f-expiry-date').value= isEdit ? (policyObj.expiry_date || '') : '';
+
+            // Set provider select
+            const provSel = document.getElementById('f-provider');
+            if (isEdit && policyObj.provider) {
+                // Try to match existing option, else add it dynamically
+                let found = false;
+                for (const opt of provSel.options) {
+                    if (opt.value === policyObj.provider) { opt.selected = true; found = true; break; }
+                }
+                if (!found) {
+                    provSel.insertAdjacentHTML('beforeend', `<option value="${policyObj.provider}" selected>${policyObj.provider}</option>`);
+                }
+            } else {
+                provSel.value = '';
+            }
+
+            populateVehicleSelect(isEdit ? policyObj.vehicle_id : null);
+            if (isEdit) document.getElementById('f-vehicle-id').disabled = true;
+            else        document.getElementById('f-vehicle-id').disabled = false;
+        }
+
+        function closeDrawer() {
+            document.getElementById('drawerOverlay').classList.remove('open');
+            document.getElementById('renewalForm').reset();
+            document.getElementById('f-pid').value = '';
+            document.getElementById('f-vehicle-id').disabled = false;
+        }
+        document.getElementById('drawerOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeDrawer();
+        });
+
+        // ── LOAD KPI STATS ───────────────────────────────────────────
+        // Backend returns: { coveragePercent, expiredOrUninsured, expiringIn7Days, activePolicies }
         async function loadStats() {
             try {
                 const res = await fetch('/api/insurance/stats', { headers: authHeaders });
                 if (!res.ok) return;
                 const s = await res.json();
-                const total = (s.total || 1);
-                const covered = total - (s.expired || 0);
-                document.getElementById('statCoverage').textContent = ((covered/total)*100).toFixed(1) + '%';
-                document.getElementById('statExpired').textContent = String(s.expired || 0).padStart(2,'0');
-                document.getElementById('stat7Days').textContent = String(s.expiring7 || 0).padStart(2,'0');
-                document.getElementById('statPremium').textContent = s.totalPremium
-                    ? '₹ ' + (s.totalPremium/1000000).toFixed(1) + 'M' : '—';
+                document.getElementById('statCoverage').textContent = (s.coveragePercent ?? '0') + '%';
+                document.getElementById('statExpired').textContent  = String(s.expiredOrUninsured ?? 0).padStart(2, '0');
+                document.getElementById('stat7Days').textContent    = String(s.expiringIn7Days   ?? 0).padStart(2, '0');
+                document.getElementById('statPremium').textContent  = s.activePolicies ?? '0';
+                // Replace the "Premium Value" label with Active Policies since backend doesn't return premium
+                const labels = document.querySelectorAll('.kpi-label');
+                labels[3].textContent = 'Active Policies';
             } catch {}
         }
 
-        // ─── LOAD URGENT ITEMS ──────────────────────────────────────
+        // ── LOAD URGENT ITEMS ────────────────────────────────────────
+        // Backend returns: [..., { vehicle: { registration_number, make, model }, provider, policy_number, expiry_date }]
         async function loadUrgent() {
             const box = document.getElementById('urgentContainer');
             try {
@@ -681,21 +758,23 @@
                     return;
                 }
                 box.innerHTML = items.map(p => {
-                    const days = daysLeft(p.expiry_date);
+                    const days    = daysLeft(p.expiry_date);
                     const expired = days < 0;
+                    const reg     = vehicleReg(p);
+                    const name    = vehicleName(p);
                     return `
-                    <div class="urgent-item" style="${expired?'border-color:#EF4444;background:#FEF2F2;':''}">
+                    <div class="urgent-item" style="${expired ? 'border-color:#EF4444;background:#FEF2F2;' : ''}">
                         <div class="urgent-info">
-                            <div class="days-badge" style="${expired?'background:#EF4444;color:white;':''}">
-                                <span>${expired ? 'EXP' : String(days).padStart(2,'0')}</span>
-                                <small>${expired ? '! ! !' : 'Days'}</small>
+                            <div class="days-badge" style="${expired ? 'background:#EF4444;color:white;' : ''}">
+                                <span>${expired ? 'EXP' : String(days).padStart(2, '0')}</span>
+                                <small>${expired ? '!!!' : 'Days'}</small>
                             </div>
                             <div class="vehicle-meta">
-                                <h4>${p.vehicle_reg || p.vehicle_id} • ${p.provider || '—'}</h4>
-                                <p style="${expired?'color:#DC2626;font-weight:600;':''}">Policy #${p.policy_number || '—'}</p>
+                                <h4>${reg}${name ? ' — ' + name : ''} • ${p.provider || '—'}</h4>
+                                <p style="${expired ? 'color:#DC2626;font-weight:600;' : ''}">Policy #${p.policy_number || '—'}</p>
                             </div>
                         </div>
-                        <button class="renew-btn" style="${expired?'background:#DC2626;':''}" onclick="openDrawer('${p.vehicle_reg || ''}')">Renew Now</button>
+                        <button class="renew-btn" style="${expired ? 'background:#DC2626;' : ''}" onclick='openDrawer(${JSON.stringify(p)})'>Renew Now</button>
                     </div>`;
                 }).join('');
             } catch {
@@ -703,7 +782,8 @@
             }
         }
 
-        // ─── LOAD POLICY TABLE ──────────────────────────────────────
+        // ── LOAD POLICY TABLE ────────────────────────────────────────
+        // Backend returns: [..., { vehicle: { registration_number, make, model, vin, status }, provider, policy_number, expiry_date, ... }]
         async function loadPolicies() {
             const tbody = document.getElementById('policyTableBody');
             try {
@@ -711,19 +791,35 @@
                 if (!res.ok) throw new Error();
                 const policies = await res.json();
                 if (!policies.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#94A3B8;">No policies found.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#94A3B8;">No policies yet. Add one via &ldquo;Add Policy&rdquo;.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = policies.map(p => {
                     const days = daysLeft(p.expiry_date);
+                    const reg  = vehicleReg(p);
+                    const name = vehicleName(p);
+                    // Serialize safely for onclick
+                    const safe = JSON.stringify(p).replace(/'/g, "&#39;");
                     return `
                     <tr>
-                        <td><strong>${p.vehicle_reg || '—'}</strong><br><span style="color:#64748B;font-size:0.8rem;">${p.vehicle_name || ''}</span></td>
-                        <td><div style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-building-columns" style="color:#2563EB;"></i>${p.provider || '—'}</div></td>
+                        <td>
+                            <strong>${reg}</strong>
+                            ${name ? `<br><span style="color:#64748B;font-size:0.8rem;">${name}</span>` : ''}
+                        </td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <i class="fa-solid fa-building-columns" style="color:#2563EB;"></i>
+                                ${p.provider || '—'}
+                            </div>
+                        </td>
                         <td>${p.policy_number || '—'}</td>
                         <td>${fmtDate(p.expiry_date)}</td>
                         <td>${pillHtml(days)}</td>
-                        <td><button style="background:none;border:none;cursor:pointer;color:#94A3B8;" onclick="openDrawer('${p.vehicle_reg||''}', ${p.id})"><i class="fa-solid fa-pen"></i></button></td>
+                        <td>
+                            <button style="background:none;border:none;cursor:pointer;color:#94A3B8;" onclick='openDrawer(${safe})'>
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </td>
                     </tr>`;
                 }).join('');
             } catch {
@@ -731,69 +827,82 @@
             }
         }
 
-        // ─── FORM SUBMIT (ADD / UPDATE POLICY) ──────────────────────
+        // ── FORM SUBMIT (ADD or UPDATE POLICY) ───────────────────────
         async function handleRenewal(e) {
             e.preventDefault();
-            const form = e.target;
-            const inputs = form.querySelectorAll('input, select');
-            const vehicleReg = inputs[0]?.value;
-            const provider   = inputs[1]?.value;
-            const policyNo   = inputs[2]?.value;
-            const startDate  = inputs[3]?.value;
-            const expiryDate = inputs[4]?.value;
-            const btn = form.querySelector('button[type="submit"]');
+            const policyId  = document.getElementById('f-pid').value.trim();
+            const vehicleId = document.getElementById('f-vehicle-id').value;
+            const provider  = document.getElementById('f-provider').value;
+            const policyNo  = document.getElementById('f-policy-no').value.trim();
+            const startDate = document.getElementById('f-start-date').value;
+            const expiry    = document.getElementById('f-expiry-date').value;
+
+            if (!provider || !policyNo || !expiry) {
+                alert('Please fill in Provider, Policy Number and Expiry Date.');
+                return;
+            }
+            if (!policyId && !vehicleId) {
+                alert('Please select a vehicle.');
+                return;
+            }
+
+            const btn  = document.getElementById('drawerSubmitBtn');
             const orig = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+            btn.disabled  = true;
+
+            const isEdit = !!policyId;
+            const url    = isEdit ? `/api/insurance/${policyId}` : '/api/insurance';
+            const method = isEdit ? 'PUT' : 'POST';
+            const body   = isEdit
+                ? { provider, policy_number: policyNo, start_date: startDate, expiry_date: expiry }
+                : { vehicle_id: vehicleId, provider, policy_number: policyNo, start_date: startDate, expiry_date: expiry };
+
             try {
-                const res = await fetch('/api/insurance', {
-                    method: 'POST',
-                    headers: authHeaders,
-                    body: JSON.stringify({ vehicle_reg: vehicleReg, provider, policy_number: policyNo, start_date: startDate, expiry_date: expiryDate })
-                });
+                const res  = await fetch(url, { method, headers: authHeaders, body: JSON.stringify(body) });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Failed');
+                if (!res.ok) throw new Error(data.error || data.message || 'Failed');
                 closeDrawer();
-                form.reset();
                 await Promise.all([loadStats(), loadUrgent(), loadPolicies()]);
             } catch (err) {
                 alert(err.message || 'Failed to save policy.');
             } finally {
                 btn.innerHTML = orig;
-                btn.disabled = false;
+                btn.disabled  = false;
             }
         }
 
-        // ─── CHART (fetched data, falls back to empty) ───────────────
+        // ── CHART ────────────────────────────────────────────────────
         async function renderChart() {
-            let seriesData = [0,0,0,0,0,0,0];
-            let categories = ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
+            let seriesData = [];
+            let categories = [];
             try {
-                const res = await fetch('/api/insurance/upcoming?limit=50', { headers: authHeaders });
+                const res = await fetch('/api/insurance/upcoming?limit=100', { headers: authHeaders });
                 if (res.ok) {
                     const rows = await res.json();
                     const counts = {};
                     rows.forEach(p => {
-                        const m = new Date(p.expiry_date).toLocaleString('en', {month:'short'});
+                        const m = new Date(p.expiry_date).toLocaleString('en', { month: 'short' });
                         counts[m] = (counts[m] || 0) + 1;
                     });
-                    categories = Object.keys(counts);
-                    seriesData = Object.values(counts);
+                    categories  = Object.keys(counts);
+                    seriesData  = Object.values(counts);
                 }
             } catch {}
+            if (!categories.length) { categories = ['—']; seriesData = [0]; }
             new ApexCharts(document.querySelector('#coverageChart'), {
-                series: [{ name: 'Renewals', data: seriesData }],
+                series: [{ name: 'Renewals Due', data: seriesData }],
                 chart: { height: 250, type: 'bar', toolbar: { show: false }, fontFamily: 'Inter' },
                 colors: ['#2563EB'],
                 plotOptions: { bar: { borderRadius: 4, columnWidth: '45%' } },
                 dataLabels: { enabled: false },
                 xaxis: { categories, axisBorder: { show: false }, axisTicks: { show: false } },
                 grid: { borderColor: '#F1F5F9', strokeDashArray: 4 },
-                noData: { text: 'No renewal data', style: { color: '#94A3B8' } }
+                noData: { text: 'No renewal data yet', style: { color: '#94A3B8' } }
             }).render();
         }
 
-        // ─── INIT ────────────────────────────────────────────────────
+        // ── INIT ─────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
             loadUrgent();
