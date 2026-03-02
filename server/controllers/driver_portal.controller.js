@@ -409,7 +409,7 @@ exports.getAvailableVehicles = async (req, res) => {
         // Fetch all vehicles (not blocked)
         const { data: vehicles, error: vErr } = await supabase
             .from('vehicles')
-            .select('id, registration_number, make, model, year, vehicle_type, fuel_level, status')
+            .select('id, registration_number, make, model, year, status')
             .not('status', 'eq', 'blocked')
             .order('registration_number');
 
@@ -463,9 +463,85 @@ exports.getAvailableVehicles = async (req, res) => {
                 make: v.make,
                 model: v.model,
                 year: v.year,
-                vehicle_type: v.vehicle_type,
-                fuel_level: v.fuel_level,
                 status: v.status,
+                insurance: ins ? { expiry_date: expiryDate, policy_number: ins.policy_number, days_left: daysLeft } : null,
+                checks: { insurance_valid: insValid, not_in_maintenance: notMaint, not_on_trip: notOnTrip },
+                eligible,
+                eligibility_reason: reason
+            };
+        });
+
+        res.json(result);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/driver/vehicle-lookup?last4=XXXX
+// Driver enters last 4 digits of registration; returns vehicle + eligibility checks
+// ─────────────────────────────────────────────────────────────────────────────
+exports.lookupVehicleByPlate = async (req, res) => {
+    try {
+        const last4 = (req.query.last4 || '').trim().toUpperCase();
+        if (!last4 || last4.length < 2) {
+            return res.status(400).json({ error: 'Please enter at least 2 characters of the vehicle number.' });
+        }
+
+        const today = new Date();
+
+        // Find vehicle(s) whose registration ends with the given digits
+        const { data: vehicles, error: vErr } = await supabase
+            .from('vehicles')
+            .select('id, registration_number, make, model, year, status, vin')
+            .ilike('registration_number', `%${last4}`)
+            .not('status', 'eq', 'blocked');
+
+        if (vErr) return res.status(500).json({ error: vErr.message });
+        if (!vehicles || !vehicles.length) {
+            return res.status(404).json({ error: `No authorised vehicle found with number ending in "${last4}". Please check and try again.` });
+        }
+
+        // If multiple match, return all — front-end will show disambiguation
+        const vehicleIds = vehicles.map(v => v.id);
+
+        const [tripsRes, insRes] = await Promise.all([
+            supabase.from('dispatch_requests')
+                .select('vehicle_id')
+                .in('status', ['active', 'pending'])
+                .in('vehicle_id', vehicleIds),
+            supabase.from('insurance_policies')
+                .select('vehicle_id, expiry_date, policy_number')
+                .in('vehicle_id', vehicleIds)
+                .order('expiry_date', { ascending: false })
+        ]);
+
+        const onRoadSet = new Set((tripsRes.data || []).map(t => t.vehicle_id));
+        const latestIns = {};
+        (insRes.data || []).forEach(ins => {
+            if (!latestIns[ins.vehicle_id]) latestIns[ins.vehicle_id] = ins;
+        });
+
+        const result = vehicles.map(v => {
+            const ins      = latestIns[v.id] || null;
+            const notMaint = v.status !== 'maintenance';
+            const notOnTrip = !onRoadSet.has(v.id);
+            let insValid = false, daysLeft = null, expiryDate = null;
+            if (ins) {
+                expiryDate = ins.expiry_date;
+                daysLeft   = Math.ceil((new Date(ins.expiry_date) - today) / 86400000);
+                insValid   = daysLeft > 0;
+            }
+            const eligible = insValid && notMaint && notOnTrip;
+            const reason   = !ins       ? 'No insurance policy found'
+                           : !insValid  ? `Insurance expired ${Math.abs(daysLeft)} day(s) ago`
+                           : !notMaint  ? 'Vehicle is currently in maintenance'
+                           : !notOnTrip ? 'Vehicle is already on an active trip'
+                           : '✅ All checks passed — eligible for dispatch';
+            return {
+                id: v.id,
+                registration_number: v.registration_number,
+                make: v.make, model: v.model, year: v.year, status: v.status,
                 insurance: ins ? { expiry_date: expiryDate, policy_number: ins.policy_number, days_left: daysLeft } : null,
                 checks: { insurance_valid: insValid, not_in_maintenance: notMaint, not_on_trip: notOnTrip },
                 eligible,
