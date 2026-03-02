@@ -1,6 +1,7 @@
 require('dotenv').config();
+const path    = require('path');
 const express = require('express');
-const cors = require('cors');
+const cors    = require('cors');
 
 const app = express();
 
@@ -10,7 +11,8 @@ app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 // Serve the static HTML/CSS/JS files from the 'public' directory
-app.use(express.static('public'));
+// Use __dirname so it works regardless of what directory the process starts from
+app.use(express.static(path.join(__dirname, 'public')));
 
 // --- API Routes ---
 const authRoutes      = require('./routes/auth.routes');
