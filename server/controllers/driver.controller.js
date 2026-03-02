@@ -9,7 +9,7 @@ exports.getAllDrivers = async (req, res) => {
             driver_profiles (
                 phone, license_number, license_type, license_expiry,
                 safety_score, miles_this_month, total_incidents,
-                years_experience, address, on_time_rate, status,
+                years_experience, status,
                 assigned_vehicle_id,
                 vehicles!assigned_vehicle_id ( make, model, registration_number )
             )
@@ -33,7 +33,7 @@ exports.getDriverById = async (req, res) => {
             driver_profiles (
                 phone, license_number, license_type, license_expiry,
                 safety_score, miles_this_month, total_incidents,
-                years_experience, address, on_time_rate, status,
+                years_experience, status,
                 assigned_vehicle_id,
                 vehicles!assigned_vehicle_id ( make, model, registration_number )
             )
