@@ -296,7 +296,7 @@ function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-IN',{day:'2-
 function fmtCost(c) { return c != null ? '₹'+Number(c).toLocaleString('en-IN') : '—'; }
 
 function buildCard(o) {
-  const reg = o.vehicles?.registration_number || '—';
+  const reg = o.vehicle?.registration_number || '—';
   return `
     <div class="work-card" id="wc-${o.id}" draggable="true"
          ondragstart="dragStart(event,'${o.id}')" ondragend="dragEnd(event)">
@@ -412,7 +412,7 @@ async function loadProactive() {
         <div class="pro-icon"><i class="fas fa-calendar-check"></i></div>
         <div class="pro-info">
           <div class="pro-title">${o.title}</div>
-          <div class="pro-meta">${o.vehicles?.registration_number || '—'}</div>
+          <div class="pro-meta">${o.vehicle?.registration_number || '—'}</div>
         </div>
         <div class="pro-date">${fmtDate(o.scheduled_date)}</div>
       </div>`).join('');

@@ -200,7 +200,7 @@ function renderCards(data) {
   grid.innerHTML = data.map(v => {
     const st = v.computed_status || v.status || 'idle';
     const stLbl = STATUS_LABEL[st] || st;
-    const driverName = v.assigned_driver?.full_name || null;
+    const driverName = typeof v.assigned_driver === 'string' ? v.assigned_driver : null;
     const trip = v.current_trip;
     return `
       <div class="vehicle-card" onclick="openDrawer('${v.id}')">
@@ -291,12 +291,12 @@ function openDrawer(id) {
     </div>
     ${trip ? `<div class="detail-section"><h3>Active Trip</h3><div class="detail-grid">
       <div class="detail-item" style="grid-column:1/-1"><span class="detail-label">Route</span><span class="detail-value">${trip.origin}  ${trip.destination}</span></div>
-      <div class="detail-item"><span class="detail-label">Cargo</span><span class="detail-value">${trip.cargo_description||'—'}</span></div>
+      <div class="detail-item"><span class="detail-label">Cargo</span><span class="detail-value">${trip.cargo_type||'—'}${trip.cargo_weight?' ('+trip.cargo_weight+')':''}</span></div>
       <div class="detail-item"><span class="detail-label">Trip Status</span><span class="detail-value">${trip.status||'—'}</span></div>
     </div></div>` : ''}
     ${v.assigned_driver ? `<div class="detail-section"><h3>Assigned Driver</h3><div class="card-driver" style="background:var(--card);border-radius:10px;border:1px solid var(--border);padding:12px;">
-      <div class="driver-avatar">${v.assigned_driver.full_name.charAt(0).toUpperCase()}</div>
-      <div><div class="driver-name">${v.assigned_driver.full_name}</div><div class="driver-sub">${v.assigned_driver.email||''}</div></div>
+      <div class="driver-avatar">${String(v.assigned_driver).charAt(0).toUpperCase()}</div>
+      <div><div class="driver-name">${v.assigned_driver}</div><div class="driver-sub">Assigned Driver</div></div>
     </div></div>` : ''}
   `;
   document.getElementById('overlay').classList.add('open');

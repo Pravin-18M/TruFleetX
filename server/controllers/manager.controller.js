@@ -84,7 +84,7 @@ exports.getManagerFleet = async (req, res) => {
             supabase.from('vehicles').select('*').order('created_at', { ascending: false }),
             supabase
                 .from('dispatch_requests')
-                .select('id, vehicle_id, driver_id, origin, destination, ticket_number, driver:users!driver_id(full_name)')
+                .select('id, vehicle_id, driver_id, origin, destination, ticket_number, cargo_type, cargo_weight, driver:users!driver_id(full_name)')
                 .eq('status', 'active'),
             supabase
                 .from('driver_profiles')

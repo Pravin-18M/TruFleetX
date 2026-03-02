@@ -373,8 +373,8 @@ async function loadDispatch() {
         <div class="dispatch-info">
           <div class="dispatch-route">${r.origin || 'Origin'}  ${r.destination || 'Destination'}</div>
           <div class="dispatch-meta">
-            ${r.driver_name || r.users?.full_name || 'Unknown driver'} &nbsp;&nbsp;
-            ${r.vehicle_reg || r.vehicles?.registration_number || '—'} &nbsp;&nbsp;
+            ${r.driver_name || r.driver?.full_name || 'Unknown driver'} &nbsp;&nbsp;
+            ${r.vehicle_reg || r.vehicle?.registration_number || '—'} &nbsp;&nbsp;
             ${timeAgo(r.created_at)}
           </div>
         </div>
@@ -403,7 +403,7 @@ async function approveDispatch(id) {
 
 async function rejectDispatch(id) {
   try {
-    await apiFetch(`/api/dispatch/reject/${id}`, { method:'PUT' });
+    await apiFetch(`/api/dispatch/reject/${id}`, { method:'DELETE' });
     document.getElementById(`dr-${id}`)?.remove();
     const remaining = document.querySelectorAll('[id^="dr-"]').length;
     document.getElementById('pendingBadge').textContent = remaining;
@@ -430,7 +430,7 @@ async function loadMaintenance() {
           <div class="maint-icon"><i class="fas fa-wrench"></i></div>
           <div class="maint-info">
             <div class="maint-title">${o.title}</div>
-            <div class="maint-meta">${o.vehicles?.registration_number || '—'} &nbsp;&nbsp; ${date}</div>
+            <div class="maint-meta">${o.vehicle?.registration_number || '—'} &nbsp;&nbsp; ${date}</div>
           </div>
           <span class="priority-badge ${pClass}">${(o.priority||'medium').toUpperCase()}</span>
         </div>`;
@@ -460,7 +460,7 @@ async function loadActivity() {
           <div class="act-dot ${color}"><i class="fas ${icon}"></i></div>
           <div class="act-text">
             <div class="act-desc">${a.origin || '—'}  ${a.destination || '—'}</div>
-            <div class="act-time">${a.driver_name || a.users?.full_name || 'Unknown'} &nbsp;&nbsp; ${timeAgo(a.updated_at || a.created_at)}</div>
+            <div class="act-time">${a.driver_name || a.driver?.full_name || 'Unknown'} &nbsp;&nbsp; ${timeAgo(a.updated_at || a.created_at)}</div>
           </div>
         </div>`;
     }).join('');
