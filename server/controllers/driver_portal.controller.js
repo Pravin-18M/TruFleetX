@@ -399,6 +399,166 @@ exports.createTicket = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GET /api/driver/available-vehicles
+// Returns all vehicles with insurance + availability eligibility checks
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getAvailableVehicles = async (req, res) => {
+    try {
+        const today = new Date();
+
+        // Fetch all vehicles (not blocked)
+        const { data: vehicles, error: vErr } = await supabase
+            .from('vehicles')
+            .select('id, registration_number, make, model, year, vehicle_type, fuel_level, status')
+            .not('status', 'eq', 'blocked')
+            .order('registration_number');
+
+        if (vErr) return res.status(500).json({ error: vErr.message });
+        if (!vehicles || !vehicles.length) return res.json([]);
+
+        // Which vehicle_ids are currently on active/pending trips?
+        const { data: activeTrips } = await supabase
+            .from('dispatch_requests')
+            .select('vehicle_id')
+            .in('status', ['active', 'pending']);
+        const onRoadSet = new Set((activeTrips || []).map(t => t.vehicle_id).filter(Boolean));
+
+        // Fetch the latest insurance policy per vehicle
+        const vehicleIds = vehicles.map(v => v.id);
+        const { data: allInsurances } = await supabase
+            .from('insurance_policies')
+            .select('vehicle_id, expiry_date, policy_number')
+            .in('vehicle_id', vehicleIds)
+            .order('expiry_date', { ascending: false });
+
+        // Build a map: vehicle_id → latest policy
+        const latestIns = {};
+        (allInsurances || []).forEach(ins => {
+            if (!latestIns[ins.vehicle_id]) latestIns[ins.vehicle_id] = ins;
+        });
+
+        // Compute eligibility for each vehicle
+        const result = vehicles.map(v => {
+            const ins         = latestIns[v.id] || null;
+            const notMaint    = v.status !== 'maintenance';
+            const notOnTrip   = !onRoadSet.has(v.id);
+            let insValid = false, expiryDate = null, daysLeft = null;
+
+            if (ins) {
+                expiryDate = ins.expiry_date;
+                daysLeft   = Math.ceil((new Date(ins.expiry_date) - today) / 86400000);
+                insValid   = daysLeft > 0;
+            }
+
+            const eligible = insValid && notMaint && notOnTrip;
+            const reason   = !ins         ? 'No insurance policy found'
+                           : !insValid    ? `Insurance expired ${Math.abs(daysLeft)} days ago`
+                           : !notMaint    ? 'Vehicle is in maintenance'
+                           : !notOnTrip   ? 'Already on an active trip'
+                           : 'All checks passed';
+
+            return {
+                id: v.id,
+                registration_number: v.registration_number,
+                make: v.make,
+                model: v.model,
+                year: v.year,
+                vehicle_type: v.vehicle_type,
+                fuel_level: v.fuel_level,
+                status: v.status,
+                insurance: ins ? { expiry_date: expiryDate, policy_number: ins.policy_number, days_left: daysLeft } : null,
+                checks: { insurance_valid: insValid, not_in_maintenance: notMaint, not_on_trip: notOnTrip },
+                eligible,
+                eligibility_reason: reason
+            };
+        });
+
+        res.json(result);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/driver/dispatch
+// Driver raises a new dispatch request — server re-validates vehicle eligibility
+// ─────────────────────────────────────────────────────────────────────────────
+exports.raiseDispatchRequest = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { vehicle_id, origin, destination, cargo_type, cargo_weight, priority } = req.body;
+
+        if (!vehicle_id || !origin || !destination) {
+            return res.status(400).json({ error: 'vehicle_id, origin, and destination are required.' });
+        }
+
+        const today = new Date();
+
+        // Re-validate vehicle eligibility (server-side guard, never trust client)
+        const [vehicleRes, insuranceRes, activeRes] = await Promise.all([
+            supabase.from('vehicles')
+                .select('id, status, registration_number')
+                .eq('id', vehicle_id)
+                .single(),
+            supabase.from('insurance_policies')
+                .select('expiry_date')
+                .eq('vehicle_id', vehicle_id)
+                .order('expiry_date', { ascending: false })
+                .limit(1)
+                .maybeSingle(),
+            supabase.from('dispatch_requests')
+                .select('id')
+                .eq('vehicle_id', vehicle_id)
+                .in('status', ['active', 'pending'])
+                .limit(1)
+        ]);
+
+        if (!vehicleRes.data) return res.status(404).json({ error: 'Vehicle not found.' });
+        const v = vehicleRes.data;
+
+        if (v.status === 'maintenance') return res.status(400).json({ error: `${v.registration_number} is currently in maintenance.` });
+        if (v.status === 'blocked')     return res.status(400).json({ error: `${v.registration_number} is blocked.` });
+
+        if (activeRes.data && activeRes.data.length > 0)
+            return res.status(400).json({ error: `${v.registration_number} is already on an active trip.` });
+
+        if (!insuranceRes.data)
+            return res.status(400).json({ error: `${v.registration_number} has no insurance policy.` });
+
+        const daysLeft = Math.ceil((new Date(insuranceRes.data.expiry_date) - today) / 86400000);
+        if (daysLeft <= 0)
+            return res.status(400).json({ error: `${v.registration_number} insurance expired ${Math.abs(daysLeft)} days ago.` });
+
+        // All checks passed — create request
+        const ticket_number = 'REQ-' + Date.now().toString().slice(-6);
+
+        const { data, error } = await supabase
+            .from('dispatch_requests')
+            .insert([{
+                ticket_number,
+                vehicle_id,
+                driver_id:    userId,
+                origin,
+                destination,
+                cargo_type:   cargo_type   || null,
+                cargo_weight: cargo_weight || null,
+                priority:     priority     || 'standard',
+                status:       'pending'
+            }])
+            .select('*, vehicle:vehicles(make, model, registration_number)');
+
+        if (error) return res.status(500).json({ error: error.message });
+
+        res.status(201).json({
+            message: 'Dispatch request raised. Awaiting manager/admin approval.',
+            request: data[0]
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // POST /api/driver/sos
 // Creates a high-priority emergency SOS ticket and logs the alert
 // ─────────────────────────────────────────────────────────────────────────────

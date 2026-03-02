@@ -187,7 +187,10 @@
             font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
         }
         .st-scheduled { background: #EFF6FF; color: var(--accent); }
-        .st-completed { background: #ECFDF5; color: var(--success); }
+        .st-active    { background: #ECFDF5; color: var(--success); }
+        .st-completed { background: #F0F9FF; color: #0284C7; }
+        .st-rejected  { background: #FEF2F2; color: var(--danger); }
+        .st-pending   { background: #FFFBEB; color: var(--warning); }
         .trip-id { font-size: 0.8rem; color: var(--text-muted); display: block; }
 
         /* DRAWER */
@@ -210,6 +213,80 @@
         .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--bg-body); }
         .d-label { color: var(--text-muted); font-size: 0.9rem; }
         .d-val { font-weight: 600; color: var(--primary); }
+
+        /* DISPATCH REQUEST MODAL */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15,23,42,0.5); backdrop-filter: blur(4px);
+            z-index: 200; display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .dispatch-modal {
+            background: white; border-radius: 20px; width: 600px; max-width: 95vw;
+            max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+        }
+        .modal-head {
+            padding: 1.5rem 2rem; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; background: white; z-index: 1; border-radius: 20px 20px 0 0;
+        }
+        .modal-head h2 { font-family: 'Outfit'; font-size: 1.25rem; color: var(--primary); }
+        .modal-body { padding: 1.5rem 2rem 2rem; }
+        .modal-close-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .form-row.full { grid-template-columns: 1fr; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+        .form-input, .form-select {
+            padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'Inter'; font-size: 0.95rem; color: var(--primary);
+            transition: border-color 0.2s; background: #F8FAFC;
+        }
+        .form-input:focus, .form-select:focus { border-color: var(--accent); background: white; }
+        .form-select option { background: white; }
+
+        /* Vehicle selector cards */
+        .vehicle-selector { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; max-height: 260px; overflow-y: auto; }
+        .vehicle-option {
+            display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+            border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: 0.2s;
+        }
+        .vehicle-option:hover:not(.ineligible) { border-color: var(--accent); background: var(--accent-soft); }
+        .vehicle-option.selected { border-color: var(--accent); background: var(--accent-soft); }
+        .vehicle-option.ineligible { opacity: 0.55; cursor: not-allowed; background: #F8FAFC; }
+        .vo-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; position: relative; }
+        .vehicle-option.selected .vo-radio { border-color: var(--accent); background: var(--accent); }
+        .vehicle-option.selected .vo-radio::after { content:''; position:absolute; top:50%;left:50%; transform:translate(-50%,-50%); width:6px;height:6px; border-radius:50%; background:white; }
+        .vo-info { flex: 1; min-width: 0; }
+        .vo-reg { font-weight: 700; font-size: 0.95rem; }
+        .vo-sub { font-size: 0.8rem; color: var(--text-muted); }
+        .vo-checks { display: flex; gap: 4px; flex-wrap: wrap; flex-shrink: 0; }
+        .check-badge {
+            display: flex; align-items: center; gap: 3px; font-size: 0.7rem; font-weight: 600;
+            padding: 2px 7px; border-radius: 10px;
+        }
+        .check-ok  { background: #ECFDF5; color: var(--success); }
+        .check-err { background: #FEF2F2; color: var(--danger); }
+        .check-warn{ background: #FFFBEB; color: var(--warning); }
+        .vo-reason { font-size: 0.75rem; margin-top: 3px; }
+        .vo-reason.ok   { color: var(--success); }
+        .vo-reason.fail { color: var(--danger); }
+
+        /* Request btn */
+        .request-trip-bar {
+            display: flex; justify-content: flex-end; margin-bottom: 1.5rem;
+        }
+        .btn-request-trip {
+            display: flex; align-items: center; gap: 8px; padding: 10px 20px;
+            background: var(--accent); color: white; border: none; border-radius: 10px;
+            font-family: 'Outfit'; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+        }
+        .btn-request-trip:hover { background: #1D4ED8; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding-top: 1rem; border-top: 1px solid var(--border); margin-top: 1.5rem; }
+        .btn-cancel { padding: 10px 20px; border: 1px solid var(--border); border-radius: 8px; background: none; color: var(--text-muted); font-family:'Inter'; cursor: pointer; font-size: 0.9rem; }
+        .btn-submit { padding: 10px 24px; background: var(--accent); color: white; border: none; border-radius: 8px; font-family:'Outfit'; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: 0.2s; }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
         @keyframes fadeInPage { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -303,6 +380,13 @@
                     </div>
                 </div>
 
+                <!-- REQUEST TRIP BUTTON -->
+                <div class="request-trip-bar">
+                    <button class="btn-request-trip" onclick="openDispatchModal()">
+                        <i class="fa-solid fa-plus"></i> Request New Trip
+                    </button>
+                </div>
+
                 <!-- TABS -->
                 <div class="tabs">
                     <button class="tab-btn active" id="tabUpcoming" onclick="switchView('scheduled')">Upcoming</button>
@@ -323,6 +407,77 @@
 
             </div>
         </main>
+    </div>
+
+    <!-- DISPATCH REQUEST MODAL -->
+    <div class="modal-overlay" id="dispatchModal" onclick="if(event.target===this)closeDispatchModal()">
+        <div class="dispatch-modal" onclick="event.stopPropagation()">
+            <div class="modal-head">
+                <h2><i class="fa-solid fa-paper-plane" style="color:var(--accent);margin-right:10px;"></i>Request New Trip</h2>
+                <button class="modal-close-btn" onclick="closeDispatchModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- VEHICLE SELECTOR -->
+                <div class="form-group" style="margin-bottom:1.2rem">
+                    <label class="form-label">Select Vehicle <span style="color:var(--danger)">*</span></label>
+                    <div class="vehicle-selector" id="vehicleSelector">
+                        <p style="color:var(--text-muted);font-size:0.9rem;padding:8px">Loading available vehicles...</p>
+                    </div>
+                    <p id="vehicleSelectorNote" style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">
+                        <i class="fa-solid fa-circle-info"></i> Only vehicles with valid insurance, not in maintenance, and not on an active trip can be selected.
+                    </p>
+                </div>
+
+                <!-- ROUTE -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Origin <span style="color:var(--danger)">*</span></label>
+                        <input class="form-input" id="dOrigin" type="text" placeholder="e.g. Mumbai Warehouse" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Destination <span style="color:var(--danger)">*</span></label>
+                        <input class="form-input" id="dDest" type="text" placeholder="e.g. Pune Depot" />
+                    </div>
+                </div>
+
+                <!-- CARGO -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Cargo Type</label>
+                        <input class="form-input" id="dCargoType" type="text" placeholder="e.g. Electronics" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cargo Weight</label>
+                        <input class="form-input" id="dCargoWeight" type="text" placeholder="e.g. 2.5 tons" />
+                    </div>
+                </div>
+
+                <!-- PRIORITY -->
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        <select class="form-select" id="dPriority">
+                            <option value="standard">Standard</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- PRE-FLIGHT CHECKS SUMMARY -->
+                <div id="checksPanel" style="display:none;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:12px;padding:14px;margin-bottom:1rem">
+                    <p style="font-size:0.85rem;font-weight:600;color:#0284C7;margin-bottom:10px"><i class="fa-solid fa-shield-check" style="margin-right:6px;"></i>Pre-Dispatch Checks for Selected Vehicle</p>
+                    <div id="checksList" style="display:flex;flex-direction:column;gap:6px;"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-cancel" onclick="closeDispatchModal()">Cancel</button>
+                    <button class="btn-submit" id="dispatchSubmitBtn" onclick="submitDispatchRequest()">
+                        <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Submit Request
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- TRIP DETAILS DRAWER -->
@@ -387,6 +542,128 @@
         // ─── State ────────────────────────────────────────────────────────────
         let allUpcoming = [], allHistory = [];
 
+        // ─── Dispatch Request Modal ──────────────────────────────────────────────
+        let availableVehicles = [];
+        let selectedVehicleId = null;
+
+        async function openDispatchModal() {
+            document.getElementById('dispatchModal').classList.add('open');
+            selectedVehicleId = null;
+            document.getElementById('checksPanel').style.display = 'none';
+            document.getElementById('dispatchSubmitBtn').disabled = true;
+            await loadAvailableVehicles();
+        }
+
+        function closeDispatchModal() {
+            document.getElementById('dispatchModal').classList.remove('open');
+            ['dOrigin','dDest','dCargoType','dCargoWeight'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('dPriority').value = 'standard';
+            selectedVehicleId = null;
+        }
+
+        async function loadAvailableVehicles() {
+            const sel = document.getElementById('vehicleSelector');
+            sel.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;padding:8px"><i class="fa-solid fa-spinner fa-spin"></i> Loading vehicles...</p>';
+            try {
+                availableVehicles = await apiFetch('/api/driver/available-vehicles');
+                if (!availableVehicles.length) {
+                    sel.innerHTML = '<p style="color:var(--text-muted);padding:8px">No vehicles found in the fleet.</p>';
+                    return;
+                }
+                sel.innerHTML = availableVehicles.map(v => {
+                    const checks = v.checks || {};
+                    const insExpiry = v.insurance
+                        ? (v.insurance.days_left <= 30
+                            ? `<span class="check-badge check-warn"><i class="fa-solid fa-triangle-exclamation"></i> Ins. expires in ${v.insurance.days_left}d</span>`
+                            : `<span class="check-badge check-ok"><i class="fa-solid fa-check"></i> Insurance valid</span>`)
+                        : `<span class="check-badge check-err"><i class="fa-solid fa-xmark"></i> No insurance</span>`;
+                    const maintBadge = checks.not_in_maintenance
+                        ? `<span class="check-badge check-ok"><i class="fa-solid fa-check"></i> Operational</span>`
+                        : `<span class="check-badge check-err"><i class="fa-solid fa-xmark"></i> In maintenance</span>`;
+                    const tripBadge = checks.not_on_trip
+                        ? `<span class="check-badge check-ok"><i class="fa-solid fa-check"></i> Available</span>`
+                        : `<span class="check-badge check-err"><i class="fa-solid fa-xmark"></i> On trip</span>`;
+                    return `
+                    <div class="vehicle-option ${v.eligible ? '' : 'ineligible'}"
+                         id="vo-${v.id}" onclick="${v.eligible ? `selectVehicle('${v.id}')` : 'void(0)'}">
+                        <div class="vo-radio"></div>
+                        <div class="vo-info">
+                            <div class="vo-reg">${v.registration_number}</div>
+                            <div class="vo-sub">${v.make||''} ${v.model||''} ${v.year ? '('+v.year+')' : ''} &bull; ${v.vehicle_type||'Vehicle'}</div>
+                            <div class="vo-reason ${v.eligible ? 'ok' : 'fail'}">
+                                <i class="fa-solid ${v.eligible ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                                ${v.eligibility_reason}
+                            </div>
+                        </div>
+                        <div class="vo-checks">${insExpiry}${maintBadge}${tripBadge}</div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                sel.innerHTML = '<p style="color:var(--danger);padding:8px">Failed to load vehicles. ' + e.message + '</p>';
+            }
+        }
+
+        function selectVehicle(id) {
+            selectedVehicleId = id;
+            document.querySelectorAll('.vehicle-option').forEach(el => el.classList.remove('selected'));
+            document.getElementById('vo-' + id)?.classList.add('selected');
+            document.getElementById('dispatchSubmitBtn').disabled = false;
+
+            const v = availableVehicles.find(x => x.id === id);
+            if (v) {
+                const panel = document.getElementById('checksPanel');
+                const list  = document.getElementById('checksList');
+                panel.style.display = 'block';
+                const ins = v.insurance;
+                const insText = ins
+                    ? (ins.days_left <= 0 ? 'Expired' : ins.days_left <= 30 ? `Expiring in ${ins.days_left} days` : `Valid — expires ${new Date(ins.expiry_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}`)
+                    : 'No policy';
+                list.innerHTML = [
+                    [v.checks.insurance_valid,    'fa-file-shield', 'Insurance',       insText],
+                    [v.checks.not_in_maintenance, 'fa-wrench',      'Maintenance',     v.checks.not_in_maintenance ? 'Vehicle operational' : 'In maintenance — cannot dispatch'],
+                    [v.checks.not_on_trip,        'fa-route',       'Availability',    v.checks.not_on_trip ? 'Vehicle available' : 'Already on an active trip'],
+                    [v.fuel_level != null,        'fa-gas-pump',    'Fuel Level',      v.fuel_level != null ? v.fuel_level + '%' : 'Data unavailable']
+                ].map(([ok, icon, label, text]) =>
+                    `<div style="display:flex;align-items:center;gap:10px;font-size:0.85rem">
+                        <i class="fa-solid ${icon}" style="width:16px;color:${ok ? 'var(--success)' : 'var(--danger)'}"></i>
+                        <span style="font-weight:600;min-width:110px">${label}</span>
+                        <span style="color:${ok ? 'var(--success)' : 'var(--danger)'}">
+                            ${ok ? '✅' : '❌'} ${text}
+                        </span>
+                    </div>`
+                ).join('');
+            }
+        }
+
+        async function submitDispatchRequest() {
+            if (!selectedVehicleId) { alert('Please select a vehicle.'); return; }
+            const origin      = document.getElementById('dOrigin').value.trim();
+            const destination = document.getElementById('dDest').value.trim();
+            if (!origin || !destination) { alert('Origin and destination are required.'); return; }
+            const btn = document.getElementById('dispatchSubmitBtn');
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+            try {
+                const res = await apiFetch('/api/driver/dispatch', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        vehicle_id:   selectedVehicleId,
+                        origin,
+                        destination,
+                        cargo_type:   document.getElementById('dCargoType').value.trim() || null,
+                        cargo_weight: document.getElementById('dCargoWeight').value.trim() || null,
+                        priority:     document.getElementById('dPriority').value
+                    })
+                });
+                closeDispatchModal();
+                alert(`✅ Dispatch request submitted (${res.request?.ticket_number}).\n\nAwaiting manager/admin approval.`);
+                loadTrips();
+            } catch (e) {
+                alert('❌ ' + e.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i> Submit Request';
+            }
+        }
+
         // ─── Load Profile ────────────────────────────────────────────────────
         async function loadMe() {
             try {
@@ -419,12 +696,12 @@
 
         function statusPillHtml(status) {
             const map = {
-                pending:   { cls: 'st-scheduled', label: 'Pending' },
-                active:    { cls: 'st-scheduled', label: 'Active' },
-                completed: { cls: 'st-completed', label: 'Completed' },
-                rejected:  { cls: '', label: 'Rejected' }
+                pending:   { cls: 'st-pending',   label: '⏳ Awaiting Approval' },
+                active:    { cls: 'st-active',    label: '✅ Approved & Active' },
+                completed: { cls: 'st-completed', label: '✔ Completed' },
+                rejected:  { cls: 'st-rejected',  label: '✕ Rejected' }
             };
-            const s = map[status] || { cls: '', label: status };
+            const s = map[status] || { cls: 'st-scheduled', label: status };
             return `<span class="status-pill ${s.cls}">${s.label}</span>`;
         }
 

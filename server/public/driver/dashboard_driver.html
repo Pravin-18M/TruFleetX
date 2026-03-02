@@ -471,29 +471,46 @@
                     destEl.textContent   = trip.destination || '—';
 
                     if (trip.status === 'active') {
-                        statusEl.textContent           = 'In Progress';
-                        statusEl.style.background      = '#EFF6FF';
-                        statusEl.style.color           = '#2563EB';
+                        statusEl.textContent           = '✅ Approved & Active';
+                        statusEl.style.background      = '#ECFDF5';
+                        statusEl.style.color           = '#059669';
                         btnEl.innerHTML = '<i class="fa-solid fa-flag-checkered" style="margin-right:10px;"></i> Mark as Completed';
+                        btnEl.disabled  = false;
+                        btnEl.style.opacity = '1';
+                        btnEl.style.cursor  = 'pointer';
+                    } else if (trip.status === 'pending') {
+                        statusEl.textContent      = '⏳ Awaiting Approval';
+                        statusEl.style.background = '#FFFBEB';
+                        statusEl.style.color      = '#D97706';
+                        btnEl.innerHTML     = '<i class="fa-solid fa-hourglass-half" style="margin-right:10px;"></i> Pending Approval';
+                        btnEl.disabled      = true;
+                        btnEl.style.opacity = '0.6';
+                        btnEl.style.cursor  = 'not-allowed';
                     } else {
-                        statusEl.textContent = 'Ready to Start';
-                        btnEl.innerHTML = '<i class="fa-solid fa-play" style="margin-right:10px;"></i> Begin Trip';
+                        statusEl.textContent      = 'Ready to Start';
+                        statusEl.style.background = '#EFF6FF';
+                        statusEl.style.color      = '#2563EB';
+                        btnEl.innerHTML     = '<i class="fa-solid fa-play" style="margin-right:10px;"></i> Begin Trip';
+                        btnEl.disabled      = false;
+                        btnEl.style.opacity = '1';
+                        btnEl.style.cursor  = 'pointer';
                     }
 
-                    insEl.textContent      = 'Vehicle documents verified — Active policy';
-                    insIcon.className      = 'check-icon';
+                    insEl.textContent = 'Vehicle documents verified — Active policy';
+                    insIcon.className = 'check-icon';
                 } else {
-                    originEl.textContent = 'No Trip';
-                    destEl.textContent   = 'Assigned';
-                    statusEl.textContent = 'Stand By';
+                    originEl.textContent      = '—';
+                    destEl.textContent        = '—';
+                    statusEl.textContent      = 'No Active Trip';
                     statusEl.style.background = '#F1F5F9';
                     statusEl.style.color      = '#64748B';
-                    btnEl.innerHTML      = '<i class="fa-solid fa-hourglass-half" style="margin-right:10px;"></i> Awaiting Assignment';
-                    btnEl.disabled       = true;
-                    btnEl.style.opacity  = '0.6';
-                    btnEl.style.cursor   = 'not-allowed';
-                    insEl.textContent    = 'No active trip — docs will be verified on dispatch';
-                    insIcon.className    = 'check-icon warning';
+                    btnEl.innerHTML     = '<i class="fa-solid fa-plus" style="margin-right:10px;"></i> Request New Trip';
+                    btnEl.disabled      = false;
+                    btnEl.style.opacity = '1';
+                    btnEl.style.cursor  = 'pointer';
+                    btnEl.onclick       = () => window.location.href = 'MyTrips_driver.html';
+                    insEl.textContent   = 'No active trip — documents will be verified on dispatch';
+                    insIcon.className   = 'check-icon warning';
                 }
             } catch (e) {
                 console.error('loadCurrentTrip error:', e);

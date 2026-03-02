@@ -22,6 +22,10 @@ router.put('/trips/:tripId/complete',  guard, c.completeMyTrip);
 router.get('/vehicle',                 guard, c.getMyVehicle);
 router.post('/vehicle/issue',          guard, c.reportVehicleIssue);
 
+// ── Dispatch (Driver can raise a request) ──────────────────────────────────
+router.get('/available-vehicles',      guard, c.getAvailableVehicles);
+router.post('/dispatch',               guard, c.raiseDispatchRequest);
+
 // ── Documents ──────────────────────────────────────────────────────────────
 router.get('/documents',               guard, c.getMyDocuments);
 
