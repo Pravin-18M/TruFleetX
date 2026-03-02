@@ -484,10 +484,10 @@
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-icon" style="background: #F0FDF4; color: var(--success);">
-                        <i class="fa-solid fa-indian-rupee-sign"></i>
+                        <i class="fa-solid fa-circle-check"></i>
                     </div>
-                    <span class="kpi-value" id="statPremium">--</span>
-                    <span class="kpi-label">Premium Value</span>
+                    <span class="kpi-value" id="statActive">--</span>
+                    <span class="kpi-label">Active Policies</span>
                 </div>
             </div>
 
@@ -526,7 +526,7 @@
                         <span class="section-title">Master Policy Registry</span>
                         <div style="position: relative;">
                             <i class="fa-solid fa-search" style="position: absolute; left: 10px; top: 10px; color: #94A3B8;"></i>
-                            <input type="text" placeholder="Search Policy or VIN" style="padding: 8px 10px 8px 35px; border: 1px solid #E2E8F0; border-radius: 6px; font-family: 'Inter';">
+                            <input type="text" id="policySearch" oninput="filterPolicies(this.value)" placeholder="Search vehicle, policy, provider" style="padding: 8px 10px 8px 35px; border: 1px solid #E2E8F0; border-radius: 6px; font-family: 'Inter';">
                         </div>
                     </div>
                     <table>
@@ -729,19 +729,16 @@
         });
 
         // ── LOAD KPI STATS ───────────────────────────────────────────
-        // Backend returns: { coveragePercent, expiredOrUninsured, expiringIn7Days, activePolicies }
+        // Backend returns: { totalVehicles, coveragePercent, expiredOrUninsured, expiringIn7Days, activePolicies }
         async function loadStats() {
             try {
                 const res = await fetch('/api/insurance/stats', { headers: authHeaders });
                 if (!res.ok) return;
                 const s = await res.json();
-                document.getElementById('statCoverage').textContent = (s.coveragePercent ?? '0') + '%';
+                document.getElementById('statCoverage').textContent = (s.coveragePercent  ?? '0.0') + '%';
                 document.getElementById('statExpired').textContent  = String(s.expiredOrUninsured ?? 0).padStart(2, '0');
-                document.getElementById('stat7Days').textContent    = String(s.expiringIn7Days   ?? 0).padStart(2, '0');
-                document.getElementById('statPremium').textContent  = s.activePolicies ?? '0';
-                // Replace the "Premium Value" label with Active Policies since backend doesn't return premium
-                const labels = document.querySelectorAll('.kpi-label');
-                labels[3].textContent = 'Active Policies';
+                document.getElementById('stat7Days').textContent    = String(s.expiringIn7Days    ?? 0).padStart(2, '0');
+                document.getElementById('statActive').textContent   = String(s.activePolicies     ?? 0).padStart(2, '0');
             } catch {}
         }
 
@@ -784,47 +781,73 @@
 
         // ── LOAD POLICY TABLE ────────────────────────────────────────
         // Backend returns: [..., { vehicle: { registration_number, make, model, vin, status }, provider, policy_number, expiry_date, ... }]
+        // Auto-reflects insurance records created when vehicles are added via Vehicle Management page.
+        let _allPolicies = [];
+
         async function loadPolicies() {
             const tbody = document.getElementById('policyTableBody');
             try {
                 const res = await fetch('/api/insurance', { headers: authHeaders });
                 if (!res.ok) throw new Error();
-                const policies = await res.json();
-                if (!policies.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#94A3B8;">No policies yet. Add one via &ldquo;Add Policy&rdquo;.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = policies.map(p => {
-                    const days = daysLeft(p.expiry_date);
-                    const reg  = vehicleReg(p);
-                    const name = vehicleName(p);
-                    // Serialize safely for onclick
-                    const safe = JSON.stringify(p).replace(/'/g, "&#39;");
-                    return `
-                    <tr>
-                        <td>
-                            <strong>${reg}</strong>
-                            ${name ? `<br><span style="color:#64748B;font-size:0.8rem;">${name}</span>` : ''}
-                        </td>
-                        <td>
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <i class="fa-solid fa-building-columns" style="color:#2563EB;"></i>
-                                ${p.provider || '—'}
-                            </div>
-                        </td>
-                        <td>${p.policy_number || '—'}</td>
-                        <td>${fmtDate(p.expiry_date)}</td>
-                        <td>${pillHtml(days)}</td>
-                        <td>
-                            <button style="background:none;border:none;cursor:pointer;color:#94A3B8;" onclick='openDrawer(${safe})'>
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-                }).join('');
+                _allPolicies = await res.json();
+                renderPolicyRows(_allPolicies);
             } catch {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--danger);">Failed to load policies.</td></tr>';
             }
+        }
+
+        function renderPolicyRows(policies) {
+            const tbody = document.getElementById('policyTableBody');
+            if (!policies.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#94A3B8;">No policies yet. Add a vehicle with insurance details or use &ldquo;Add Policy&rdquo;.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = policies.map(p => {
+                const days = daysLeft(p.expiry_date);
+                const reg  = vehicleReg(p);
+                const name = vehicleName(p);
+                const safe = JSON.stringify(p).replace(/'/g, "&#39;");
+                const startStr = p.start_date ? fmtDate(p.start_date) : '—';
+                return `
+                <tr data-search="${(reg + ' ' + name + ' ' + (p.provider||'') + ' ' + (p.policy_number||'')).toLowerCase()}">
+                    <td>
+                        <strong>${reg}</strong>
+                        ${name ? `<br><span style="color:#64748B;font-size:0.8rem;">${name}</span>` : ''}
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <i class="fa-solid fa-building-columns" style="color:#2563EB;"></i>
+                            ${p.provider || '—'}
+                        </div>
+                    </td>
+                    <td>${p.policy_number || '—'}</td>
+                    <td>
+                        <div>${fmtDate(p.expiry_date)}</div>
+                        ${p.start_date ? `<span style="color:#94A3B8;font-size:0.75rem;">From ${startStr}</span>` : ''}
+                    </td>
+                    <td>${pillHtml(days)}</td>
+                    <td>
+                        <button title="Edit Policy" style="background:none;border:none;cursor:pointer;color:#64748B;padding:4px 8px;border-radius:6px;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='none'" onclick='openDrawer(${safe})'>
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ── LIVE SEARCH ──────────────────────────────────────────────
+        function filterPolicies(q) {
+            const term = q.toLowerCase().trim();
+            if (!term) { renderPolicyRows(_allPolicies); return; }
+            const filtered = _allPolicies.filter(p => {
+                const hay = [
+                    p.vehicle?.registration_number,
+                    p.vehicle?.make, p.vehicle?.model, p.vehicle?.vin,
+                    p.provider, p.policy_number
+                ].filter(Boolean).join(' ').toLowerCase();
+                return hay.includes(term);
+            });
+            renderPolicyRows(filtered);
         }
 
         // ── FORM SUBMIT (ADD or UPDATE POLICY) ───────────────────────

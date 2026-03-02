@@ -13,46 +13,56 @@ exports.getAllPolicies = async (req, res) => {
 
 // GET insurance KPI stats
 exports.getInsuranceStats = async (req, res) => {
-    const today = new Date();
-    const in7Days = new Date();
+    const today     = new Date();
+    const in7Days   = new Date();
     in7Days.setDate(today.getDate() + 7);
+    const todayStr    = today.toISOString().split('T')[0];
+    const in7DaysStr  = in7Days.toISOString().split('T')[0];
 
-    const todayStr = today.toISOString().split('T')[0];
-    const in7DaysStr = in7Days.toISOString().split('T')[0];
-
-    // Count total vehicles
+    // 1. Total vehicles in fleet
     const { count: totalVehicles } = await supabase
         .from('vehicles')
         .select('*', { count: 'exact', head: true });
 
-    // Count policies that are active (not expired)
+    // 2. Active policies (expiry >= today)
     const { count: activePolicies } = await supabase
         .from('insurance_policies')
         .select('*', { count: 'exact', head: true })
         .gte('expiry_date', todayStr);
 
-    // Count expired / uninsured
+    // 3. Expired policies (expiry < today)
     const { count: expiredCount } = await supabase
         .from('insurance_policies')
         .select('*', { count: 'exact', head: true })
         .lt('expiry_date', todayStr);
 
-    // Count expiring in 7 days
+    // 4. Vehicles with NO insurance record at all (truly uninsured)
+    //    Fetch all insured vehicle_ids, then subtract from total
+    const { data: insuredRows } = await supabase
+        .from('insurance_policies')
+        .select('vehicle_id');
+    const uniqueInsuredCount = new Set((insuredRows || []).map(r => r.vehicle_id)).size;
+    const uninsuredVehicles  = Math.max(0, (totalVehicles || 0) - uniqueInsuredCount);
+
+    // 5. Expiring within next 7 days (active but critical)
     const { count: expiringIn7 } = await supabase
         .from('insurance_policies')
         .select('*', { count: 'exact', head: true })
         .gte('expiry_date', todayStr)
         .lte('expiry_date', in7DaysStr);
 
-    const coveragePct = totalVehicles > 0
-        ? ((activePolicies / totalVehicles) * 100).toFixed(1)
-        : 0;
+    // coveragePercent = vehicles that have at least one active policy / total vehicles
+    const coveragePct = (totalVehicles || 0) > 0
+        ? (((activePolicies || 0) / totalVehicles) * 100).toFixed(1)
+        : '0.0';
 
     res.json({
-        coveragePercent: coveragePct,
-        expiredOrUninsured: expiredCount || 0,
-        expiringIn7Days: expiringIn7 || 0,
-        activePolicies: activePolicies || 0
+        totalVehicles:      totalVehicles      || 0,
+        coveragePercent:    coveragePct,
+        // Expired policies + vehicles with zero policy record
+        expiredOrUninsured: (expiredCount || 0) + uninsuredVehicles,
+        expiringIn7Days:    expiringIn7        || 0,
+        activePolicies:     activePolicies     || 0
     });
 };
 
