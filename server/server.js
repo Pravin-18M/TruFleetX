@@ -34,13 +34,19 @@ app.use('/api/manager',   managerRoutes);
 app.use('/api/driver',    driverPortalRoutes);
 
 
-// --- Server Initialization ---
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`[Trufleet CTO]: Server is running on port ${PORT}. Awaiting commands.`);
-});
-
 // --- Root Route to serve the landing page ---
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/Home.html');
+    res.sendFile(__dirname + '/public/home.html');
 });
+
+// --- Export app for Cloud Functions (server/index.js) ---
+module.exports = app;
+
+// --- Start HTTP server only when run directly (node server.js / npm run dev) ---
+// In Firebase Cloud Functions, index.js imports `app` and Firebase handles the port.
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`[Trufleet CTO]: Server is running on port ${PORT}. Awaiting commands.`);
+    });
+}
