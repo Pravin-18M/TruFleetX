@@ -3,264 +3,193 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Documents — TruFleetX</title>
+<title>Documents | TruFleetX Pilot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
-:root{
-  --bg:#F0F4F8;--sidebar:#1A2332;--sidebar-w:240px;
-  --card:#fff;--border:#E2E8F0;
-  --primary:#2D3A8C;--primary-light:#E8EAFB;
-  --accent:#4F8EF7;--accent-light:#EBF3FF;
-  --green:#0EA371;--green-light:#D1FAE5;
-  --red:#E53E3E;--red-light:#FED7D7;
-  --orange:#DD6B20;--orange-light:#FEEBC8;
-  --yellow:#D69E2E;--yellow-light:#FEFCBF;
-  --text:#1A202C;--muted:#64748B;--bdr:12px;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
-.sidebar{width:var(--sidebar-w);background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
-.sidebar-logo{padding:22px 18px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07)}
-.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,#4F8EF7,#2D3A8C);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0}
-.logo-text{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff}
-.sidebar-section{padding:14px 14px 4px;font-size:10px;font-weight:600;color:rgba(255,255,255,.32);letter-spacing:.12em;text-transform:uppercase}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;text-decoration:none;color:rgba(255,255,255,.58);font-size:13px;font-weight:500;margin:1px 0;transition:all .15s}
-.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
-.nav-item.active{background:linear-gradient(90deg,rgba(79,142,247,.25),rgba(79,142,247,.08));color:#fff;border-left:3px solid #4F8EF7}
-.nav-item i{width:18px;font-size:13px;text-align:center;flex-shrink:0}
-.sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,.07)}
-.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
-.header{background:var(--card);border-bottom:1px solid var(--border);padding:0 26px;height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.hdr-title{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;color:var(--primary)}
-.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px}
-.driver-chip{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 5px}
-.driver-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover}
-.sdot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2.5s infinite;flex-shrink:0}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.content{padding:24px;flex:1}
-.slabel{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.slabel::after{content:'';flex:1;height:1px;background:var(--border)}
-/* ALERT BANNER */
-.ualert{border-radius:var(--bdr);padding:14px 16px;display:flex;align-items:flex-start;gap:10px;margin-bottom:20px}
-.ualert.warn{background:var(--orange-light);border:1.5px solid #F6AD55}
-.ualert.danger{background:var(--red-light);border:1.5px solid #FC8181}
-.ualert i{margin-top:2px;font-size:14px}
-.ualert.warn i{color:var(--orange)}
-.ualert.danger i{color:var(--red)}
-.ualert-t{font-size:13px;font-weight:700;margin-bottom:2px}
-.ualert.warn .ualert-t{color:var(--orange)}
-.ualert.danger .ualert-t{color:var(--red)}
+:root{--primary:#0F172A;--accent:#2563EB;--accent-soft:#EFF6FF;--bg-body:#F1F5F9;--bg-card:#FFFFFF;--text-main:#1E293B;--text-muted:#64748B;--success:#10B981;--warning:#F59E0B;--danger:#EF4444;--sidebar-width:280px;--sidebar-collapsed:80px;--header-height:80px;--shadow-sm:0 1px 2px 0 rgba(0,0,0,.05);--shadow-card:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);--shadow-hover:0 20px 25px -5px rgba(0,0,0,.07),0 10px 10px -5px rgba(0,0,0,.02);--radius-lg:20px;--radius-md:12px;--spring:all .4s cubic-bezier(.34,1.56,.64,1);--smooth:all .3s cubic-bezier(.4,0,.2,1);}
+*{margin:0;padding:0;box-sizing:border-box;outline:none}
+body{font-family:'Inter',sans-serif;background:var(--bg-body);color:var(--text-main);overflow-x:hidden}
+.app{display:grid;grid-template-columns:var(--sidebar-width) 1fr;transition:grid-template-columns .4s ease;min-height:100vh}
+.app.collapsed{grid-template-columns:var(--sidebar-collapsed) 1fr}
+aside{background:var(--bg-card);border-right:1px solid #E2E8F0;padding:1.5rem 1rem;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;z-index:50;transition:var(--smooth);overflow:hidden}
+.brand-logo{display:flex;align-items:center;gap:12px;padding:0 1rem 2.5rem;color:var(--primary);text-decoration:none;font-family:'Outfit',sans-serif;font-weight:700;font-size:1.4rem;white-space:nowrap;overflow:hidden}
+.brand-text{font-family:'Outfit',sans-serif;font-weight:600;font-size:1rem;transition:opacity .2s}
+.app.collapsed .brand-text{opacity:0;pointer-events:none;width:0;overflow:hidden}
+.nav-menu{display:flex;flex-direction:column;gap:.35rem;flex:1;min-width:0}
+.nav-label{padding:.9rem 1rem .3rem;font-size:.68rem;font-weight:600;color:#CBD5E1;text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;overflow:hidden}
+.app.collapsed .nav-label{opacity:0}
+.nav-item{display:flex;align-items:center;gap:16px;padding:11px 16px;color:var(--text-muted);text-decoration:none;border-radius:10px;transition:.25s;font-weight:500;white-space:nowrap;overflow:hidden}
+.nav-item:hover,.nav-item.active{background:#EFF6FF;color:var(--accent)}
+.nav-item i{font-size:1.05rem;min-width:22px;text-align:center;flex-shrink:0}
+.nav-spacer{flex-grow:1}
+main{padding:0;overflow-y:auto;height:100vh}
+header{height:var(--header-height);background:rgba(255,255,255,.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(226,232,240,.6);position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:0 2rem}
+.hdr-left{display:flex;align-items:center;gap:1rem}
+.toggle-btn{background:transparent;border:none;font-size:1.1rem;cursor:pointer;color:var(--text-muted);padding:8px;border-radius:8px;transition:.2s}
+.toggle-btn:hover{background:var(--accent-soft);color:var(--accent)}
+.page-title{font-family:'Outfit',sans-serif;font-weight:600;font-size:1.2rem;color:var(--primary)}
+.page-sub{font-size:.75rem;color:var(--text-muted);margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:1.25rem}
+.profile-chip{display:flex;align-items:center;gap:10px;padding:6px 14px 6px 7px;background:#fff;border:1px solid #E2E8F0;border-radius:30px;cursor:pointer;transition:var(--smooth)}
+.profile-chip:hover{border-color:var(--accent)}
+.profile-img{width:32px;height:32px;border-radius:50%;object-fit:cover}
+.pname{font-weight:600;font-size:.85rem;color:var(--primary);line-height:1.15}
+.prole{font-size:.7rem;color:var(--text-muted)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0;animation:ldot 2.2s infinite}
+@keyframes ldot{0%,100%{opacity:1}50%{opacity:.3}}
+.content{padding:2rem;max-width:1400px;margin:0 auto;opacity:0;animation:fadeIn .55s ease-out forwards}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+/* ALERTS */
+.alert{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-radius:12px;margin-bottom:.75rem;font-size:.88rem;font-weight:500}
+.alert-e{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B}.alert-w{background:#FFFBEB;border:1px solid #FDE68A;color:#92400E}
+.alert-ico{flex-shrink:0;margin-top:1px}
 /* DOC GRID */
-.doc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-@media(max-width:780px){.doc-grid{grid-template-columns:1fr}}
-.doc-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--bdr);padding:20px;transition:box-shadow .15s}
-.doc-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.07)}
-.doc-card.expiring{border-color:#F6AD55}
-.doc-card.expired{border-color:#FC8181}
-.doc-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
-.doc-ico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.doc-name{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px}
-.doc-status{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px}
-.ds-valid{background:var(--green-light);color:var(--green)}
-.ds-expiring{background:var(--orange-light);color:var(--orange)}
-.ds-expired{background:var(--red-light);color:var(--red)}
-.ds-na{background:var(--bg);color:var(--muted)}
-.doc-rows{display:flex;flex-direction:column;gap:6px}
-.doc-row{display:flex;align-items:center;justify-content:space-between;font-size:12px}
-.doc-row-label{color:var(--muted);font-weight:500;min-width:110px}
-.doc-row-val{font-weight:600;text-align:right}
-.doc-action{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-.btn-sm{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;gap:5px;font-family:'Inter',sans-serif;transition:all .15s}
-.btn-sm-pri{background:var(--accent-light);color:var(--accent)}
-.btn-sm-pri:hover{background:var(--accent);color:#fff}
-.btn-sm-out{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
-.btn-sm-out:hover{color:var(--text)}
-.shimmer{background:linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%);background-size:200% 100%;animation:shim 1.4s infinite;border-radius:8px}
-@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.toast{position:fixed;bottom:22px;right:22px;background:#1A2332;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:7px;max-width:340px}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;margin-top:1.5rem}
+.doc-card{background:var(--bg-card);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);border:1.5px solid #E2E8F0;padding:1.5rem;transition:var(--spring);display:flex;flex-direction:column}
+.doc-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
+.doc-card.c-ok{border-top:4px solid var(--success)}.doc-card.c-wn{border-top:4px solid var(--warning)}.doc-card.c-er{border-top:4px solid var(--danger)}.doc-card.c-na{border-top:4px solid #CBD5E1}
+.dc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.dc-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.ic-ok{background:#ECFDF5;color:#10B981}.ic-wn{background:#FFFBEB;color:#F59E0B}.ic-er{background:#FEF2F2;color:#EF4444}.ic-na{background:#F1F5F9;color:#94A3B8}
+.badge{font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:20px}
+.bg{background:#ECFDF5;color:#10B981}.bo{background:#FFF7ED;color:#F59E0B}.br{background:#FEF2F2;color:#EF4444}.bmo{background:#F1F5F9;color:#64748B}
+.dc-name{font-family:'Outfit',sans-serif;font-weight:700;font-size:1rem;color:var(--primary);margin-bottom:.75rem}
+.dc-rows{display:flex;flex-direction:column;gap:.45rem;flex:1}
+.dc-row{display:flex;justify-content:space-between;font-size:.83rem}
+.dc-rl{color:var(--text-muted)}.dc-rv{font-weight:600;color:var(--text-main)}
+.dc-footer{margin-top:1rem;padding-top:.75rem;border-top:1px solid #F1F5F9}
+.btn-sec{width:100%;padding:8px 16px;border:1.5px solid #E2E8F0;border-radius:8px;background:transparent;font-size:.83rem;font-weight:600;cursor:pointer;color:var(--text-muted);font-family:'Inter',sans-serif;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-sec:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.panel{background:var(--bg-card);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);border:1px solid rgba(226,232,240,.5);padding:1.5rem}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.pt{font-family:'Outfit',sans-serif;font-weight:600;font-size:1.05rem;color:var(--primary);display:flex;align-items:center;gap:8px}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 16px;border-radius:12px;background:#1E293B;color:#fff;font-size:.85rem;font-weight:500;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:8px;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
 .toast.show{opacity:1;transform:translateY(0)}
+.shimmer{background:linear-gradient(90deg,#F8FAFC 25%,#E2E8F0 50%,#F8FAFC 75%);background-size:200% 100%;animation:shim 1.5s infinite;border-radius:8px}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media(max-width:768px){.app{grid-template-columns:1fr}aside{position:fixed;left:-280px;top:0;height:100%;box-shadow:10px 0 30px rgba(0,0,0,.1)}.app.mobile-open aside{left:0}.doc-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<nav class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-mark">T</div>
-    <span class="logo-text">TruFleetX</span>
-  </div>
-  <div class="sidebar-section">Pilot Portal</div>
-  <a href="dashboard_driver.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
-  <a href="MyTrips_driver.html" class="nav-item"><i class="fa-solid fa-route"></i><span>My Trips</span></a>
-  <a href="Vehicle_status_driver.html" class="nav-item"><i class="fa-solid fa-truck"></i><span>My Vehicle</span></a>
-  <a href="Documents_driver.html" class="nav-item active"><i class="fa-solid fa-folder-open"></i><span>Documents</span></a>
-  <a href="support_driver.html" class="nav-item"><i class="fa-solid fa-headset"></i><span>Support</span></a>
-  <div class="sidebar-bottom">
-    <a href="../login.html" class="nav-item" style="color:rgba(255,255,255,.4)" onclick="localStorage.clear()">
-      <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Sign Out</span>
-    </a>
-  </div>
-</nav>
-<div class="main">
-  <div class="header">
-    <div>
-      <div class="hdr-title"><i class="fa-solid fa-folder-open" style="color:var(--accent);margin-right:7px;font-size:14px"></i>Documents</div>
-      <div class="hdr-sub" id="hdrSub">Your compliance & regulatory documents</div>
+<div class="app" id="app">
+<aside id="sidebar">
+  <a href="#" class="brand-logo"><i class="fa-solid fa-cube"></i><span class="brand-text">TruFleetX</span></a>
+  <nav class="nav-menu">
+    <div class="nav-label">Pilot Portal</div>
+    <a href="dashboard_driver.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span class="brand-text">Dashboard</span></a>
+    <a href="MyTrips_driver.html" class="nav-item"><i class="fa-solid fa-route"></i><span class="brand-text">My Trips</span></a>
+    <a href="Vehicle_status_driver.html" class="nav-item"><i class="fa-solid fa-truck-front"></i><span class="brand-text">My Vehicle</span></a>
+    <a href="Documents_driver.html" class="nav-item active"><i class="fa-solid fa-folder-open"></i><span class="brand-text">Documents</span></a>
+    <a href="support_driver.html" class="nav-item"><i class="fa-solid fa-headset"></i><span class="brand-text">Support</span></a>
+    <div class="nav-spacer"></div>
+    <a href="../login.html" class="nav-item" style="color:var(--danger)" onclick="localStorage.clear()"><i class="fa-solid fa-arrow-right-from-bracket"></i><span class="brand-text">Sign Out</span></a>
+  </nav>
+</aside>
+<main>
+  <header>
+    <div class="hdr-left">
+      <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></button>
+      <div><div class="page-title">Documents</div><div class="page-sub">Identity, license &amp; compliance records</div></div>
     </div>
-    <div class="driver-chip">
-      <span class="sdot"></span>
-      <img id="avatar" class="driver-avatar" src="" alt=""/>
-      <span id="dName" style="font-size:13px;font-weight:600">Driver</span>
+    <div class="hdr-right">
+      <div class="profile-chip">
+        <span class="live-dot"></span>
+        <img id="profileImg" class="profile-img" src="" alt=""/>
+        <div><div class="pname" id="profileName">Loading…</div><div class="prole">Fleet Pilot</div></div>
+      </div>
     </div>
-  </div>
+  </header>
   <div class="content">
-    <div id="alertsSection"></div>
-    <div class="slabel">Compliance Documents</div>
-    <div class="doc-grid" id="docGrid">
-      <div class="doc-card shimmer" style="height:160px"></div>
-      <div class="doc-card shimmer" style="height:160px"></div>
-      <div class="doc-card shimmer" style="height:160px"></div>
-      <div class="doc-card shimmer" style="height:160px"></div>
+    <div class="panel">
+      <div class="ph"><div class="pt"><i class="fa-solid fa-folder-open" style="color:var(--accent)"></i>Compliance Documents</div><div id="docSummary" style="font-size:.82rem;color:var(--text-muted)"></div></div>
+      <div id="alertBox"></div>
+      <div class="doc-grid" id="docGrid">
+        <div class="doc-card c-na shimmer" style="min-height:220px"></div>
+        <div class="doc-card c-na shimmer" style="min-height:220px"></div>
+        <div class="doc-card c-na shimmer" style="min-height:220px"></div>
+        <div class="doc-card c-na shimmer" style="min-height:220px"></div>
+        <div class="doc-card c-na shimmer" style="min-height:220px"></div>
+      </div>
     </div>
   </div>
+</main>
 </div>
-<div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
+<div class="toast" id="toast"><i id="tIco" class="fa-solid fa-circle-check"></i><span id="tMsg"></span></div>
 <script>
 const TOKEN=localStorage.getItem('trufleet_token')||'';
 if(!TOKEN){window.location.href='../login.html';}
-const api=(path,opts={})=>fetch('/api/driver'+path,{
-  ...opts,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(opts.headers||{})}
-}).then(async r=>{
-  if(r.status===401){localStorage.clear();window.location.href='../login.html';}
-  const d=await r.json(); if(!r.ok) throw new Error(d.error||'Request failed'); return d;
-});
-
+(function(){try{const p=JSON.parse(atob(TOKEN.split('.')[1]));if(!p||!['driver','admin','manager'].includes(p.role)){localStorage.clear();window.location.href='../login.html';}}catch{localStorage.clear();window.location.href='../login.html';}})();
+const api=(path,opts={})=>fetch('/api/driver'+path,{...opts,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(opts.headers||{})}}).then(async r=>{if(r.status===401){localStorage.clear();window.location.href='../login.html';}const d=await r.json();if(!r.ok)throw new Error(d.error||'Error');return d;});
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function fmtDate(iso){if(!iso)return'—';return new Date(iso).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+function fmt(iso){if(!iso)return'N/A';return new Date(iso).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+function toast(msg,ok=true){const el=document.getElementById('toast');document.getElementById('tIco').className=ok?'fa-solid fa-circle-check':'fa-solid fa-circle-xmark';el.style.background=ok?'#1E293B':'#EF4444';document.getElementById('tMsg').textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3800);}
+const app=document.getElementById('app'),sb=document.getElementById('sidebar');
+function toggleSidebar(){if(window.innerWidth<=768)app.classList.toggle('mobile-open');else app.classList.toggle('collapsed');}
+sb.addEventListener('mouseenter',()=>{if(window.innerWidth>768&&app.classList.contains('collapsed')){app.classList.remove('collapsed');sb.dataset.ae='1';}});
+sb.addEventListener('mouseleave',()=>{if(window.innerWidth>768&&sb.dataset.ae==='1'){app.classList.add('collapsed');sb.dataset.ae='0';}});
+async function loadProfile(){try{const d=await api('/me');const n=d.full_name||d.email?.split('@')[0]||'Pilot';document.getElementById('profileName').textContent=n;document.getElementById('profileImg').src=d.avatar_url||`https://ui-avatars.com/api/?name=${encodeURIComponent(n)}&background=EFF6FF&color=2563EB&rounded=true`;}catch{}}
 
-function toast(msg,err=false){
-  const el=document.getElementById('toast');
-  el.querySelector('i').className=err?'fa-solid fa-circle-exclamation':'fa-solid fa-circle-check';
-  el.style.background=err?'#E53E3E':'#1A2332';
-  document.getElementById('toastMsg').textContent=msg;
-  el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3800);
+const DOC_DEFS=[
+  {key:'license',label:'Driving License',icon:'fa-id-card',expiryKey:'license_expiry',numKey:'license_number'},
+  {key:'aadhar',label:'Aadhar Card',icon:'fa-address-card',expiryKey:'aadhar_expiry',numKey:'aadhar_number'},
+  {key:'medical',label:'Medical Certificate',icon:'fa-notes-medical',expiryKey:'medical_expiry',numKey:'medical_number'},
+  {key:'rc',label:'Vehicle RC',icon:'fa-car',expiryKey:'rc_expiry',numKey:'rc_number'},
+  {key:'insurance',label:'Vehicle Insurance',icon:'fa-file-shield',expiryKey:'insurance_expiry',numKey:'insurance_policy'},
+];
+
+function getDocStatus(expiry){
+  if(!expiry)return{label:'NO DATA',cls:'bmo',cardCls:'c-na',icoCls:'ic-na',days:null};
+  const days=Math.ceil((new Date(expiry)-new Date())/86400000);
+  if(days<0)return{label:'EXPIRED',cls:'br',cardCls:'c-er',icoCls:'ic-er',days};
+  if(days<=30)return{label:'EXPIRING',cls:'bo',cardCls:'c-wn',icoCls:'ic-wn',days};
+  return{label:'VALID',cls:'bg',cardCls:'c-ok',icoCls:'ic-ok',days};
 }
 
-function getExpiryInfo(isoExpiry){
-  if(!isoExpiry) return{days:null,status:'na',label:'Not on record',color:'var(--muted)',bg:'var(--bg)'};
-  const today=new Date(); const exp=new Date(isoExpiry);
-  const days=Math.ceil((exp-today)/(1000*60*60*24));
-  if(days<0) return{days,status:'expired',label:`Expired ${Math.abs(days)}d ago`,color:'var(--red)',bg:'var(--red-light)'};
-  if(days<=30) return{days,status:'expiring',label:`Expiring in ${days}d`,color:'var(--orange)',bg:'var(--orange-light)'};
-  return{days,status:'valid',label:`Valid · ${days}d left`,color:'var(--green)',bg:'var(--green-light)'};
+async function loadDocs(){
+  try{
+    const d=await api('/documents');
+    const dp=Array.isArray(d.driver_profiles)?d.driver_profiles[0]:(d.driver_profiles||d||{});
+    const today=new Date();
+    let expired=[],expiring=[];
+    const cards=DOC_DEFS.map(def=>{
+      const expiry=dp[def.expiryKey]||null;
+      const num=dp[def.numKey]||null;
+      const st=getDocStatus(expiry);
+      if(st.days!==null&&st.days<0)expired.push(def.label);
+      else if(st.days!==null&&st.days<=30)expiring.push(`${def.label} (${st.days}d)`);
+      return{...def,expiry,num,st};
+    });
+    // Alerts
+    let alertHtml='';
+    if(expired.length)alertHtml+=`<div class="alert alert-e"><i class="fa-solid fa-circle-xmark alert-ico"></i><div><strong>Expired Documents:</strong> ${esc(expired.join(', '))} — renew immediately to avoid compliance issues.</div></div>`;
+    if(expiring.length)alertHtml+=`<div class="alert alert-w"><i class="fa-solid fa-triangle-exclamation alert-ico"></i><div><strong>Expiring Soon:</strong> ${esc(expiring.join(', '))} — schedule renewal.</div></div>`;
+    document.getElementById('alertBox').innerHTML=alertHtml;
+    const valid=cards.filter(c=>c.st.days!==null&&c.st.days>0).length;
+    document.getElementById('docSummary').textContent=`${valid} of ${cards.length} valid`;
+    document.getElementById('docGrid').innerHTML=cards.map(c=>`
+      <div class="doc-card ${c.st.cardCls}">
+        <div class="dc-head">
+          <div class="dc-ico ${c.st.icoCls}"><i class="fa-solid ${c.icon}"></i></div>
+          <span class="badge ${c.st.cls}">${c.st.label}</span>
+        </div>
+        <div class="dc-name">${esc(c.label)}</div>
+        <div class="dc-rows">
+          <div class="dc-row"><span class="dc-rl">Document #</span><span class="dc-rv">${esc(c.num||'—')}</span></div>
+          <div class="dc-row"><span class="dc-rl">Expiry Date</span><span class="dc-rv" style="${c.st.days!==null&&c.st.days<=0?'color:var(--danger)':c.st.days!==null&&c.st.days<=30?'color:var(--warning)':''}">${fmt(c.expiry)}</span></div>
+          ${c.st.days!==null?`<div class="dc-row"><span class="dc-rl">Days Left</span><span class="dc-rv" style="${c.st.days<=0?'color:var(--danger)':c.st.days<=30?'color:var(--warning)':'color:var(--success)'}">${c.st.days<=0?'Expired':''+c.st.days+' days'}</span></div>`:''}
+        </div>
+        <div class="dc-footer">
+          <button class="btn-sec" onclick="toast('Document viewing coming soon. Contact your manager.', false)"><i class="fa-solid fa-eye"></i>View Document</button>
+        </div>
+      </div>`).join('');
+  }catch(e){document.getElementById('docGrid').innerHTML=`<div style="grid-column:1/-1;padding:2rem;text-align:center;color:var(--text-muted);font-size:.88rem"><i class="fa-solid fa-triangle-exclamation" style="display:block;font-size:2rem;opacity:.4;margin-bottom:10px"></i>Could not load documents. ${esc(e.message)}</div>`;}
 }
 
-function statusBadge(ei){
-  const cls={valid:'ds-valid',expiring:'ds-expiring',expired:'ds-expired',na:'ds-na'}[ei.status];
-  const txt={valid:'VALID',expiring:'EXPIRING SOON',expired:'EXPIRED',na:'N/A'}[ei.status];
-  return`<span class="doc-status ${cls}">${txt}</span>`;
-}
-
-function docRow(label,val){return`<div class="doc-row"><span class="doc-row-label">${label}</span><span class="doc-row-val">${val}</span></div>`;}
-
-function viewBtn(url){
-  if(!url) return'';
-  return`<a href="${esc(url)}" target="_blank" rel="noopener" class="btn-sm btn-sm-pri"><i class="fa-solid fa-eye"></i>View</a>`;
-}
-
-function buildDocCard(icon,iconBg,iconColor,name,statusEl,cardClass,rows,actionHtml=''){
-  return`<div class="doc-card ${cardClass}">
-    <div class="doc-head">
-      <div class="doc-ico" style="background:${iconBg};color:${iconColor}"><i class="fa-solid ${icon}"></i></div>
-      <div><div class="doc-name">${name}</div>${statusEl}</div>
-    </div>
-    <div class="doc-rows">${rows.join('')}</div>
-    ${actionHtml?`<div class="doc-action">${actionHtml}</div>`:''}
-  </div>`;
-}
-
-async function loadProfile(){
-  const d=await api('/me');
-  const name=d.full_name||d.email?.split('@')[0]||'Driver';
-  document.getElementById('dName').textContent=name;
-  document.getElementById('avatar').src=d.avatar_url||`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4F8EF7&color=fff&size=56`;
-}
-
-async function loadDocuments(){
-  const d=await api('/documents');
-  const lic=d.license||{};
-  const aad=d.aadhar||{};
-  const med=d.medical||{};
-  const veh=d.vehicle||{};
-  const ins=d.insurance||{};
-
-  const cards=[];
-  const alerts=[];
-
-  /* 1. DRIVING LICENSE */
-  const licEI=getExpiryInfo(lic.expiry);
-  if(licEI.status==='expired') alerts.push({type:'danger',title:'Driving License Expired',text:`Your license expired ${Math.abs(licEI.days)} days ago. You are NOT permitted to operate any fleet vehicle.`});
-  else if(licEI.status==='expiring') alerts.push({type:'warn',title:'Driving License Expiring Soon',text:`Your license expires in ${licEI.days} days. Please renew immediately to avoid suspension.`});
-  cards.push(buildDocCard('id-card','var(--primary-light)','var(--primary)','Driving License',statusBadge(licEI),licEI.status==='expired'?'expired':licEI.status==='expiring'?'expiring':'',[
-    docRow('License No.',esc(lic.number||'—')),
-    docRow('License Type',esc(lic.type||'—')),
-    docRow('Issue Date',fmtDate(lic.issue_date)),
-    docRow('Expiry Date',`<span style="color:${licEI.color};font-weight:700">${fmtDate(lic.expiry)} <small>${licEI.label}</small></span>`),
-  ]));
-
-  /* 2. GOVERNMENT ID */
-  const maskedAad=aad.number?String(aad.number).replace(/\d(?=\d{4})/g,'*'):'—';
-  cards.push(buildDocCard('fingerprint','#EDE9FE','var(--purple)','Government ID (Aadhar)',`<span class="doc-status ds-na">${aad.number?'ON RECORD':'NOT ON RECORD'}</span>`,'',[ 
-    docRow('Aadhar Number',`<span style="letter-spacing:.1em;font-family:monospace">${maskedAad}</span>`),
-    docRow('Verification',aad.number?'<span style="color:var(--green)">✓ Verified</span>':'<span style="color:var(--muted)">—</span>'),
-  ]));
-
-  /* 3. MEDICAL CERTIFICATE */
-  const medEI=getExpiryInfo(med.expiry);
-  if(medEI.status==='expired') alerts.push({type:'danger',title:'Medical Certificate Expired',text:'Your medical certificate has expired. Renewal is mandatory for compliance.'});
-  else if(medEI.status==='expiring') alerts.push({type:'warn',title:'Medical Certificate Expiring',text:`Medical certificate expires in ${medEI.days} days. Schedule a check-up soon.`});
-  cards.push(buildDocCard('stethoscope','var(--green-light)','var(--green)','Medical Certificate',statusBadge(medEI),medEI.status==='expired'?'expired':medEI.status==='expiring'?'expiring':'',[
-    docRow('Fitness Status',medEI.status==='valid'?'<span style="color:var(--green)">✓ Fit to Drive</span>':'<span style="color:var(--red)">⚠ Review Required</span>'),
-    docRow('Expiry Date',`<span style="color:${medEI.color};font-weight:700">${fmtDate(med.expiry)} <small>${medEI.label}</small></span>`),
-  ]));
-
-  /* 4. VEHICLE RC */
-  const rcEI=getExpiryInfo(veh.rc_expiry);
-  cards.push(buildDocCard('car','var(--accent-light)','var(--accent)','Vehicle Registration (RC)',statusBadge(rcEI),rcEI.status==='expired'?'expired':rcEI.status==='expiring'?'expiring':'',[
-    docRow('Vehicle',veh.make?esc(veh.make+' '+veh.model+(veh.year?' ('+veh.year+')':'')):'—'),
-    docRow('Registration No.',esc(veh.registration_number||'—')),
-    docRow('VIN',esc(veh.vin||'—')),
-    docRow('RC Expiry',`<span style="color:${rcEI.color};font-weight:700">${fmtDate(veh.rc_expiry)} <small>${rcEI.label}</small></span>`),
-  ],viewBtn(veh.rc_document_url)));
-
-  /* 5. INSURANCE POLICY */
-  const insEI=getExpiryInfo(ins.expiry_date);
-  if(insEI.status==='expired') alerts.push({type:'danger',title:'Vehicle Insurance Expired',text:'The vehicle insurance policy has expired. Operating without valid insurance is illegal.'});
-  else if(insEI.status==='expiring') alerts.push({type:'warn',title:'Vehicle Insurance Expiring',text:`Insurance expires in ${insEI.days} days. Contact fleet management.`});
-  cards.push(buildDocCard('file-shield','var(--orange-light)','var(--orange)','Vehicle Insurance',statusBadge(insEI),insEI.status==='expired'?'expired':insEI.status==='expiring'?'expiring':'',[
-    docRow('Provider',esc(ins.provider||'—')),
-    docRow('Policy Number',esc(ins.policy_number||'—')),
-    docRow('Coverage',esc(ins.coverage_type||'Comprehensive')),
-    docRow('Valid Period',ins.start_date&&ins.expiry_date?`${fmtDate(ins.start_date)} → ${fmtDate(ins.expiry_date)}`:'—'),
-    docRow('Status',`<span style="color:${insEI.color};font-weight:700">${insEI.label}</span>`),
-  ],viewBtn(ins.document_url)));
-
-  // ALERTS
-  const alertsSection=document.getElementById('alertsSection');
-  alertsSection.innerHTML=alerts.map(a=>`
-    <div class="ualert ${a.type}">
-      <i class="fa-solid ${a.type==='danger'?'fa-circle-xmark':'fa-triangle-exclamation'}"></i>
-      <div><div class="ualert-t">${esc(a.title)}</div><div style="font-size:12px">${esc(a.text)}</div></div>
-    </div>`).join('');
-
-  document.getElementById('docGrid').innerHTML=cards.join('');
-}
-
-async function init(){
-  await Promise.all([loadProfile(),loadDocuments()]);
-}
-init().catch(console.error);
+loadProfile();loadDocs();
 </script>
 </body>
 </html>

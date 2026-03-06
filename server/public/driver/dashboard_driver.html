@@ -3,371 +3,329 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Pilot Dashboard — TruFleetX</title>
+<title>Mission Control | TruFleetX Pilot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
 :root{
-  --bg:#F0F4F8;--sidebar:#1A2332;--sidebar-w:240px;
-  --card:#fff;--border:#E2E8F0;
-  --primary:#2D3A8C;--primary-light:#E8EAFB;
-  --accent:#4F8EF7;--accent-light:#EBF3FF;
-  --green:#0EA371;--green-light:#D1FAE5;
-  --red:#E53E3E;--red-light:#FED7D7;
-  --orange:#DD6B20;--orange-light:#FEEBC8;
-  --yellow:#D69E2E;--yellow-light:#FEFCBF;
-  --purple:#6B46C1;--purple-light:#E9D8FD;
-  --text:#1A202C;--muted:#64748B;--bdr:12px;
+  --primary:#0F172A;--accent:#2563EB;--accent-soft:#EFF6FF;
+  --bg-body:#F1F5F9;--bg-card:#FFFFFF;
+  --text-main:#1E293B;--text-muted:#64748B;
+  --success:#10B981;--warning:#F59E0B;--danger:#EF4444;
+  --sidebar-width:280px;--sidebar-collapsed:80px;--header-height:80px;
+  --shadow-sm:0 1px 2px 0 rgba(0,0,0,.05);
+  --shadow-card:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);
+  --shadow-hover:0 20px 25px -5px rgba(0,0,0,.07),0 10px 10px -5px rgba(0,0,0,.02);
+  --radius-lg:20px;--radius-md:12px;
+  --spring:all .4s cubic-bezier(.34,1.56,.64,1);
+  --smooth:all .3s cubic-bezier(.4,0,.2,1);
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
-.sidebar{width:var(--sidebar-w);background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
-.sidebar-logo{padding:22px 18px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07)}
-.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,#4F8EF7,#2D3A8C);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0}
-.logo-text{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff}
-.sidebar-section{padding:14px 14px 4px;font-size:10px;font-weight:600;color:rgba(255,255,255,.32);letter-spacing:.12em;text-transform:uppercase}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;cursor:pointer;text-decoration:none;color:rgba(255,255,255,.58);font-size:13px;font-weight:500;margin:1px 0;transition:all .15s}
-.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
-.nav-item.active{background:linear-gradient(90deg,rgba(79,142,247,.25),rgba(79,142,247,.08));color:#fff;border-left:3px solid #4F8EF7}
-.nav-item i{width:18px;font-size:13px;text-align:center;flex-shrink:0}
-.sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,.07)}
-.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
-.header{background:var(--card);border-bottom:1px solid var(--border);padding:0 26px;height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.hdr-title{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;color:var(--primary)}
-.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px}
-.driver-chip{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 5px}
-.driver-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover}
-.driver-name{font-size:13px;font-weight:600}
-.sdot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2.5s infinite;flex-shrink:0}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.clock{font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:5px 10px;border-radius:8px}
-.content{padding:24px;flex:1}
-.slabel{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.slabel::after{content:'';flex:1;height:1px;background:var(--border)}
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
-@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
-.kpi{background:var(--card);border-radius:var(--bdr);padding:18px;border:1px solid var(--border);display:flex;align-items:center;gap:14px;transition:all .2s}
-.kpi:hover{box-shadow:0 8px 24px rgba(0,0,0,.06);transform:translateY(-1px)}
-.kpi-ico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.kpi .val{font-family:'Outfit',sans-serif;font-size:26px;font-weight:700;line-height:1.1}
-.kpi .lbl{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
-.kb .kpi-ico{background:var(--accent-light);color:var(--accent)}.kb .val{color:var(--accent)}
-.kg .kpi-ico{background:var(--green-light);color:var(--green)}.kg .val{color:var(--green)}
-.kp .kpi-ico{background:var(--purple-light);color:var(--purple)}.kp .val{color:var(--purple)}
-.ko .kpi-ico{background:var(--orange-light);color:var(--orange)}.ko .val{color:var(--orange)}
-.row2{display:grid;grid-template-columns:1.45fr 1fr;gap:18px;margin-bottom:18px}
-@media(max-width:1100px){.row2{grid-template-columns:1fr}}
-.card{background:var(--card);border-radius:var(--bdr);border:1px solid var(--border)}
-.chead{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.ctitle{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
-.ctitle i{color:var(--muted);font-size:12px}
-.status-pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
-.sp-green{background:var(--green-light);color:var(--green)}
-.sp-yellow{background:var(--yellow-light);color:var(--yellow)}
-.sp-blue{background:var(--accent-light);color:var(--accent)}
-.sp-gray{background:#F1F5F9;color:var(--muted)}
-.mission-body{padding:18px}
-.route-vis{display:flex;align-items:stretch;gap:12px;margin-bottom:14px}
-.rl-wrap{display:flex;flex-direction:column;align-items:center;padding-top:4px}
-.rdot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0}
-.rline{width:2px;flex:1;background:linear-gradient(180deg,var(--accent),var(--green));min-height:28px}
-.rdot-end{width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0}
-.r-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
-.rloc{font-size:14px;font-weight:700}
-.rsub{font-size:11px;color:var(--muted)}
-.prog-wrap{margin-bottom:14px}
-.prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px}
-.prog-bar{height:6px;background:var(--border);border-radius:10px;overflow:hidden}
-.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:10px;transition:width .5s}
-.meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:14px}
-.meta span{display:flex;align-items:center;gap:5px}
-.meta strong{color:var(--text)}
-.abtn{width:100%;padding:11px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Inter',sans-serif;transition:all .2s}
-.abtn-primary{background:var(--accent);color:#fff}.abtn-primary:hover:not(:disabled){background:#3a7de8}
-.abtn-green{background:var(--green);color:#fff}.abtn-green:hover:not(:disabled){background:#0b8a5e}
-.abtn-gray{background:var(--bg);color:var(--muted);border:1.5px solid var(--border)}
-.abtn:disabled{opacity:.55;cursor:not-allowed}
-.no-trip{padding:36px;text-align:center}
-.no-trip-ico{font-size:36px;color:var(--border);margin-bottom:12px}
-.no-trip h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
-.no-trip p{font-size:13px;color:var(--muted);margin-bottom:18px}
-.checklist-body{padding:0}
-.ci{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border)}
-.ci:last-child{border-bottom:none}
-.ci-wrap{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-.ci-ok{background:var(--green-light);color:var(--green)}
-.ci-warn{background:var(--orange-light);color:var(--orange)}
-.ci-err{background:var(--red-light);color:var(--red)}
-.ci-muted{background:#F1F5F9;color:var(--muted)}
-.ci-label{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:2px}
-.ci-val{font-size:13px;font-weight:500}
-.trip-row{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--border);transition:background .1s}
-.trip-row:last-child{border-bottom:none}
-.trip-row:hover{background:#FAFBFD}
-.tdate{width:40px;height:40px;border-radius:8px;background:var(--primary-light);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
-.tdate .mm{font-size:9px;font-weight:700;color:var(--primary);text-transform:uppercase}
-.tdate .dd{font-size:15px;font-weight:800;color:var(--primary);line-height:1}
-.troute{flex:1;min-width:0}
-.troute .ft{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.troute .tk{font-size:11px;color:var(--muted);margin-top:2px}
-.spill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px}
-.sc{background:var(--green-light);color:var(--green)}
-.sa{background:var(--accent-light);color:var(--accent)}
-.sp{background:var(--yellow-light);color:var(--yellow)}
-.sr{background:var(--red-light);color:var(--red)}
-.toast{position:fixed;bottom:22px;right:22px;background:#1A2332;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:7px}
+*{margin:0;padding:0;box-sizing:border-box;outline:none}
+body{font-family:'Inter',sans-serif;background:var(--bg-body);color:var(--text-main);overflow-x:hidden}
+.app{display:grid;grid-template-columns:var(--sidebar-width) 1fr;transition:grid-template-columns .4s ease;min-height:100vh}
+.app.collapsed{grid-template-columns:var(--sidebar-collapsed) 1fr}
+aside{background:var(--bg-card);border-right:1px solid #E2E8F0;padding:1.5rem 1rem;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;z-index:50;transition:var(--smooth);overflow:hidden}
+.brand-logo{display:flex;align-items:center;gap:12px;padding:0 1rem 2.5rem;color:var(--primary);text-decoration:none;font-family:'Outfit',sans-serif;font-weight:700;font-size:1.4rem;white-space:nowrap;overflow:hidden}
+.brand-text{font-family:'Outfit',sans-serif;font-weight:600;font-size:1rem;transition:opacity .2s}
+.app.collapsed .brand-text{opacity:0;pointer-events:none;width:0;overflow:hidden}
+.nav-menu{display:flex;flex-direction:column;gap:.35rem;flex:1;min-width:0}
+.nav-label{padding:.9rem 1rem .3rem;font-size:.68rem;font-weight:600;color:#CBD5E1;text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;overflow:hidden}
+.app.collapsed .nav-label{opacity:0}
+.nav-item{display:flex;align-items:center;gap:16px;padding:11px 16px;color:var(--text-muted);text-decoration:none;border-radius:10px;transition:.25s;font-weight:500;white-space:nowrap;overflow:hidden}
+.nav-item:hover,.nav-item.active{background:#EFF6FF;color:var(--accent)}
+.nav-item i{font-size:1.05rem;min-width:22px;text-align:center;flex-shrink:0}
+.nav-spacer{flex-grow:1}
+main{padding:0;overflow-y:auto;height:100vh}
+header{height:var(--header-height);background:rgba(255,255,255,.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(226,232,240,.6);position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:0 2rem}
+.hdr-left{display:flex;align-items:center;gap:1rem}
+.toggle-btn{background:transparent;border:none;font-size:1.1rem;cursor:pointer;color:var(--text-muted);padding:8px;border-radius:8px;transition:.2s}
+.toggle-btn:hover{background:var(--accent-soft);color:var(--accent)}
+.page-title{font-family:'Outfit',sans-serif;font-weight:600;font-size:1.2rem;color:var(--primary)}
+.page-sub{font-size:.75rem;color:var(--text-muted);margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:1.25rem}
+.profile-chip{display:flex;align-items:center;gap:10px;padding:6px 14px 6px 7px;background:#fff;border:1px solid #E2E8F0;border-radius:30px;cursor:pointer;transition:var(--smooth)}
+.profile-chip:hover{border-color:var(--accent);box-shadow:var(--shadow-sm)}
+.profile-img{width:32px;height:32px;border-radius:50%;object-fit:cover}
+.pname{font-weight:600;font-size:.85rem;color:var(--primary);line-height:1.15}
+.prole{font-size:.7rem;color:var(--text-muted)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0;animation:ldot 2.2s infinite}
+@keyframes ldot{0%,100%{opacity:1}50%{opacity:.3}}
+.content{padding:2rem;max-width:1600px;margin:0 auto;opacity:0;animation:fadeIn .55s ease-out forwards}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.5rem;margin-bottom:2rem}
+.kpi-card{background:var(--bg-card);padding:1.5rem;border-radius:var(--radius-lg);box-shadow:var(--shadow-card);border:1px solid rgba(226,232,240,.5);transition:var(--spring);position:relative;overflow:hidden;cursor:default}
+.kpi-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-hover)}
+.kpi-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:1rem}
+.ic-b{background:#EFF6FF;color:#2563EB}.ic-g{background:#ECFDF5;color:#10B981}.ic-o{background:#FFF7ED;color:#F59E0B}.ic-r{background:#FEF2F2;color:#EF4444}.ic-p{background:#F5F3FF;color:#7C3AED}
+.kpi-val{font-family:'Outfit',sans-serif;font-size:2rem;font-weight:700;color:var(--primary);display:block;margin-bottom:.2rem}
+.kpi-lbl{color:var(--text-muted);font-size:.875rem;font-weight:500}
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1.5fr 1fr;gap:1.5rem;margin-bottom:2rem}
+/* PANEL */
+.panel{background:var(--bg-card);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);border:1px solid rgba(226,232,240,.5);padding:1.5rem}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.pt{font-family:'Outfit',sans-serif;font-weight:600;font-size:1.05rem;color:var(--primary);display:flex;align-items:center;gap:8px}
+.badge{font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:20px}
+.bb{background:#EFF6FF;color:#2563EB}.bg{background:#ECFDF5;color:#10B981}.bo{background:#FFF7ED;color:#F59E0B}.br{background:#FEF2F2;color:#EF4444}.bmo{background:#F1F5F9;color:#64748B}
+/* MISSION */
+.mission-empty{text-align:center;padding:2.5rem 1.5rem;border:2px dashed #E2E8F0;border-radius:16px}
+.mission-row{border:1.5px solid #E2E8F0;border-radius:var(--radius-md);padding:1.125rem;margin-bottom:0;transition:var(--smooth)}
+.mission-row:hover{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.06)}
+.route-line-wrap{display:flex;align-items:center;gap:10px;margin:10px 0}
+.rdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.rline{flex:1;height:2px;background:linear-gradient(90deg,var(--accent),var(--success))}
+.prog-bar{height:6px;border-radius:20px;background:#E2E8F0;overflow:hidden;margin:6px 0}
+.prog-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#2563EB,#60A5FA);transition:width .7s ease}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:.7rem;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--accent-soft);color:var(--accent)}
+.chip.g{background:#ECFDF5;color:#10B981}.chip.o{background:#FFF7ED;color:#F59E0B}.chip.r{background:#FEF2F2;color:#EF4444}
+.notes-ta{width:100%;margin-top:10px;padding:8px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-family:'Inter',sans-serif;font-size:.82rem;resize:vertical;min-height:58px;transition:border-color .2s;color:var(--text-main)}
+.notes-ta:focus{border-color:var(--accent)}
+.complete-btn{width:100%;margin-top:10px;padding:10px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;transition:var(--smooth)}
+.complete-btn:hover:not(:disabled){background:#1D4ED8}
+.complete-btn:disabled{opacity:.55;cursor:not-allowed}
+/* CHECKLIST */
+.ci{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;margin-bottom:6px;border:1px solid #E2E8F0}
+.ci-ok{background:#F0FDF4;border-color:#BBF7D0;color:#166534}.ci-wn{background:#FFFBEB;border-color:#FDE68A;color:#92400E}.ci-er{background:#FEF2F2;border-color:#FECACA;color:#991B1B}.ci-na{background:#F8FAFC;color:var(--text-muted)}
+.ci-ico{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0}
+/* TABLE */
+.dtbl{width:100%;border-collapse:collapse}
+.dtbl th{text-align:left;padding:.75rem 1rem;font-size:.78rem;color:var(--text-muted);font-weight:600;border-bottom:1px solid #E2E8F0;white-space:nowrap}
+.dtbl td{padding:.75rem 1rem;font-size:.87rem;border-bottom:1px solid #F1F5F9;vertical-align:middle}
+.dtbl tr:last-child td{border-bottom:none}
+.dtbl tbody tr:hover td{background:#F8FAFC}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 16px;border-radius:12px;background:#1E293B;color:#fff;font-size:.85rem;font-weight:500;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:8px;max-width:360px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
 .toast.show{opacity:1;transform:translateY(0)}
-.shimmer{background:linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%);background-size:200% 100%;animation:shim 1.4s infinite;border-radius:8px}
+/* SHIMMER */
+.shimmer{background:linear-gradient(90deg,#F8FAFC 25%,#E2E8F0 50%,#F8FAFC 75%);background-size:200% 100%;animation:shim 1.5s infinite;border-radius:8px}
 @keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
-textarea{font-family:'Inter',sans-serif;font-size:12px}
+@media(max-width:1200px){.two-col{grid-template-columns:1fr}}
+@media(max-width:768px){.app{grid-template-columns:1fr}aside{position:fixed;left:-280px;top:0;height:100%;box-shadow:10px 0 30px rgba(0,0,0,.1)}.app.mobile-open aside{left:0}.kpi-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
-<nav class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-mark">T</div>
-    <span class="logo-text">TruFleetX</span>
-  </div>
-  <div class="sidebar-section">Pilot Portal</div>
-  <a href="dashboard_driver.html" class="nav-item active"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
-  <a href="MyTrips_driver.html" class="nav-item"><i class="fa-solid fa-route"></i><span>My Trips</span></a>
-  <a href="Vehicle_status_driver.html" class="nav-item"><i class="fa-solid fa-truck"></i><span>My Vehicle</span></a>
-  <a href="Documents_driver.html" class="nav-item"><i class="fa-solid fa-folder-open"></i><span>Documents</span></a>
-  <a href="support_driver.html" class="nav-item"><i class="fa-solid fa-headset"></i><span>Support</span></a>
-  <div class="sidebar-bottom">
-    <a href="../login.html" class="nav-item" style="color:rgba(255,255,255,.4)" onclick="localStorage.clear()">
-      <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Sign Out</span>
-    </a>
-  </div>
-</nav>
-<div class="main">
-  <div class="header">
-    <div>
-      <div class="hdr-title"><i class="fa-solid fa-gauge-high" style="color:var(--accent);margin-right:7px;font-size:14px"></i>Pilot Command Center</div>
-      <div class="hdr-sub" id="hdrSub">Loading profile…</div>
+<div class="app" id="app">
+<aside id="sidebar">
+  <a href="#" class="brand-logo"><i class="fa-solid fa-cube"></i><span class="brand-text">TruFleetX</span></a>
+  <nav class="nav-menu">
+    <div class="nav-label">Pilot Portal</div>
+    <a href="dashboard_driver.html" class="nav-item active"><i class="fa-solid fa-gauge-high"></i><span class="brand-text">Dashboard</span></a>
+    <a href="MyTrips_driver.html" class="nav-item"><i class="fa-solid fa-route"></i><span class="brand-text">My Trips</span></a>
+    <a href="Vehicle_status_driver.html" class="nav-item"><i class="fa-solid fa-truck-front"></i><span class="brand-text">My Vehicle</span></a>
+    <a href="Documents_driver.html" class="nav-item"><i class="fa-solid fa-folder-open"></i><span class="brand-text">Documents</span></a>
+    <a href="support_driver.html" class="nav-item"><i class="fa-solid fa-headset"></i><span class="brand-text">Support</span></a>
+    <div class="nav-spacer"></div>
+    <a href="../login.html" class="nav-item" style="color:var(--danger)" onclick="localStorage.clear()"><i class="fa-solid fa-arrow-right-from-bracket"></i><span class="brand-text">Sign Out</span></a>
+  </nav>
+</aside>
+<main>
+  <header>
+    <div class="hdr-left">
+      <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></button>
+      <div><div class="page-title">Pilot Dashboard</div><div class="page-sub" id="clockSub">Loading…</div></div>
     </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div class="clock" id="clock">—</div>
-      <div class="driver-chip">
-        <span class="sdot"></span>
-        <img id="avatar" class="driver-avatar" src="" alt=""/>
-        <span class="driver-name" id="dName">Driver</span>
+    <div class="hdr-right">
+      <div class="profile-chip">
+        <span class="live-dot"></span>
+        <img id="profileImg" class="profile-img" src="" alt=""/>
+        <div><div class="pname" id="profileName">Loading…</div><div class="prole">Fleet Pilot</div></div>
       </div>
     </div>
-  </div>
+  </header>
   <div class="content">
-    <div class="slabel">Performance Overview</div>
+    <!-- KPI -->
     <div class="kpi-grid" id="kpiGrid">
-      <div class="kpi kb"><div class="kpi-ico shimmer" style="width:44px;height:44px"></div><div><div class="val shimmer" style="width:56px;height:26px"></div><div class="lbl shimmer" style="width:90px;height:11px;margin-top:5px"></div></div></div>
-      <div class="kpi kg"><div class="kpi-ico shimmer" style="width:44px;height:44px"></div><div><div class="val shimmer" style="width:56px;height:26px"></div><div class="lbl shimmer" style="width:90px;height:11px;margin-top:5px"></div></div></div>
-      <div class="kpi kp"><div class="kpi-ico shimmer" style="width:44px;height:44px"></div><div><div class="val shimmer" style="width:56px;height:26px"></div><div class="lbl shimmer" style="width:90px;height:11px;margin-top:5px"></div></div></div>
-      <div class="kpi ko"><div class="kpi-ico shimmer" style="width:44px;height:44px"></div><div><div class="val shimmer" style="width:56px;height:26px"></div><div class="lbl shimmer" style="width:90px;height:11px;margin-top:5px"></div></div></div>
+      <div class="kpi-card"><div class="kpi-icon ic-b shimmer" style="height:48px"></div><span class="shimmer" style="height:32px;width:70px;display:block;margin-bottom:6px"></span><span class="shimmer" style="height:14px;width:110px;display:block"></span></div>
+      <div class="kpi-card"><div class="kpi-icon ic-g shimmer" style="height:48px"></div><span class="shimmer" style="height:32px;width:70px;display:block;margin-bottom:6px"></span><span class="shimmer" style="height:14px;width:110px;display:block"></span></div>
+      <div class="kpi-card"><div class="kpi-icon ic-p shimmer" style="height:48px"></div><span class="shimmer" style="height:32px;width:70px;display:block;margin-bottom:6px"></span><span class="shimmer" style="height:14px;width:110px;display:block"></span></div>
+      <div class="kpi-card"><div class="kpi-icon ic-o shimmer" style="height:48px"></div><span class="shimmer" style="height:32px;width:70px;display:block;margin-bottom:6px"></span><span class="shimmer" style="height:14px;width:110px;display:block"></span></div>
     </div>
-    <div class="slabel">Mission Control</div>
-    <div class="row2">
-      <div class="card">
-        <div class="chead">
-          <div class="ctitle"><i class="fa-solid fa-location-dot"></i>Current Mission</div>
-          <span id="mBadge" class="status-pill" style="display:none"></span>
+    <!-- TWO COL -->
+    <div class="two-col">
+      <div>
+        <!-- CURRENT MISSION -->
+        <div class="panel" style="margin-bottom:1.5rem">
+          <div class="ph">
+            <div class="pt"><i class="fa-solid fa-location-crosshairs" style="color:var(--accent)"></i>Current Mission</div>
+            <span class="badge bb" id="mBadge">Loading</span>
+          </div>
+          <div id="missionBody"><div style="padding:24px;text-align:center;color:var(--text-muted)"><i class="fa-solid fa-spinner fa-spin fa-lg"></i></div></div>
         </div>
-        <div id="mBody" style="padding:28px;text-align:center;color:var(--muted);font-size:13px">Loading…</div>
+        <!-- RECENT TRIPS -->
+        <div class="panel">
+          <div class="ph">
+            <div class="pt"><i class="fa-solid fa-clock-rotate-left" style="color:var(--success)"></i>Recent Trips</div>
+            <a href="MyTrips_driver.html" style="font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:600">View All →</a>
+          </div>
+          <table class="dtbl"><thead><tr><th>Date</th><th>Route</th><th>Ticket</th><th>Status</th></tr></thead>
+          <tbody id="recentBody"><tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted)"><i class="fa-solid fa-spinner fa-spin"></i></td></tr></tbody></table>
+        </div>
       </div>
-      <div class="card">
-        <div class="chead">
-          <div class="ctitle"><i class="fa-solid fa-circle-check"></i>Pre-Trip Checklist</div>
-          <span id="cscore" style="font-size:11px;color:var(--muted)"></span>
-        </div>
-        <div class="checklist-body" id="cBody">
-          <div class="ci"><div class="ci-wrap shimmer" style="width:32px;height:32px"></div><div style="flex:1"><div class="shimmer" style="height:11px;width:70px;margin-bottom:5px;border-radius:4px"></div><div class="shimmer" style="height:13px;width:150px;border-radius:4px"></div></div></div>
-          <div class="ci"><div class="ci-wrap shimmer" style="width:32px;height:32px"></div><div style="flex:1"><div class="shimmer" style="height:11px;width:70px;margin-bottom:5px;border-radius:4px"></div><div class="shimmer" style="height:13px;width:150px;border-radius:4px"></div></div></div>
-          <div class="ci"><div class="ci-wrap shimmer" style="width:32px;height:32px"></div><div style="flex:1"><div class="shimmer" style="height:11px;width:70px;margin-bottom:5px;border-radius:4px"></div><div class="shimmer" style="height:13px;width:150px;border-radius:4px"></div></div></div>
-          <div class="ci"><div class="ci-wrap shimmer" style="width:32px;height:32px"></div><div style="flex:1"><div class="shimmer" style="height:11px;width:70px;margin-bottom:5px;border-radius:4px"></div><div class="shimmer" style="height:13px;width:150px;border-radius:4px"></div></div></div>
-        </div>
+      <!-- CHECKLIST -->
+      <div class="panel">
+        <div class="ph"><div class="pt"><i class="fa-solid fa-list-check" style="color:var(--accent)"></i>Pre-Trip Checklist</div></div>
+        <div id="checklistBody"><div style="padding:24px;text-align:center;color:var(--text-muted)"><i class="fa-solid fa-spinner fa-spin fa-lg"></i></div></div>
       </div>
     </div>
-    <div class="slabel">Recent Trip History</div>
-    <div class="card" id="recentCard"><div style="padding:28px;text-align:center;color:var(--muted);font-size:13px">Loading…</div></div>
   </div>
+</main>
 </div>
-<div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
+<div class="toast" id="toast"><i id="tIco" class="fa-solid fa-circle-check"></i><span id="tMsg"></span></div>
 <script>
-const TOKEN = localStorage.getItem('trufleet_token')||'';
+const TOKEN=localStorage.getItem('trufleet_token')||'';
 if(!TOKEN){window.location.href='../login.html';}
+(function(){try{const p=JSON.parse(atob(TOKEN.split('.')[1]));if(!p||!['driver','admin','manager'].includes(p.role)){localStorage.clear();window.location.href='../login.html';}}catch{localStorage.clear();window.location.href='../login.html';}})();
 
-const api = (path, opts={}) => fetch('/api/driver'+path,{
-  ...opts, headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(opts.headers||{})}
-}).then(async r=>{
+const api=(path,opts={})=>fetch('/api/driver'+path,{...opts,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(opts.headers||{})}}).then(async r=>{
   if(r.status===401){localStorage.clear();window.location.href='../login.html';}
-  const d=await r.json(); if(!r.ok) throw new Error(d.error||'Request failed'); return d;
+  const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d;
 });
 
-function tick(){
-  const n=new Date();
-  document.getElementById('clock').textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' · '+n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-}
-setInterval(tick,1000); tick();
-
-function toast(msg,err=false){
-  const el=document.getElementById('toast');
-  el.querySelector('i').className=err?'fa-solid fa-circle-exclamation':'fa-solid fa-circle-check';
-  el.style.background=err?'#E53E3E':'#1A2332';
-  document.getElementById('toastMsg').textContent=msg;
-  el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3500);
-}
-
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-function fmtDate(iso){
-  if(!iso)return{m:'—',d:'—'};
-  const d=new Date(iso);
-  return{m:d.toLocaleString('default',{month:'short'}),d:d.getDate()};
+function fmt(iso){if(!iso)return'—';return new Date(iso).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+function toast(msg,ok=true){
+  const el=document.getElementById('toast');
+  document.getElementById('tIco').className=ok?'fa-solid fa-circle-check':'fa-solid fa-circle-xmark';
+  el.style.background=ok?'#1E293B':'#EF4444';
+  document.getElementById('tMsg').textContent=msg;
+  el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3800);
 }
+function clock(){const n=new Date();document.getElementById('clockSub').textContent=n.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});}
+setInterval(clock,60000);clock();
 
-function stPill(s){
-  const m={pending:['sp','⏳ Pending'],active:['sa','● Active'],completed:['sc','✓ Completed'],rejected:['sr','✕ Rejected']};
-  const [c,l]=m[s]||['','—'];
-  return`<span class="spill ${c}">${l}</span>`;
-}
-
-let _tripId=null, _tripStatus=null;
+const app=document.getElementById('app'),sb=document.getElementById('sidebar');
+function toggleSidebar(){if(window.innerWidth<=768)app.classList.toggle('mobile-open');else app.classList.toggle('collapsed');}
+sb.addEventListener('mouseenter',()=>{if(window.innerWidth>768&&app.classList.contains('collapsed')){app.classList.remove('collapsed');sb.dataset.ae='1';}});
+sb.addEventListener('mouseleave',()=>{if(window.innerWidth>768&&sb.dataset.ae==='1'){app.classList.add('collapsed');sb.dataset.ae='0';}});
 
 async function loadProfile(){
-  const d=await api('/me');
-  const name=d.full_name||d.email?.split('@')[0]||'Driver';
-  document.getElementById('dName').textContent=name;
-  document.getElementById('avatar').src=d.avatar_url||`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4F8EF7&color=fff&size=56`;
-  const p=d.driver_profiles||{};
-  const v=p.vehicles||null;
-  document.getElementById('hdrSub').textContent=v?`${v.make} ${v.model} · ${v.registration_number}`:'No vehicle assigned';
-  buildChecklist(p,v);
+  try{
+    const d=await api('/me');
+    const name=d.full_name||d.email?.split('@')[0]||'Pilot';
+    document.getElementById('profileName').textContent=name;
+    document.getElementById('profileImg').src=d.avatar_url||`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=EFF6FF&color=2563EB&rounded=true`;
+  }catch{}
 }
 
 async function loadStats(){
-  const s=await api('/trips/stats');
-  document.getElementById('kpiGrid').innerHTML=`
-    <div class="kpi kb"><div class="kpi-ico"><i class="fa-solid fa-shield-halved"></i></div><div><div class="val">${s.safetyScore??100}%</div><div class="lbl">Safety Score</div></div></div>
-    <div class="kpi kg"><div class="kpi-ico"><i class="fa-solid fa-road"></i></div><div><div class="val">${Number(s.totalDistance||0).toLocaleString()}</div><div class="lbl">Miles This Month</div></div></div>
-    <div class="kpi kp"><div class="kpi-ico"><i class="fa-solid fa-route"></i></div><div><div class="val">${s.totalTrips??0}</div><div class="lbl">Completed Trips</div></div></div>
-    <div class="kpi ko"><div class="kpi-ico"><i class="fa-solid fa-clock"></i></div><div><div class="val">${s.onTimeRate??100}%</div><div class="lbl">On-Time Rate</div></div></div>`;
-}
-
-function buildChecklist(p,v){
-  const fuel=v?.fuel_level;
-  const licExp=p?.license_expiry;
-  let licState='muted',licText='License expiry not recorded';
-  if(licExp){
-    const days=Math.ceil((new Date(licExp)-new Date())/86400000);
-    licState=days<0?'err':days<30?'warn':'ok';
-    licText=days<0?`Expired ${Math.abs(days)} days ago — DO NOT DRIVE`:days<30?`Expires in ${days} days — renew soon`:`Valid · ${new Date(licExp).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}`;
-  }
-  const vSt=v?.status||'unknown';
-  const items=[
-    {icon:'fa-gas-pump',label:'Fuel Level',
-     text:fuel!=null?`${fuel}% — ${fuel<30?'Low, refuel before departure':fuel<60?'Moderate':'Sufficient for trip'}`:'No fuel data available',
-     state:fuel==null?'muted':fuel>=30?'ok':'warn'},
-    {icon:'fa-wrench',label:'Vehicle Health',
-     text:vSt==='active'?'All systems operational':vSt==='maintenance'?'In maintenance — contact fleet manager':`Status: ${vSt}`,
-     state:vSt==='active'?'ok':vSt==='maintenance'?'err':'warn'},
-    {icon:'fa-id-card',label:'Driving License',text:licText,state:licState},
-    {icon:'fa-truck',label:'Vehicle Assigned',
-     text:v?`${v.make} ${v.model} · ${v.registration_number}`:'No vehicle assigned — contact dispatch',
-     state:v?'ok':'warn'},
-  ];
-  const stm={ok:'ci-ok',warn:'ci-warn',err:'ci-err',muted:'ci-muted'};
-  const ic ={ok:'fa-check',warn:'fa-triangle-exclamation',err:'fa-xmark',muted:'fa-circle-dot'};
-  const ok=items.filter(i=>i.state==='ok').length;
-  document.getElementById('cscore').textContent=`${ok}/${items.length} Checks Passed`;
-  document.getElementById('cBody').innerHTML=items.map(it=>`
-    <div class="ci">
-      <div class="ci-wrap ${stm[it.state]}"><i class="fa-solid ${it.icon||ic[it.state]}"></i></div>
-      <div><div class="ci-label">${it.label}</div><div class="ci-val">${it.text}</div></div>
-    </div>`).join('');
-}
-
-async function loadCurrentTrip(){
-  const trip=await api('/current-trip');
-  _tripId=trip?.id||null; _tripStatus=trip?.status||null;
-  const mBody=document.getElementById('mBody');
-  const mBadge=document.getElementById('mBadge');
-  if(!trip){
-    mBadge.style.display='none';
-    mBody.innerHTML=`<div class="no-trip"><div class="no-trip-ico"><i class="fa-solid fa-route"></i></div><h3>No Active Mission</h3><p>You have no trip in progress. Request a new dispatch to begin.</p><button class="abtn abtn-primary" style="max-width:240px;margin:0 auto" onclick="window.location.href='MyTrips_driver.html'"><i class="fa-solid fa-plus"></i> Request New Trip</button></div>`;
-    return;
-  }
-  const cfg={
-    active:{bg:'var(--green-light)',color:'var(--green)',label:'● Active Mission'},
-    pending:{bg:'var(--yellow-light)',color:'var(--yellow)',label:'⏳ Awaiting Approval'}
-  }[trip.status]||{bg:'#F1F5F9',color:'var(--muted)',label:trip.status};
-  mBadge.style.cssText=`display:inline-flex;background:${cfg.bg};color:${cfg.color}`;
-  mBadge.textContent=cfg.label;
-  const pct=trip.progress_pct||0;
-  const v=trip.vehicle||{};
-  mBody.innerHTML=`<div class="mission-body">
-    <div class="route-vis">
-      <div class="rl-wrap"><div class="rdot"></div><div class="rline"></div><div class="rdot-end"></div></div>
-      <div class="r-info">
-        <div><div class="rloc">${esc(trip.origin||'—')}</div><div class="rsub">Origin · Departure point</div></div>
-        <div><div class="rloc">${esc(trip.destination||'—')}</div><div class="rsub">${trip.eta?'ETA: '+trip.eta:'Destination'}</div></div>
-      </div>
-    </div>
-    <div class="prog-wrap">
-      <div class="prog-lbl"><span>Trip Progress</span><span><strong>${pct}%</strong></span></div>
-      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
-    </div>
-    <div class="meta">
-      <span><i class="fa-solid fa-hashtag" style="font-size:10px"></i><strong>${esc(trip.ticket_number||'—')}</strong></span>
-      <span><i class="fa-solid fa-truck" style="font-size:10px"></i><strong>${v.make||''} ${v.model||''} ${v.registration_number?'· '+v.registration_number:''}</strong></span>
-      ${trip.cargo_type?`<span><i class="fa-solid fa-box" style="font-size:10px"></i><strong>${esc(trip.cargo_type)}</strong></span>`:''}
-      <span><i class="fa-solid fa-flag" style="font-size:10px"></i><strong>${trip.priority||'standard'}</strong></span>
-    </div>
-    ${trip.status==='active'?`<textarea id="tNotes" rows="2" placeholder="Optional completion notes (damage, delays, remarks)…" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;resize:none;outline:none;margin-bottom:10px;color:var(--text)"></textarea>`:''}
-    <button id="aBtn" class="abtn ${trip.status==='active'?'abtn-green':'abtn-gray'}" ${trip.status!=='active'?'disabled':''} onclick="doAction()">
-      ${trip.status==='active'?'<i class="fa-solid fa-flag-checkered"></i> Complete Trip':'<i class="fa-solid fa-hourglass-half"></i> Awaiting Fleet Manager Approval'}
-    </button>
-  </div>`;
-}
-
-async function doAction(){
-  if(!_tripId||_tripStatus!=='active')return;
-  const btn=document.getElementById('aBtn');
-  const notes=document.getElementById('tNotes')?.value||'';
-  btn.disabled=true; btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Completing…';
   try{
-    await api(`/trips/${_tripId}/complete`,{method:'PUT',body:JSON.stringify({notes})});
-    toast('Trip completed! Great job on the delivery.');
-    await Promise.all([loadCurrentTrip(),loadStats(),loadRecentTrips()]);
-  }catch(e){
-    toast(e.message,true);
-    btn.disabled=false;
-    btn.innerHTML='<i class="fa-solid fa-flag-checkered"></i> Complete Trip';
-  }
+    const s=await api('/trips/stats');
+    document.getElementById('kpiGrid').innerHTML=`
+      <div class="kpi-card"><div class="kpi-icon ic-b"><i class="fa-solid fa-shield-halved"></i></div><span class="kpi-val">${s.safetyScore??'—'}</span><span class="kpi-lbl">Safety Score</span></div>
+      <div class="kpi-card"><div class="kpi-icon ic-g"><i class="fa-solid fa-road"></i></div><span class="kpi-val">${s.totalDistance?Number(s.totalDistance).toLocaleString():'0'}</span><span class="kpi-lbl">Miles Driven</span></div>
+      <div class="kpi-card"><div class="kpi-icon ic-p"><i class="fa-solid fa-route"></i></div><span class="kpi-val">${s.totalTrips??0}</span><span class="kpi-lbl">Completed Trips</span></div>
+      <div class="kpi-card"><div class="kpi-icon ic-o"><i class="fa-solid fa-clock"></i></div><span class="kpi-val">${s.onTimeRate??100}%</span><span class="kpi-lbl">On-Time Rate</span></div>`;
+  }catch{document.getElementById('kpiGrid').innerHTML=`<div style="grid-column:1/-1;padding:1rem;color:var(--text-muted);font-size:.88rem">Statistics unavailable.</div>`;}
+}
+
+async function loadMission(){
+  try{
+    const t=await api('/current-trip');
+    const mb=document.getElementById('mBadge');
+    if(!t){
+      mb.textContent='No Active Trip';mb.className='badge bmo';
+      document.getElementById('missionBody').innerHTML=`<div class="mission-empty"><div style="font-size:2.5rem;margin-bottom:12px">🛣️</div><div style="font-weight:600;font-size:1rem;margin-bottom:6px">No Active Mission</div><div style="color:var(--text-muted);font-size:.88rem;margin-bottom:16px">Head to My Trips to request a new dispatch.</div><a href="MyTrips_driver.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:8px;text-decoration:none;font-size:.85rem;font-weight:600"><i class="fa-solid fa-plus"></i>New Trip Request</a></div>`;
+      return;
+    }
+    const cm={active:'bb',pending:'bo',completed:'bg'};
+    mb.textContent=(t.status||'—').toUpperCase();mb.className='badge '+(cm[t.status]||'bb');
+    const v=t.vehicle||{};const prog=t.progress_pct||0;const isA=t.status==='active';
+    document.getElementById('missionBody').innerHTML=`
+      <div class="mission-row">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:.82rem;color:var(--text-muted)">Ticket <strong style="color:var(--primary)">#${esc(t.ticket_number||'—')}</strong></span>
+          <span style="font-size:.78rem;font-weight:700;color:${t.priority==='high'?'var(--danger)':'var(--success)'}">${(t.priority||'standard').toUpperCase()}</span>
+        </div>
+        <div class="route-line-wrap">
+          <div class="rdot" style="background:var(--accent)"></div>
+          <div class="rline"></div>
+          <div class="rdot" style="background:var(--success)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.83rem;font-weight:600;margin-bottom:10px">
+          <span>${esc(t.origin||'—')}</span><span>${esc(t.destination||'—')}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-muted);margin-bottom:4px"><span>Trip Progress</span><span>${prog}%</span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${prog}%"></div></div>
+        <div class="chips">
+          ${v.make?`<span class="chip"><i class="fa-solid fa-truck" style="margin-right:3px;font-size:.65rem"></i>${esc(v.make+' '+v.model)}</span>`:''}
+          ${t.cargo_type?`<span class="chip g">${esc(t.cargo_type)}</span>`:''}
+          ${t.eta?`<span class="chip o">ETA: ${esc(t.eta)}</span>`:''}
+        </div>
+        ${isA?`<textarea id="tripNotes" class="notes-ta" placeholder="Add delivery notes (optional)…"></textarea>
+          <button class="complete-btn" id="cBtn" onclick="completeTrip('${t.id}')"><i class="fa-solid fa-flag-checkered"></i>Mark Trip Complete</button>`
+          :`<div style="margin-top:10px;padding:9px 12px;background:#FFFBEB;border-radius:8px;font-size:.82rem;color:#92400E;border:1px solid #FDE68A"><i class="fa-solid fa-hourglass-half" style="margin-right:6px"></i>Awaiting dispatch activation.</div>`}
+      </div>`;
+  }catch(e){document.getElementById('missionBody').innerHTML=`<div style="padding:14px;color:var(--text-muted);font-size:.88rem">Could not load mission: ${esc(e.message)}</div>`;}
+}
+
+async function completeTrip(id){
+  const btn=document.getElementById('cBtn');const notes=document.getElementById('tripNotes')?.value||'';
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Completing…';}
+  try{
+    await api(`/trips/${id}/complete`,{method:'PUT',body:JSON.stringify({notes})});
+    toast('Mission complete! Great work, Pilot.');
+    loadMission();loadStats();loadRecentTrips();
+  }catch(e){toast(e.message,false);if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-flag-checkered"></i>Mark Trip Complete';}}
 }
 
 async function loadRecentTrips(){
-  const trips=await api('/trips?view=history');
-  const recent=(trips||[]).slice(0,5);
-  const card=document.getElementById('recentCard');
-  if(!recent.length){
-    card.innerHTML=`<div style="padding:28px;text-align:center;color:var(--muted);font-size:13px">No completed trips yet — your journey history will appear here.</div>`;
-    return;
-  }
-  card.innerHTML=recent.map(t=>{
-    const dt=fmtDate(t.completed_at||t.updated_at||t.created_at);
-    const v=t.vehicle||{};
-    return`<div class="trip-row">
-      <div class="tdate"><div class="mm">${dt.m}</div><div class="dd">${dt.d}</div></div>
-      <div class="troute">
-        <div class="ft">${esc(t.origin||'—')} → ${esc(t.destination||'—')}</div>
-        <div class="tk">${t.ticket_number||'—'}${v.make?' · '+v.make+' '+v.model:''}</div>
-      </div>
-      ${stPill(t.status)}
-    </div>`;
-  }).join('');
+  try{
+    const trips=await api('/trips?view=history');
+    const tbody=document.getElementById('recentBody');
+    const r=(trips||[]).slice(0,5);
+    if(!r.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;font-size:.88rem">No completed trips yet.</td></tr>`;return;}
+    const cm={completed:'bg',active:'bb',pending:'bo',rejected:'br'};
+    tbody.innerHTML=r.map(t=>`<tr>
+      <td style="font-size:.8rem;white-space:nowrap;color:var(--text-muted)">${fmt(t.created_at)}</td>
+      <td><div style="font-weight:600;font-size:.87rem">${esc(t.origin||'—')} → ${esc(t.destination||'—')}</div></td>
+      <td style="font-size:.8rem;color:var(--text-muted)">#${esc(t.ticket_number||'—')}</td>
+      <td><span class="badge ${cm[t.status]||'bb'}" style="font-size:.7rem">${(t.status||'—').toUpperCase()}</span></td>
+    </tr>`).join('');
+  }catch{document.getElementById('recentBody').innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1.5rem">Could not load trips.</td></tr>`;}
 }
 
-Promise.all([loadProfile(),loadStats(),loadCurrentTrip(),loadRecentTrips()]).catch(console.error);
+async function loadChecklist(){
+  const el=document.getElementById('checklistBody');
+  try{
+    const [vRes,meRes]=await Promise.all([api('/vehicle').catch(()=>({vehicle:{},insurance:{}})),api('/me')]);
+    const v=vRes.vehicle||{};const ins=vRes.insurance||{};
+    const dp=Array.isArray(meRes.driver_profiles)?meRes.driver_profiles[0]:meRes.driver_profiles||{};
+    const today=new Date();
+    const licExp=dp.license_expiry?new Date(dp.license_expiry):null;
+    const licDays=licExp?Math.ceil((licExp-today)/86400000):null;
+    const insExp=ins.expiry_date?new Date(ins.expiry_date):null;
+    const insDays=insExp?Math.ceil((insExp-today)/86400000):null;
+    const fuel=v.fuel_level??null;
+    const items=[
+      {ico:'fa-gas-pump',lbl:'Fuel Level',sub:fuel!=null?`${fuel}% — ${fuel>20?'Sufficient':'Low — refuel before trip'}`:'No fuel data available',ok:fuel!=null&&fuel>20,na:fuel==null,warn:fuel!=null&&fuel>10&&fuel<=20},
+      {ico:'fa-file-shield',lbl:'Vehicle Insurance',sub:insDays!=null?(insDays<=0?`Expired ${Math.abs(insDays)}d ago`:insDays<=30?`Expiring in ${insDays} days`:`Valid · ${insDays}d remaining`):'No policy on record',ok:insDays!=null&&insDays>0,na:!ins.expiry_date,warn:insDays!=null&&insDays>0&&insDays<=30},
+      {ico:'fa-id-card',lbl:'Driving License',sub:licDays!=null?(licDays<=0?'License expired':licDays<=30?`Expiring in ${licDays} days`:`Valid · ${licDays}d remaining`):'No license record',ok:licDays!=null&&licDays>0,na:!licExp,warn:licDays!=null&&licDays>0&&licDays<=30},
+      {ico:'fa-truck',lbl:'Vehicle Assignment',sub:v.id?`${v.make||''} ${v.model||''} · ${v.registration_number||''}`.trim()||'Assigned':'No vehicle assigned — contact dispatcher',ok:!!v.id,na:!v.id},
+    ];
+    el.innerHTML=items.map(i=>{
+      const cls=i.na?'ci-na':i.warn?'ci-wn':i.ok?'ci-ok':'ci-er';
+      const bgc=i.na?'#94A3B8':i.warn?'#F59E0B':i.ok?'#10B981':'#EF4444';
+      const fa=i.na?'fa-minus':i.warn?'fa-exclamation':i.ok?'fa-check':'fa-xmark';
+      return`<div class="ci ${cls}">
+        <div class="ci-ico" style="background:${bgc};color:#fff"><i class="fa-solid ${fa}"></i></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:.875rem"><i class="fa-solid ${i.ico}" style="margin-right:5px;font-size:.78rem"></i>${i.lbl}</div>
+          <div style="font-size:.75rem;margin-top:2px;opacity:.7">${esc(i.sub)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch{el.innerHTML=`<div style="padding:12px;color:var(--text-muted);font-size:.85rem">Checklist data unavailable.</div>`;}
+}
+
+async function init(){
+  await Promise.all([loadProfile(),loadStats(),loadMission(),loadRecentTrips(),loadChecklist()]);
+}
+init();
 </script>
 </body>
 </html>
