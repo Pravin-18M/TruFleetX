@@ -1,4 +1,5 @@
 const supabase = require('../config/supabaseClient');
+const { writeAudit } = require('./sysadmin.controller');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/driver/me
@@ -144,7 +145,13 @@ exports.completeMyTrip = async (req, res) => {
 
         const { data, error } = await supabase
             .from('dispatch_requests')
-            .update({ status: 'completed', progress_pct: 100, updated_at: new Date().toISOString() })
+            .update({
+                status:       'completed',
+                progress_pct:  100,
+                completed_at:  new Date().toISOString(),
+                trip_notes:    (req.body?.notes || '').trim() || null,
+                updated_at:    new Date().toISOString()
+            })
             .eq('id', tripId)
             .select();
 
@@ -155,6 +162,18 @@ exports.completeMyTrip = async (req, res) => {
             .from('driver_profiles')
             .update({ status: 'available' })
             .eq('user_id', userId);
+
+        writeAudit({
+            type:        'TRIP_COMPLETED',
+            severity:    'INFO',
+            actorId:     userId,
+            actorName:   req.user?.full_name || req.user?.email,
+            actorRole:   req.user?.role,
+            entityType:  'dispatch_request',
+            entityId:    tripId,
+            entityLabel: `Ticket ${existing.ticket_number || tripId.slice(-6)}`,
+            details:     { notes: req.body?.notes || null }
+        });
 
         res.json({ message: 'Trip marked as completed.', request: data[0] });
     } catch (e) {
@@ -629,6 +648,38 @@ exports.raiseDispatchRequest = async (req, res) => {
             message: 'Trip approved and activated. Safe journey!',
             request: data[0]
         });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/driver/vehicle/maintenance-history
+// Returns full maintenance history for the driver's assigned vehicle
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getMaintenanceHistory = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const { data: profile, error: pErr } = await supabase
+            .from('driver_profiles')
+            .select('assigned_vehicle_id')
+            .eq('user_id', userId)
+            .single();
+
+        if (pErr || !profile?.assigned_vehicle_id) {
+            return res.json([]);
+        }
+
+        const { data, error } = await supabase
+            .from('maintenance_orders')
+            .select('id, title, description, priority, status, order_type, mechanic_name, scheduled_date, completed_date, estimated_cost, actual_cost')
+            .eq('vehicle_id', profile.assigned_vehicle_id)
+            .order('scheduled_date', { ascending: false })
+            .limit(20);
+
+        if (error) return res.status(500).json({ error: error.message });
+        res.json(data || []);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

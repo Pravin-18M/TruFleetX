@@ -19,8 +19,9 @@ router.get('/current-trip',            guard, c.getCurrentTrip);
 router.put('/trips/:tripId/complete',  guard, c.completeMyTrip);
 
 // ── Vehicle ────────────────────────────────────────────────────────────────
-router.get('/vehicle',                 guard, c.getMyVehicle);
-router.post('/vehicle/issue',          guard, c.reportVehicleIssue);
+router.get('/vehicle',                       guard, c.getMyVehicle);
+router.post('/vehicle/issue',                guard, c.reportVehicleIssue);
+router.get('/vehicle/maintenance-history',   guard, c.getMaintenanceHistory);
 
 // ── Dispatch (Driver can raise a request) ──────────────────────────────────
 router.get('/vehicle-lookup',          guard, c.lookupVehicleByPlate);

@@ -1,583 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Wallet | Trufleet Pilot</title>
-    
-    <!-- FONTS & ICONS -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        /* 
-         * DESIGN SYSTEM: "AERO-LIGHT" (Unified System)
-         */
-        :root {
-            --primary: #0F172A;
-            --accent: #2563EB;
-            --accent-soft: #EFF6FF;
-            --bg-body: #F1F5F9;
-            --bg-card: #FFFFFF;
-            --text-main: #1E293B;
-            --text-muted: #64748B;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --danger: #EF4444;
-            --border: #E2E8F0;
-            
-            --sidebar-width: 280px;
-            --sidebar-collapsed: 80px;
-            --header-height: 80px;
-            
-            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-            
-            --radius-lg: 16px;
-            --radius-md: 10px;
-            
-            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            overflow-x: hidden;
-        }
-
-        .app-container {
-            display: grid;
-            grid-template-columns: var(--sidebar-width) 1fr;
-            transition: grid-template-columns 0.4s ease;
-            min-height: 100vh;
-        }
-
-        .app-container.collapsed {
-            grid-template-columns: var(--sidebar-collapsed) 1fr;
-        }
-
-        /* SIDEBAR */
-        aside {
-            background: var(--bg-card);
-            border-right: 1px solid var(--border);
-            padding: 1.5rem 1rem;
-            display: flex;
-            flex-direction: column;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            z-index: 50;
-            transition: var(--transition-smooth);
-        }
-
-        .brand-logo {
-            display: flex; align-items: center; gap: 12px;
-            padding: 0 1rem 2.5rem; color: var(--primary); text-decoration: none;
-            overflow: hidden; white-space: nowrap;
-        }
-        
-        .brand-text {
-            font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.4rem;
-            opacity: 1; transition: opacity 0.2s;
-        }
-
-        .app-container.collapsed .brand-text { opacity: 0; display: none; }
-
-        .nav-menu { flex: 1; }
-
-        .nav-item {
-            display: flex; align-items: center; gap: 16px; padding: 12px 16px;
-            color: var(--text-muted); text-decoration: none; border-radius: 12px;
-            transition: var(--transition-smooth); font-weight: 500; margin-bottom: 4px;
-            white-space: nowrap; overflow: hidden;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background-color: var(--accent-soft);
-            color: var(--accent);
-        }
-        .nav-item i { min-width: 24px; text-align: center; font-size: 1.1rem; }
-
-        /* MAIN CONTENT */
-        main { overflow-y: auto; height: 100vh; }
-
-        header {
-            height: var(--header-height);
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-            position: sticky;
-            top: 0;
-            z-index: 40;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 2rem;
-        }
-        
-        .header-left { display: flex; align-items: center; gap: 1rem; }
-        .toggle-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
-
-        .profile-chip {
-            display: flex; align-items: center; gap: 10px;
-            padding: 6px 12px; background: white; border: 1px solid var(--border);
-            border-radius: 30px; cursor: pointer;
-        }
-        .profile-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-
-        .dashboard-content {
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            opacity: 0;
-            animation: fadeInPage 0.6s ease-out forwards;
-        }
-
-        /* ALERT BANNER */
-        .alert-banner {
-            background: #FFF7ED; border: 1px solid #FED7AA; color: #9A3412;
-            padding: 1rem 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        /* TABS */
-        .tabs { display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
-        .tab-btn {
-            background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted);
-            cursor: pointer; padding: 8px 16px; border-radius: 8px; transition: 0.3s;
-        }
-        .tab-btn.active { background: var(--accent-soft); color: var(--accent); }
-
-        /* DOC GRID */
-        .doc-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .doc-card {
-            background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-card); border: 1px solid var(--border);
-            position: relative; overflow: hidden; transition: 0.3s;
-        }
-        .doc-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
-
-        .doc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
-        .doc-icon {
-            width: 48px; height: 48px; border-radius: 12px; background: var(--bg-body);
-            display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--primary);
-        }
-        
-        .status-badge {
-            padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-        }
-        .st-valid { background: #ECFDF5; color: #059669; }
-        .st-expiring { background: #FFFBEB; color: #D97706; }
-        .st-expired { background: #FEF2F2; color: #DC2626; }
-
-        .doc-title { font-family: 'Outfit'; font-size: 1.1rem; font-weight: 600; color: var(--primary); margin-bottom: 0.25rem; }
-        .doc-sub { font-size: 0.85rem; color: var(--text-muted); font-family: monospace; letter-spacing: 0.5px; }
-
-        .expiry-container { margin-top: 1.5rem; }
-        .expiry-text { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
-        .progress-bar { height: 6px; background: #F1F5F9; border-radius: 3px; overflow: hidden; }
-        .progress-fill { height: 100%; border-radius: 3px; }
-
-        .card-actions {
-            margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--bg-body);
-            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
-        }
-        .act-btn {
-            padding: 8px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
-            text-align: center; transition: 0.2s; border: 1px solid transparent;
-        }
-        .btn-view { background: var(--bg-body); color: var(--text-main); }
-        .btn-view:hover { background: #E2E8F0; }
-        .btn-download { background: white; border-color: var(--border); color: var(--accent); }
-        .btn-download:hover { border-color: var(--accent); }
-
-        /* DRAWER (Preview) */
-        .drawer-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
-            z-index: 100; opacity: 0; visibility: hidden; transition: 0.4s ease;
-        }
-        .drawer {
-            position: absolute; top: 0; right: 0; width: 600px; height: 100%;
-            background: white; box-shadow: -10px 0 40px rgba(0,0,0,0.2);
-            transform: translateX(100%); transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            display: flex; flex-direction: column;
-        }
-        .drawer-overlay.open { opacity: 1; visibility: visible; }
-        .drawer-overlay.open .drawer { transform: translateX(0); }
-        .drawer-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .drawer-body { padding: 2rem; overflow-y: auto; flex: 1; background: #F8FAFC; display: flex; flex-direction: column; align-items: center; }
-
-        .doc-preview {
-            width: 100%; max-width: 400px; background: white; padding: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-radius: 8px; margin-bottom: 2rem;
-        }
-        .doc-preview img { width: 100%; height: auto; border: 1px solid #E2E8F0; }
-
-        @keyframes fadeInPage { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        @media (max-width: 768px) {
-            .app-container { grid-template-columns: 1fr; }
-            .app-container aside { position: fixed; left: -280px; transition: 0.3s; }
-            .app-container.mobile-open aside { left: 0; }
-            .drawer { width: 100%; }
-            .doc-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Documents — TruFleetX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+:root{
+  --bg:#F0F4F8;--sidebar:#1A2332;--sidebar-w:240px;
+  --card:#fff;--border:#E2E8F0;
+  --primary:#2D3A8C;--primary-light:#E8EAFB;
+  --accent:#4F8EF7;--accent-light:#EBF3FF;
+  --green:#0EA371;--green-light:#D1FAE5;
+  --red:#E53E3E;--red-light:#FED7D7;
+  --orange:#DD6B20;--orange-light:#FEEBC8;
+  --yellow:#D69E2E;--yellow-light:#FEFCBF;
+  --text:#1A202C;--muted:#64748B;--bdr:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
+.sidebar-logo{padding:22px 18px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,#4F8EF7,#2D3A8C);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0}
+.logo-text{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#fff}
+.sidebar-section{padding:14px 14px 4px;font-size:10px;font-weight:600;color:rgba(255,255,255,.32);letter-spacing:.12em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;text-decoration:none;color:rgba(255,255,255,.58);font-size:13px;font-weight:500;margin:1px 0;transition:all .15s}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:linear-gradient(90deg,rgba(79,142,247,.25),rgba(79,142,247,.08));color:#fff;border-left:3px solid #4F8EF7}
+.nav-item i{width:18px;font-size:13px;text-align:center;flex-shrink:0}
+.sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,.07)}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.header{background:var(--card);border-bottom:1px solid var(--border);padding:0 26px;height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.hdr-title{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;color:var(--primary)}
+.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.driver-chip{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 5px}
+.driver-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2.5s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.content{padding:24px;flex:1}
+.slabel{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.slabel::after{content:'';flex:1;height:1px;background:var(--border)}
+/* ALERT BANNER */
+.ualert{border-radius:var(--bdr);padding:14px 16px;display:flex;align-items:flex-start;gap:10px;margin-bottom:20px}
+.ualert.warn{background:var(--orange-light);border:1.5px solid #F6AD55}
+.ualert.danger{background:var(--red-light);border:1.5px solid #FC8181}
+.ualert i{margin-top:2px;font-size:14px}
+.ualert.warn i{color:var(--orange)}
+.ualert.danger i{color:var(--red)}
+.ualert-t{font-size:13px;font-weight:700;margin-bottom:2px}
+.ualert.warn .ualert-t{color:var(--orange)}
+.ualert.danger .ualert-t{color:var(--red)}
+/* DOC GRID */
+.doc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:780px){.doc-grid{grid-template-columns:1fr}}
+.doc-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--bdr);padding:20px;transition:box-shadow .15s}
+.doc-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.07)}
+.doc-card.expiring{border-color:#F6AD55}
+.doc-card.expired{border-color:#FC8181}
+.doc-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.doc-ico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.doc-name{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px}
+.doc-status{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px}
+.ds-valid{background:var(--green-light);color:var(--green)}
+.ds-expiring{background:var(--orange-light);color:var(--orange)}
+.ds-expired{background:var(--red-light);color:var(--red)}
+.ds-na{background:var(--bg);color:var(--muted)}
+.doc-rows{display:flex;flex-direction:column;gap:6px}
+.doc-row{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+.doc-row-label{color:var(--muted);font-weight:500;min-width:110px}
+.doc-row-val{font-weight:600;text-align:right}
+.doc-action{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.btn-sm{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;gap:5px;font-family:'Inter',sans-serif;transition:all .15s}
+.btn-sm-pri{background:var(--accent-light);color:var(--accent)}
+.btn-sm-pri:hover{background:var(--accent);color:#fff}
+.btn-sm-out{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.btn-sm-out:hover{color:var(--text)}
+.shimmer{background:linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%);background-size:200% 100%;animation:shim 1.4s infinite;border-radius:8px}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.toast{position:fixed;bottom:22px;right:22px;background:#1A2332;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:7px;max-width:340px}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
 </head>
 <body>
-
-    <div class="app-container" id="appContainer">
-        
-        <!-- SIDEBAR -->
-        <aside id="sidebar">
-            <a href="#" class="brand-logo">
-                <i class="fa-solid fa-cube" style="font-size: 1.8rem; color: var(--accent);"></i>
-                <span class="brand-text">Trufleet</span>
-            </a>
-
-            <nav class="nav-menu">
-                <a href="dashboard_driver.html" class="nav-item">
-                    <i class="fa-solid fa-gauge-high"></i>
-                    <span class="brand-text">Dashboard</span>
-                </a>
-                <a href="MyTrips_driver.html" class="nav-item">
-                    <i class="fa-solid fa-route"></i>
-                    <span class="brand-text">My Trips</span>
-                </a>
-                <a href="Vehicle_status_driver.html" class="nav-item">
-                    <i class="fa-solid fa-truck"></i>
-                    <span class="brand-text">Vehicle Status</span>
-                </a>
-                <a href="Documents_driver.html" class="nav-item active">
-                    <i class="fa-solid fa-file-lines"></i>
-                    <span class="brand-text">Documents</span>
-                </a>
-                <div style="flex-grow: 1;"></div>
-                <a href="support_driver.html" class="nav-item">
-                    <i class="fa-solid fa-headset"></i>
-                    <span class="brand-text">Support</span>
-                </a>
-                <a href="#" onclick="logout()" class="nav-item" style="color: var(--danger);">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    <span class="brand-text">Logout</span>
-                </a>
-            </nav>
-        </aside>
-
-        <!-- MAIN CONTENT -->
-        <main>
-            <header>
-                <div class="header-left">
-                    <button class="toggle-btn" onclick="toggleSidebar()">
-                        <i class="fa-solid fa-bars-staggered"></i>
-                    </button>
-                    <span style="font-family: 'Outfit'; font-weight: 600; font-size: 1.25rem;">Digital Wallet</span>
-                </div>
-                <div class="profile-chip">
-                    <img id="profileImg" src="" class="profile-img" onerror="this.src='https://ui-avatars.com/api/?name=Driver&background=2563EB&color=fff'">
-                    <div>
-                        <span class="profile-name" id="profileName">Loading...</span>
-                        <span class="profile-role" style="display:block;font-size:0.7rem;color:var(--text-muted)">Fleet Pilot</span>
-                    </div>
-                </div>
-            </header>
-
-            <div class="dashboard-content">
-                
-                <!-- ALERT BANNER (If items expiring) -->
-                <div class="alert-banner" id="alertBanner" style="display:none;">
-                    <i class="fa-solid fa-circle-exclamation" style="font-size: 1.2rem;"></i>
-                    <div>
-                        <span style="font-weight: 700;">Action Required: </span>
-                        <span id="alertMsg" style="font-size: 0.9rem;"></span>
-                    </div>
-                    <button style="margin-left: auto; background: white; border: 1px solid #FED7AA; color: #9A3412; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Update</button>
-                </div>
-
-                <!-- TABS -->
-                <div class="tabs">
-                    <button class="tab-btn active" onclick="switchTab('personal')">Personal IDs</button>
-                    <button class="tab-btn" onclick="switchTab('vehicle')">Vehicle Documents</button>
-                </div>
-
-                <!-- PERSONAL DOCS GRID -->
-                <div class="doc-grid" id="personalGrid">
-                    <p style="color:var(--text-muted)">Loading documents...</p>
-                </div>
-
-                <!-- VEHICLE DOCS GRID (Hidden by default) -->
-                <div class="doc-grid" id="vehicleGrid" style="display: none;">
-                    <p style="color:var(--text-muted)">Loading vehicle documents...</p>
-                </div>
-
-            </div>
-        </main>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">T</div>
+    <span class="logo-text">TruFleetX</span>
+  </div>
+  <div class="sidebar-section">Pilot Portal</div>
+  <a href="dashboard_driver.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+  <a href="MyTrips_driver.html" class="nav-item"><i class="fa-solid fa-route"></i><span>My Trips</span></a>
+  <a href="Vehicle_status_driver.html" class="nav-item"><i class="fa-solid fa-truck"></i><span>My Vehicle</span></a>
+  <a href="Documents_driver.html" class="nav-item active"><i class="fa-solid fa-folder-open"></i><span>Documents</span></a>
+  <a href="support_driver.html" class="nav-item"><i class="fa-solid fa-headset"></i><span>Support</span></a>
+  <div class="sidebar-bottom">
+    <a href="../login.html" class="nav-item" style="color:rgba(255,255,255,.4)" onclick="localStorage.clear()">
+      <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Sign Out</span>
+    </a>
+  </div>
+</nav>
+<div class="main">
+  <div class="header">
+    <div>
+      <div class="hdr-title"><i class="fa-solid fa-folder-open" style="color:var(--accent);margin-right:7px;font-size:14px"></i>Documents</div>
+      <div class="hdr-sub" id="hdrSub">Your compliance & regulatory documents</div>
     </div>
-
-    <!-- PREVIEW DRAWER -->
-    <div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target === this) closeDrawer()">
-        <div class="drawer">
-            <div class="drawer-header">
-                <div>
-                    <h2 id="drawerTitle" style="font-family: 'Outfit'; color: var(--primary);">Document</h2>
-                    <span style="font-size: 0.9rem; color: var(--text-muted);">Secure Preview</span>
-                </div>
-                <button onclick="closeDrawer()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="drawer-body">
-                <div class="doc-preview">
-                    <!-- Placeholder Image logic -->
-                    <img id="drawerImg" src="https://via.placeholder.com/400x250?text=Secure+Document+Preview" alt="Doc">
-                </div>
-                
-                <div style="width: 100%; max-width: 400px; display: grid; gap: 1rem;">
-                    <button class="primary-action-btn" style="width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 50px; cursor: pointer;">
-                        <i class="fa-solid fa-share-nodes"></i> Share Document
-                    </button>
-                    <button style="width: 100%; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 50px; cursor: pointer;">
-                        <i class="fa-solid fa-download"></i> Download PDF
-                    </button>
-                </div>
-            </div>
-        </div>
+    <div class="driver-chip">
+      <span class="sdot"></span>
+      <img id="avatar" class="driver-avatar" src="" alt=""/>
+      <span id="dName" style="font-size:13px;font-weight:600">Driver</span>
     </div>
+  </div>
+  <div class="content">
+    <div id="alertsSection"></div>
+    <div class="slabel">Compliance Documents</div>
+    <div class="doc-grid" id="docGrid">
+      <div class="doc-card shimmer" style="height:160px"></div>
+      <div class="doc-card shimmer" style="height:160px"></div>
+      <div class="doc-card shimmer" style="height:160px"></div>
+      <div class="doc-card shimmer" style="height:160px"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
+<script>
+const TOKEN=localStorage.getItem('trufleet_token')||'';
+if(!TOKEN){window.location.href='../login.html';}
+const api=(path,opts={})=>fetch('/api/driver'+path,{
+  ...opts,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(opts.headers||{})}
+}).then(async r=>{
+  if(r.status===401){localStorage.clear();window.location.href='../login.html';}
+  const d=await r.json(); if(!r.ok) throw new Error(d.error||'Request failed'); return d;
+});
 
-    <script>
-        // ─── Auth Guard ────────────────────────────────────────────────────────
-        const TOKEN = localStorage.getItem('trufleet_token');
-        if (!TOKEN) location.href = '../login.html';
-        function parseJwt(t) { try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; } }
-        const ME = parseJwt(TOKEN);
-        if (!ME || ME.role !== 'driver') { localStorage.clear(); location.href = '../login.html'; }
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDate(iso){if(!iso)return'—';return new Date(iso).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
 
-        async function apiFetch(path, opts = {}) {
-            const res = await fetch(path, {
-                ...opts,
-                headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
-            });
-            if (!res.ok) {
-                const ct = res.headers.get('content-type') || '';
-                const body = ct.includes('application/json')
-                    ? await res.json().catch(() => ({}))
-                    : { error: `Server error ${res.status}: ${res.statusText || await res.text().catch(() => 'unknown')}` };
-                throw new Error(body.error || `HTTP ${res.status}`);
-            }
-            return res.json();
-        }
+function toast(msg,err=false){
+  const el=document.getElementById('toast');
+  el.querySelector('i').className=err?'fa-solid fa-circle-exclamation':'fa-solid fa-circle-check';
+  el.style.background=err?'#E53E3E':'#1A2332';
+  document.getElementById('toastMsg').textContent=msg;
+  el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3800);
+}
 
-        function logout() { localStorage.clear(); location.href = '../login.html'; }
+function getExpiryInfo(isoExpiry){
+  if(!isoExpiry) return{days:null,status:'na',label:'Not on record',color:'var(--muted)',bg:'var(--bg)'};
+  const today=new Date(); const exp=new Date(isoExpiry);
+  const days=Math.ceil((exp-today)/(1000*60*60*24));
+  if(days<0) return{days,status:'expired',label:`Expired ${Math.abs(days)}d ago`,color:'var(--red)',bg:'var(--red-light)'};
+  if(days<=30) return{days,status:'expiring',label:`Expiring in ${days}d`,color:'var(--orange)',bg:'var(--orange-light)'};
+  return{days,status:'valid',label:`Valid · ${days}d left`,color:'var(--green)',bg:'var(--green-light)'};
+}
 
-        // ─── Sidebar ──────────────────────────────────────────────────────────────
-        const appContainer = document.getElementById('appContainer');
-        const sidebar      = document.getElementById('sidebar');
-        function toggleSidebar() {
-            if (window.innerWidth <= 768) appContainer.classList.toggle('mobile-open');
-            else appContainer.classList.toggle('collapsed');
-        }
-        sidebar.addEventListener('mouseenter', () => {
-            if (window.innerWidth > 768 && appContainer.classList.contains('collapsed')) {
-                appContainer.classList.remove('collapsed');
-                sidebar.dataset.autoExpanded = 'true';
-            }
-        });
-        sidebar.addEventListener('mouseleave', () => {
-            if (window.innerWidth > 768 && sidebar.dataset.autoExpanded === 'true') {
-                appContainer.classList.add('collapsed');
-                sidebar.dataset.autoExpanded = 'false';
-            }
-        });
+function statusBadge(ei){
+  const cls={valid:'ds-valid',expiring:'ds-expiring',expired:'ds-expired',na:'ds-na'}[ei.status];
+  const txt={valid:'VALID',expiring:'EXPIRING SOON',expired:'EXPIRED',na:'N/A'}[ei.status];
+  return`<span class="doc-status ${cls}">${txt}</span>`;
+}
 
-        // ─── Tab Logic ─────────────────────────────────────────────────────────
-        function switchTab(type) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            if (type === 'personal') {
-                document.getElementById('personalGrid').style.display = 'grid';
-                document.getElementById('vehicleGrid').style.display  = 'none';
-            } else {
-                document.getElementById('personalGrid').style.display = 'none';
-                document.getElementById('vehicleGrid').style.display  = 'grid';
-            }
-        }
+function docRow(label,val){return`<div class="doc-row"><span class="doc-row-label">${label}</span><span class="doc-row-val">${val}</span></div>`;}
 
-        // ─── Drawer Logic ─────────────────────────────────────────────────────
-        function openDrawer(title, imgSrc) {
-            document.getElementById('drawerTitle').textContent = title;
-            const img = document.getElementById('drawerImg');
-            img.src = imgSrc || 'https://via.placeholder.com/400x250?text=Document+Preview';
-            document.getElementById('drawerOverlay').classList.add('open');
-        }
-        function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); }
+function viewBtn(url){
+  if(!url) return'';
+  return`<a href="${esc(url)}" target="_blank" rel="noopener" class="btn-sm btn-sm-pri"><i class="fa-solid fa-eye"></i>View</a>`;
+}
 
-        // ─── Helpers ──────────────────────────────────────────────────────────
-        function getExpiryInfo(expiryIso) {
-            if (!expiryIso) return { badge: 'st-valid', label: 'N/A', pct: 100, text: 'No expiry', color: 'var(--primary)', daysLeft: Infinity };
-            const exp      = new Date(expiryIso);
-            const today    = new Date();
-            const daysLeft = Math.ceil((exp - today) / 86400000);
-            const progress = daysLeft <= 0 ? 0 : Math.min(100, Math.round(daysLeft / 365 * 50 + 50));
-            if (daysLeft <= 0)    return { badge: 'st-expired', label: 'Expired', pct: 0, text: 'Expired', color: 'var(--danger)', daysLeft };
-            if (daysLeft <= 30)   return { badge: 'st-expiring', label: 'Expiring Soon', pct: progress, text: `${daysLeft} days left`, color: 'var(--warning)', daysLeft };
-            return { badge: 'st-valid', label: 'Valid', pct: progress, text: `${Math.ceil(daysLeft / 30)} months left`, color: 'var(--success)', daysLeft };
-        }
+function buildDocCard(icon,iconBg,iconColor,name,statusEl,cardClass,rows,actionHtml=''){
+  return`<div class="doc-card ${cardClass}">
+    <div class="doc-head">
+      <div class="doc-ico" style="background:${iconBg};color:${iconColor}"><i class="fa-solid ${icon}"></i></div>
+      <div><div class="doc-name">${name}</div>${statusEl}</div>
+    </div>
+    <div class="doc-rows">${rows.join('')}</div>
+    ${actionHtml?`<div class="doc-action">${actionHtml}</div>`:''}
+  </div>`;
+}
 
-        function buildDocCard(icon, title, sub, expiryIso, expiryLabel, imgSrc, noExpiry) {
-            const ei   = noExpiry
-                ? { badge: 'st-valid', label: 'Valid', pct: 100, text: 'Valid for Life', color: 'var(--primary)' }
-                : getExpiryInfo(expiryIso);
-            const borderStyle = ei.label === 'Expiring Soon' ? 'border-color: #FDBA74;' : '';
-            const expText = expiryIso
-                ? `Expires: ${new Date(expiryIso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
-                : (noExpiry ? 'Valid for Life' : 'No expiry info');
-            return `
-            <div class="doc-card" style="${borderStyle}">
-                <div class="doc-header">
-                    <div class="doc-icon" style="color:${ei.label === 'Expiring Soon' ? 'var(--warning)' : 'var(--primary)'}">
-                        <i class="${icon}"></i>
-                    </div>
-                    <span class="status-badge ${ei.badge}">${ei.label}</span>
-                </div>
-                <h3 class="doc-title">${title}</h3>
-                <p class="doc-sub">${sub || 'Not provided'}</p>
+async function loadProfile(){
+  const d=await api('/me');
+  const name=d.full_name||d.email?.split('@')[0]||'Driver';
+  document.getElementById('dName').textContent=name;
+  document.getElementById('avatar').src=d.avatar_url||`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4F8EF7&color=fff&size=56`;
+}
 
-                <div class="expiry-container">
-                    <div class="expiry-text">
-                        <span>${expText}</span>
-                        ${expiryIso ? `<span style="color:${ei.color}">${ei.text}</span>` : ''}
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${ei.pct}%; background: ${ei.color};"></div>
-                    </div>
-                </div>
+async function loadDocuments(){
+  const d=await api('/documents');
+  const lic=d.license||{};
+  const aad=d.aadhar||{};
+  const med=d.medical||{};
+  const veh=d.vehicle||{};
+  const ins=d.insurance||{};
 
-                <div class="card-actions">
-                    <button class="act-btn btn-view" onclick="openDrawer('${title}', '${imgSrc || ''}')">
-                        View
-                    </button>
-                    <button class="act-btn btn-download"><i class="fa-solid fa-download"></i> Save</button>
-                </div>
-            </div>`;
-        }
+  const cards=[];
+  const alerts=[];
 
-        // ─── Load Profile ────────────────────────────────────────────────────
-        async function loadMe() {
-            try {
-                const data = await apiFetch('/api/driver/me');
-                document.getElementById('profileName').textContent = data.full_name || 'Driver';
-                const img = document.getElementById('profileImg');
-                img.src = data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name || 'D')}&background=2563EB&color=fff`;
-            } catch (e) { console.error('loadMe:', e); }
-        }
+  /* 1. DRIVING LICENSE */
+  const licEI=getExpiryInfo(lic.expiry);
+  if(licEI.status==='expired') alerts.push({type:'danger',title:'Driving License Expired',text:`Your license expired ${Math.abs(licEI.days)} days ago. You are NOT permitted to operate any fleet vehicle.`});
+  else if(licEI.status==='expiring') alerts.push({type:'warn',title:'Driving License Expiring Soon',text:`Your license expires in ${licEI.days} days. Please renew immediately to avoid suspension.`});
+  cards.push(buildDocCard('id-card','var(--primary-light)','var(--primary)','Driving License',statusBadge(licEI),licEI.status==='expired'?'expired':licEI.status==='expiring'?'expiring':'',[
+    docRow('License No.',esc(lic.number||'—')),
+    docRow('License Type',esc(lic.type||'—')),
+    docRow('Issue Date',fmtDate(lic.issue_date)),
+    docRow('Expiry Date',`<span style="color:${licEI.color};font-weight:700">${fmtDate(lic.expiry)} <small>${licEI.label}</small></span>`),
+  ]));
 
-        // ─── Load Documents ────────────────────────────────────────────────────
-        async function loadDocuments() {
-            try {
-                const docs = await apiFetch('/api/driver/documents');
-                const personalGrid = document.getElementById('personalGrid');
-                const vehicleGrid  = document.getElementById('vehicleGrid');
+  /* 2. GOVERNMENT ID */
+  const maskedAad=aad.number?String(aad.number).replace(/\d(?=\d{4})/g,'*'):'—';
+  cards.push(buildDocCard('fingerprint','#EDE9FE','var(--purple)','Government ID (Aadhar)',`<span class="doc-status ds-na">${aad.number?'ON RECORD':'NOT ON RECORD'}</span>`,'',[ 
+    docRow('Aadhar Number',`<span style="letter-spacing:.1em;font-family:monospace">${maskedAad}</span>`),
+    docRow('Verification',aad.number?'<span style="color:var(--green)">✓ Verified</span>':'<span style="color:var(--muted)">—</span>'),
+  ]));
 
-                let alerts = [];
+  /* 3. MEDICAL CERTIFICATE */
+  const medEI=getExpiryInfo(med.expiry);
+  if(medEI.status==='expired') alerts.push({type:'danger',title:'Medical Certificate Expired',text:'Your medical certificate has expired. Renewal is mandatory for compliance.'});
+  else if(medEI.status==='expiring') alerts.push({type:'warn',title:'Medical Certificate Expiring',text:`Medical certificate expires in ${medEI.days} days. Schedule a check-up soon.`});
+  cards.push(buildDocCard('stethoscope','var(--green-light)','var(--green)','Medical Certificate',statusBadge(medEI),medEI.status==='expired'?'expired':medEI.status==='expiring'?'expiring':'',[
+    docRow('Fitness Status',medEI.status==='valid'?'<span style="color:var(--green)">✓ Fit to Drive</span>':'<span style="color:var(--red)">⚠ Review Required</span>'),
+    docRow('Expiry Date',`<span style="color:${medEI.color};font-weight:700">${fmtDate(med.expiry)} <small>${medEI.label}</small></span>`),
+  ]));
 
-                // ── Personal Documents ──────────────────────────────────────
-                const personalCards = [];
+  /* 4. VEHICLE RC */
+  const rcEI=getExpiryInfo(veh.rc_expiry);
+  cards.push(buildDocCard('car','var(--accent-light)','var(--accent)','Vehicle Registration (RC)',statusBadge(rcEI),rcEI.status==='expired'?'expired':rcEI.status==='expiring'?'expiring':'',[
+    docRow('Vehicle',veh.make?esc(veh.make+' '+veh.model+(veh.year?' ('+veh.year+')':'')):'—'),
+    docRow('Registration No.',esc(veh.registration_number||'—')),
+    docRow('VIN',esc(veh.vin||'—')),
+    docRow('RC Expiry',`<span style="color:${rcEI.color};font-weight:700">${fmtDate(veh.rc_expiry)} <small>${rcEI.label}</small></span>`),
+  ],viewBtn(veh.rc_document_url)));
 
-                // Driving License
-                personalCards.push(buildDocCard(
-                    'fa-solid fa-id-card',
-                    'Driving License',
-                    docs.license?.number || 'Not on file',
-                    docs.license?.expiry,
-                    null, ''
-                ));
-                if (docs.license?.expiry) {
-                    const ei = getExpiryInfo(docs.license.expiry);
-                    if (ei.daysLeft <= 30) alerts.push(`Driving License ${ei.label.toLowerCase()} (${ei.text})`);
-                }
+  /* 5. INSURANCE POLICY */
+  const insEI=getExpiryInfo(ins.expiry_date);
+  if(insEI.status==='expired') alerts.push({type:'danger',title:'Vehicle Insurance Expired',text:'The vehicle insurance policy has expired. Operating without valid insurance is illegal.'});
+  else if(insEI.status==='expiring') alerts.push({type:'warn',title:'Vehicle Insurance Expiring',text:`Insurance expires in ${insEI.days} days. Contact fleet management.`});
+  cards.push(buildDocCard('file-shield','var(--orange-light)','var(--orange)','Vehicle Insurance',statusBadge(insEI),insEI.status==='expired'?'expired':insEI.status==='expiring'?'expiring':'',[
+    docRow('Provider',esc(ins.provider||'—')),
+    docRow('Policy Number',esc(ins.policy_number||'—')),
+    docRow('Coverage',esc(ins.coverage_type||'Comprehensive')),
+    docRow('Valid Period',ins.start_date&&ins.expiry_date?`${fmtDate(ins.start_date)} → ${fmtDate(ins.expiry_date)}`:'—'),
+    docRow('Status',`<span style="color:${insEI.color};font-weight:700">${insEI.label}</span>`),
+  ],viewBtn(ins.document_url)));
 
-                // Medical Certificate
-                personalCards.push(buildDocCard(
-                    'fa-solid fa-notes-medical',
-                    'Medical Certificate',
-                    docs.medical?.expiry ? `Valid until ${new Date(docs.medical.expiry).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'})}` : 'Not on file',
-                    docs.medical?.expiry,
-                    null, ''
-                ));
-                if (docs.medical?.expiry) {
-                    const ei = getExpiryInfo(docs.medical.expiry);
-                    if (ei.daysLeft <= 30) alerts.push(`Medical Certificate ${ei.label.toLowerCase()} (${ei.text})`);
-                }
+  // ALERTS
+  const alertsSection=document.getElementById('alertsSection');
+  alertsSection.innerHTML=alerts.map(a=>`
+    <div class="ualert ${a.type}">
+      <i class="fa-solid ${a.type==='danger'?'fa-circle-xmark':'fa-triangle-exclamation'}"></i>
+      <div><div class="ualert-t">${esc(a.title)}</div><div style="font-size:12px">${esc(a.text)}</div></div>
+    </div>`).join('');
 
-                // Aadhar Card
-                personalCards.push(buildDocCard(
-                    'fa-solid fa-fingerprint',
-                    'Aadhar Card',
-                    docs.aadhar?.number ? `XXXX-XXXX-${String(docs.aadhar.number).slice(-4)}` : 'Not on file',
-                    null, null, '', true
-                ));
+  document.getElementById('docGrid').innerHTML=cards.join('');
+}
 
-                personalGrid.innerHTML = personalCards.join('') || '<p style="color:var(--text-muted)">No personal documents found.</p>';
-
-                // ── Vehicle Documents ────────────────────────────────────────
-                const vehicleCards = [];
-
-                if (docs.vehicle) {
-                    // RC
-                    vehicleCards.push(buildDocCard(
-                        'fa-solid fa-car',
-                        'Registration Certificate (RC)',
-                        docs.vehicle.registration_number || '—',
-                        docs.vehicle.rc_expiry,
-                        null,
-                        docs.vehicle.rc_document_url || ''
-                    ));
-                    // Insurance
-                    if (docs.insurance) {
-                        vehicleCards.push(buildDocCard(
-                            'fa-solid fa-shield-halved',
-                            'Insurance Policy',
-                            docs.insurance.policy_number || '—',
-                            docs.insurance.expiry_date,
-                            null,
-                            docs.insurance.document_url || ''
-                        ));
-                        if (docs.insurance.expiry_date) {
-                            const ei = getExpiryInfo(docs.insurance.expiry_date);
-                            if (ei.daysLeft <= 30) alerts.push(`Vehicle Insurance ${ei.label.toLowerCase()} (${ei.text})`);
-                        }
-                    } else {
-                        vehicleCards.push('<div class="doc-card" style="opacity:0.6"><p style="color:var(--text-muted);padding:1rem">No insurance policy found for assigned vehicle.</p></div>');
-                    }
-                } else {
-                    vehicleGrid.innerHTML = '<p style="color:var(--text-muted)">No vehicle assigned — no vehicle documents to display.</p>';
-                }
-
-                if (vehicleCards.length) vehicleGrid.innerHTML = vehicleCards.join('');
-
-                // ── Alert Banner ─────────────────────────────────────────────
-                if (alerts.length) {
-                    document.getElementById('alertBanner').style.display = 'flex';
-                    document.getElementById('alertMsg').textContent = alerts.join('. ');
-                }
-
-            } catch (e) {
-                console.error('loadDocuments:', e);
-                document.getElementById('personalGrid').innerHTML = '<p style="color:var(--danger)">Failed to load documents.</p>';
-            }
-        }
-
-        // ─── Init ─────────────────────────────────────────────────────────────
-        loadMe();
-        loadDocuments();
-    </script>
+async function init(){
+  await Promise.all([loadProfile(),loadDocuments()]);
+}
+init().catch(console.error);
+</script>
 </body>
 </html>

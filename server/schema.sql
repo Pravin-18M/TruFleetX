@@ -126,6 +126,16 @@
     -- Vehicle registration certificate expiry (shown on Documents page)
     ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS rc_expiry DATE DEFAULT NULL;
 
+    -- ── Dispatch enrichment ───────────────────────────────────────────────────
+    -- Trip completion timestamp + driver notes + odometer for distance tracking
+    ALTER TABLE dispatch_requests ADD COLUMN IF NOT EXISTS completed_at   TIMESTAMPTZ;
+    ALTER TABLE dispatch_requests ADD COLUMN IF NOT EXISTS trip_notes     TEXT;
+    ALTER TABLE dispatch_requests ADD COLUMN IF NOT EXISTS odometer_start NUMERIC(10,1);
+    ALTER TABLE dispatch_requests ADD COLUMN IF NOT EXISTS actual_distance NUMERIC(10,1);
+
+    -- Driver profile: cumulative odometer across all trips
+    ALTER TABLE driver_profiles ADD COLUMN IF NOT EXISTS total_distance NUMERIC(12,1) DEFAULT 0;
+
     -- ── Support Tickets Table ────────────────────────────────────────────────
     -- Raised by drivers; visible to managers/admins on fleet dashboard.
     -- Contains emergency SOS alerts (category = 'Emergency SOS') as well.
