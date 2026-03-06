@@ -1,4 +1,5 @@
 const supabase = require('../config/supabaseClient');
+const { writeAudit } = require('./sysadmin.controller');
 
 // ─── Supabase Storage helper ───────────────────────────────────────────────────
 const BUCKET = 'fleet-documents';
@@ -108,6 +109,19 @@ exports.addVehicle = async (req, res) => {
         }
 
         res.status(201).json({ message: 'Vehicle registered successfully.', vehicle });
+
+        // Audit after successful response
+        writeAudit({
+            type:        'VEHICLE_ADDED',
+            severity:    'INFO',
+            actorId:     req.user?.id,
+            actorName:   req.user?.full_name || req.user?.email,
+            actorRole:   req.user?.role,
+            entityType:  'vehicle',
+            entityId:    vehicle.id,
+            entityLabel: `${make} ${model} (${registration_number || vin})`,
+            details:     { make, model, year, vin, registration_number, had_insurance: !!(insurance_provider && insurance_expiry) }
+        });
     } catch (err) {
         console.error('[addVehicle]', err.message);
         res.status(500).json({ error: err.message });
@@ -133,6 +147,18 @@ exports.updateVehicleStatus = async (req, res) => {
     if (error) return res.status(500).json({ error: error.message });
     if (!data || data.length === 0) return res.status(404).json({ error: 'Vehicle not found.' });
 
+    writeAudit({
+        type:        'VEHICLE_STATUS_CHANGED',
+        severity:    status === 'blocked' ? 'WARNING' : 'INFO',
+        actorId:     req.user?.id,
+        actorName:   req.user?.full_name || req.user?.email,
+        actorRole:   req.user?.role,
+        entityType:  'vehicle',
+        entityId:    vehicleId,
+        entityLabel: `${data[0].make} ${data[0].model} (${data[0].registration_number || vehicleId.slice(-6)})`,
+        details:     { new_status: status }
+    });
+
     res.json({ message: `Vehicle status updated to ${status}.`, vehicle: data[0] });
 };
 
@@ -157,37 +183,51 @@ exports.updateVehicle = async (req, res) => {
 // DELETE vehicle — requires a decommission reason for audit trail
 exports.deleteVehicle = async (req, res) => {
     const { vehicleId } = req.params;
-    const { reason, notes } = req.body || {};
 
-    if (!reason || !reason.trim()) {
-        return res.status(400).json({ error: 'A decommission reason is required.' });
+    // body.reason is primary; query param ?reason=X is fallback for edge cases
+    const rawBody = req.body && typeof req.body === 'object' ? req.body : {};
+    const reason  = (rawBody.reason || req.query.reason || '').toString().trim();
+    const notes   = (rawBody.notes  || req.query.notes  || '').toString().trim();
+
+    if (!reason) {
+        return res.status(400).json({ error: 'A decommission reason is required. Please select one from the form.' });
     }
 
-    // Fetch vehicle info before deletion for the audit log
+    // Fetch vehicle info before deletion for the audit record
     const { data: vehicle } = await supabase
         .from('vehicles')
-        .select('make, model, registration_number, vin')
+        .select('make, model, registration_number, vin, status')
         .eq('id', vehicleId)
         .single();
 
-    const { error } = await supabase
-        .from('vehicles')
-        .delete()
-        .eq('id', vehicleId);
+    if (!vehicle) return res.status(404).json({ error: 'Vehicle not found.' });
 
+    const { error } = await supabase.from('vehicles').delete().eq('id', vehicleId);
     if (error) return res.status(500).json({ error: error.message });
 
-    // Structured audit log — in production this should write to an audit_logs table
-    const adminId   = req.user?.id   || 'unknown';
-    const adminName = req.user?.full_name || req.user?.email || 'unknown';
-    console.log(JSON.stringify({
-        event:       'VEHICLE_DECOMMISSIONED',
-        timestamp:   new Date().toISOString(),
-        performed_by: { id: adminId, name: adminName },
-        vehicle:     { id: vehicleId, ...(vehicle || {}) },
-        reason,
-        notes:       notes || null
-    }));
+    writeAudit({
+        type:        'VEHICLE_DECOMMISSIONED',
+        severity:    'CRITICAL',
+        actorId:     req.user?.id,
+        actorName:   req.user?.full_name || req.user?.email,
+        actorRole:   req.user?.role,
+        entityType:  'vehicle',
+        entityId:    vehicleId,
+        entityLabel: `${vehicle.make} ${vehicle.model} (${vehicle.registration_number || vehicle.vin})`,
+        details:     {
+            make:               vehicle.make,
+            model:              vehicle.model,
+            registration_number:vehicle.registration_number,
+            vin:                vehicle.vin,
+            last_status:        vehicle.status,
+            decommission_reason:reason,
+            notes:              notes || null
+        }
+    });
 
-    res.json({ message: 'Vehicle successfully decommissioned and removed from the fleet registry.' });
+    res.json({
+        message: `Vehicle ${vehicle.make} ${vehicle.model} (${vehicle.registration_number || vehicle.vin}) has been retired from the fleet registry.`,
+        reason,
+        audited: true
+    });
 };

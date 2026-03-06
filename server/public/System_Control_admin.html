@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>System Control Center — TruFleetX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<style>
+:root{
+  --bg:#F0F4F8;--sidebar:#1A2332;--sidebar-w:240px;
+  --card:#fff;--border:#E2E8F0;
+  --primary:#2D3A8C;--primary-light:#E8EAFB;
+  --accent:#4F8EF7;--accent-light:#EBF3FF;
+  --green:#0EA371;--green-light:#D1FAE5;
+  --red:#E53E3E;--red-light:#FED7D7;
+  --orange:#DD6B20;--orange-light:#FEEBC8;
+  --yellow:#D69E2E;--yellow-light:#FEFCBF;
+  --purple:#6B46C1;--purple-light:#E9D8FD;
+  --text:#1A202C;--muted:#64748B;--border-r:12px;
+  --sev-info:#2B6CB0;--sev-warning:#B7791F;--sev-critical:#C53030;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
+.sidebar-logo{padding:24px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.logo-mark{width:36px;height:36px;background:linear-gradient(135deg,#4F8EF7,#2D3A8C);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800}
+.logo-text{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;color:#fff}
+.sidebar-section{padding:16px 12px 6px;font-size:10px;font-weight:600;color:rgba(255,255,255,.35);letter-spacing:.12em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;cursor:pointer;text-decoration:none;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;margin:1px 0;transition:all .15s}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:linear-gradient(90deg,rgba(79,142,247,.25),rgba(79,142,247,.08));color:#fff;border-left:3px solid #4F8EF7}
+.nav-item i{width:18px;font-size:14px;text-align:center}
+.sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,.07)}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* ── HEADER ── */
+.header{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-left{display:flex;flex-direction:column}
+.header-title{font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;color:var(--primary);line-height:1.2}
+.header-sub{font-size:11px;color:var(--muted);margin-top:1px;display:flex;align-items:center;gap:8px}
+.sys-health{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--green)}
+.health-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.header-right{display:flex;align-items:center;gap:20px}
+.live-clock{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);background:var(--bg);padding:6px 12px;border-radius:8px;border:1px solid var(--border)}
+.refresh-btn{background:var(--accent-light);color:var(--accent);border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+.refresh-btn:hover{background:var(--accent);color:#fff}
+.admin-badge{background:linear-gradient(135deg,var(--primary),#4F8EF7);color:#fff;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em}
+
+/* ── TABS ── */
+.tab-bar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;display:flex;gap:0;overflow-x:auto}
+.tab-btn{padding:14px 20px;font-size:13px;font-weight:600;color:var(--muted);border:none;border-bottom:3px solid transparent;background:transparent;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px;transition:all .15s}
+.tab-btn:hover{color:var(--primary)}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab-btn .badge{background:var(--primary-light);color:var(--primary);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700}
+
+/* ── CONTENT ── */
+.content{padding:28px;flex:1}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── CARDS & GRIDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-bottom:24px}
+.kpi-card{background:var(--card);border-radius:var(--border-r);padding:20px;border:1px solid var(--border);position:relative;overflow:hidden;transition:all .2s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.kpi-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px}
+.kpi-value{font-family:'Outfit',sans-serif;font-size:30px;font-weight:700;line-height:1;margin-bottom:4px}
+.kpi-label{font-size:12px;color:var(--muted);font-weight:500}
+.kpi-card::after{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:.06;background:currentColor}
+.kpi-blue .kpi-icon{background:var(--accent-light);color:var(--accent)}
+.kpi-blue .kpi-value,.kpi-blue::after{color:var(--accent)}
+.kpi-green .kpi-icon{background:var(--green-light);color:var(--green)}
+.kpi-green .kpi-value,.kpi-green::after{color:var(--green)}
+.kpi-red .kpi-icon{background:var(--red-light);color:var(--red)}
+.kpi-red .kpi-value,.kpi-red::after{color:var(--red)}
+.kpi-orange .kpi-icon{background:var(--orange-light);color:var(--orange)}
+.kpi-orange .kpi-value,.kpi-orange::after{color:var(--orange)}
+.kpi-purple .kpi-icon{background:var(--purple-light);color:var(--purple)}
+.kpi-purple .kpi-value,.kpi-purple::after{color:var(--purple)}
+.kpi-yellow .kpi-icon{background:var(--yellow-light);color:var(--yellow)}
+.kpi-yellow .kpi-value,.kpi-yellow::after{color:var(--yellow)}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:1100px){.two-col{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:var(--border-r);border:1px solid var(--border);overflow:hidden}
+.card-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-head-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.card-head-title i{color:var(--muted);font-size:13px}
+.card-body{padding:0}
+.live-badge{font-size:10px;font-weight:700;color:var(--green);background:var(--green-light);padding:2px 7px;border-radius:10px;letter-spacing:.06em}
+
+/* ── TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);background:#FAFBFC}
+.data-table td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tbody tr:hover{background:#FAFBFD}
+.data-table .empty{text-align:center;color:var(--muted);padding:32px;font-size:13px}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:var(--green-light);color:var(--green)}
+.badge-red{background:var(--red-light);color:var(--red)}
+.badge-orange{background:var(--orange-light);color:var(--orange)}
+.badge-blue{background:var(--accent-light);color:var(--accent)}
+.badge-purple{background:var(--purple-light);color:var(--purple)}
+.badge-yellow{background:var(--yellow-light);color:var(--yellow)}
+.badge-gray{background:#F1F5F9;color:var(--muted)}
+
+/* ── SEVERITY CHIPS ── */
+.sev-info{background:#EBF4FF;color:var(--sev-info);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+.sev-warning{background:#FFFBEB;color:var(--sev-warning);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+.sev-critical{background:#FFF5F5;color:var(--sev-critical);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+
+/* ── FILTERS BAR ── */
+.filter-bar{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--card)}
+.filter-pill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);transition:all .15s}
+.filter-pill:hover,.filter-pill.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.search-box{flex:1;min-width:200px;max-width:320px;padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);outline:none;font-family:'Inter',sans-serif}
+.search-box:focus{border-color:var(--accent)}
+.filter-select{padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;color:var(--text);background:#fff;outline:none;cursor:pointer}
+.filter-select:focus{border-color:var(--accent)}
+
+/* ── AUDIT LOG ROW ── */
+.audit-log-wrap{max-height:520px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:11.5px}
+.audit-row{display:flex;align-items:flex-start;gap:10px;padding:9px 16px;border-bottom:1px solid #F1F5F9;cursor:default;transition:background .1s}
+.audit-row:hover{background:#FAFBFD}
+.audit-seq{color:#A0AEC0;width:48px;flex-shrink:0;font-size:10px;padding-top:1px}
+.audit-ts{color:var(--muted);width:136px;flex-shrink:0;font-size:10.5px;padding-top:1px}
+.audit-type{width:200px;flex-shrink:0;font-weight:600;color:var(--primary);font-size:11px}
+.audit-actor{color:#555;flex-shrink:0;width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px;padding-top:1px}
+.audit-entity{flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px;padding-top:1px}
+.audit-details-btn{color:var(--accent);font-size:10px;cursor:pointer;flex-shrink:0;text-decoration:underline}
+.audit-expand{display:none;padding:8px 16px 12px 90px;background:#FAFBFD;border-bottom:1px solid #F1F5F9}
+.audit-expand pre{font-size:11px;color:var(--text);white-space:pre-wrap;word-break:break-word;font-family:'JetBrains Mono',monospace}
+
+/* ── USER TABLE ACTIONS ── */
+.act-btn{border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s;margin-right:4px}
+.act-btn-green{background:var(--green-light);color:var(--green)}
+.act-btn-green:hover{background:var(--green);color:#fff}
+.act-btn-red{background:var(--red-light);color:var(--red)}
+.act-btn-red:hover{background:var(--red);color:#fff}
+.act-btn-blue{background:var(--accent-light);color:var(--accent)}
+.act-btn-blue:hover{background:var(--accent);color:#fff}
+.act-btn-orange{background:var(--orange-light);color:var(--orange)}
+.act-btn-orange:hover{background:var(--orange);color:#fff}
+.role-select{padding:4px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-weight:600;color:var(--text);background:#fff;cursor:pointer;outline:none}
+.role-select:focus{border-color:var(--accent)}
+
+/* ── DB CONSOLE ── */
+.db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.db-card{background:var(--card);border-radius:var(--border-r);padding:22px;border:1px solid var(--border);text-align:center;transition:all .2s;cursor:default}
+.db-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.db-card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 12px}
+.db-card-count{font-family:'Outfit',sans-serif;font-size:36px;font-weight:700;margin-bottom:4px}
+.db-card-name{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.db-card-live{display:inline-block;font-size:9px;font-weight:700;color:var(--green);background:var(--green-light);padding:2px 7px;border-radius:10px;margin-top:8px;letter-spacing:.06em}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--card);border-radius:16px;padding:28px;width:90%;max-width:480px;position:relative}
+.modal-title{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;margin-bottom:6px;color:var(--red)}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.modal-target{font-size:14px;font-weight:700;color:var(--text);background:var(--red-light);padding:8px 12px;border-radius:8px;margin-bottom:20px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.btn-modal-cancel{padding:8px 18px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted)}
+.btn-modal-cancel:hover{background:var(--bg)}
+.btn-modal-confirm{padding:8px 18px;border-radius:8px;border:none;background:var(--red);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.btn-modal-confirm:hover{background:#C53030}
+
+/* ── FLEET INTEL ── */
+.fleet-split{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:1100px){.fleet-split{grid-template-columns:1fr 1fr}}
+.fleet-status-bar{display:flex;gap:0;border-radius:6px;overflow:hidden;height:8px;margin-bottom:8px}
+.fs-segment{height:100%;transition:width .4s}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:10px}
+
+/* ── SECTION TITLE ── */
+.section-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:#1A2332;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:8px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast i{font-size:15px}
+
+/* ── LOADING SHIMMER ── */
+.shimmer{background:linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.loading-row{height:42px;border-radius:6px;margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">T</div>
+    <span class="logo-text">TruFleetX</span>
+  </div>
+  <div class="sidebar-section">Operations</div>
+  <a href="Dasboard_admin.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+  <a href="Vehicle_Management_admin.html" class="nav-item"><i class="fa-solid fa-truck"></i><span>Vehicles</span></a>
+  <a href="Driver_management_admin.html" class="nav-item"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a>
+  <a href="Dispatch_Control_admin.html" class="nav-item"><i class="fa-solid fa-route"></i><span>Dispatch</span></a>
+  <a href="Insurance_admin.html" class="nav-item"><i class="fa-solid fa-shield-halved"></i><span>Insurance</span></a>
+  <div class="sidebar-section">Admin</div>
+  <a href="User_Approval_admin.html" class="nav-item"><i class="fa-solid fa-user-check"></i><span>User Approval</span></a>
+  <a href="Setting_admin.html" class="nav-item"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+  <a href="System_Control_admin.html" class="nav-item active"><i class="fa-solid fa-terminal"></i><span>System Control</span></a>
+  <div class="sidebar-bottom">
+    <a href="login.html" class="nav-item" style="color:rgba(255,255,255,.4)"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Sign Out</span></a>
+  </div>
+</nav>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div class="main">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-title">
+        <i class="fa-solid fa-terminal" style="color:var(--accent);margin-right:8px;font-size:15px"></i>
+        System Control Center
+      </div>
+      <div class="header-sub">
+        <span class="sys-health">
+          <span class="health-dot"></span>
+          All Systems Operational
+        </span>
+        <span>·</span>
+        <span id="sysUptime">Uptime: —</span>
+        <span>·</span>
+        <span>TruFleetX v2.0 · Node.js</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-clock" id="liveClock">--:--:-- --</div>
+      <button class="refresh-btn" onclick="sysRefreshAll()"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+      <div class="admin-badge"><i class="fa-solid fa-shield-halved" style="margin-right:5px"></i>Chief System Admin</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="sysTab(this,'cmdCenter')"><i class="fa-solid fa-gauge-high"></i>Command Center</button>
+    <button class="tab-btn" onclick="sysTab(this,'userReg')"><i class="fa-solid fa-users"></i>User Registry<span class="badge" id="tabUserCount">—</span></button>
+    <button class="tab-btn" onclick="sysTab(this,'auditTrail')"><i class="fa-solid fa-scroll"></i>Audit Trail<span class="badge" id="tabAuditCount">—</span></button>
+    <button class="tab-btn" onclick="sysTab(this,'fleetIntel')"><i class="fa-solid fa-truck-fast"></i>Fleet Intelligence</button>
+    <button class="tab-btn" onclick="sysTab(this,'dbConsole')"><i class="fa-solid fa-database"></i>DB Console</button>
+  </div>
+
+  <!-- ═══════════ CONTENT ═══════════ -->
+  <div class="content">
+
+    <!-- ▌TAB 1 — COMMAND CENTER ▐ -->
+    <div class="tab-panel active" id="tab-cmdCenter">
+      <div class="kpi-grid" id="overviewKpis">
+        <div class="kpi-card kpi-blue shimmer loading-row" style="height:110px"></div>
+        <div class="kpi-card kpi-green shimmer loading-row" style="height:110px"></div>
+        <div class="kpi-card kpi-purple shimmer loading-row" style="height:110px"></div>
+        <div class="kpi-card kpi-orange shimmer loading-row" style="height:110px"></div>
+        <div class="kpi-card kpi-red shimmer loading-row" style="height:110px"></div>
+        <div class="kpi-card kpi-yellow shimmer loading-row" style="height:110px"></div>
+      </div>
+      <div class="two-col">
+        <!-- Recent Audit Events -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><i class="fa-solid fa-scroll"></i> Recent Audit Events</div>
+            <span class="live-badge">LIVE</span>
+          </div>
+          <div class="audit-log-wrap" id="cmdAuditMini" style="max-height:320px"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Loading…</div></div>
+        </div>
+        <!-- DB Stats -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><i class="fa-solid fa-database"></i> Database Row Counts</div>
+            <span class="live-badge">LIVE</span>
+          </div>
+          <table class="data-table" id="cmdDbTable">
+            <thead><tr><th>Table</th><th>Rows</th><th>Status</th></tr></thead>
+            <tbody><tr><td class="empty" colspan="3">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ▌TAB 2 — USER REGISTRY ▐ -->
+    <div class="tab-panel" id="tab-userReg">
+      <div class="filter-bar">
+        <input type="text" class="search-box" id="userSearch" placeholder="Search by name or email…" oninput="sysFilterUsers()"/>
+        <select class="filter-select" id="roleFilter" onchange="sysFilterUsers()">
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="manager">Manager</option>
+          <option value="driver">Driver</option>
+          <option value="client">Client</option>
+        </select>
+        <select class="filter-select" id="statusFilter" onchange="sysFilterUsers()">
+          <option value="">All Status</option>
+          <option value="approved">Approved</option>
+          <option value="pending">Pending</option>
+        </select>
+        <button class="refresh-btn" onclick="sysLoadUsers()"><i class="fa-solid fa-arrows-rotate"></i> Reload</button>
+      </div>
+      <div class="card" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0">
+        <div style="overflow-x:auto">
+          <table class="data-table" id="userTable">
+            <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="userTbody"><tr><td class="empty" colspan="6">Loading users…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ▌TAB 3 — AUDIT TRAIL ▐ -->
+    <div class="tab-panel" id="tab-auditTrail">
+      <div class="filter-bar">
+        <button class="filter-pill active" data-atype="ALL" onclick="sysAuditTypeFilter(this)">ALL</button>
+        <button class="filter-pill" data-atype="VEHICLE" onclick="sysAuditTypeFilter(this)">VEHICLE</button>
+        <button class="filter-pill" data-atype="USER" onclick="sysAuditTypeFilter(this)">USER</button>
+        <button class="filter-pill" data-atype="AUTH" onclick="sysAuditTypeFilter(this)">AUTH</button>
+        <button class="filter-pill" data-atype="DISPATCH" onclick="sysAuditTypeFilter(this)">DISPATCH</button>
+        <button class="filter-pill" data-atype="SYSTEM" onclick="sysAuditTypeFilter(this)">SYSTEM</button>
+        <select class="filter-select" id="sevFilter" onchange="sysLoadAudit()">
+          <option value="">All Severities</option>
+          <option value="CRITICAL">CRITICAL</option>
+          <option value="WARNING">WARNING</option>
+          <option value="INFO">INFO</option>
+        </select>
+        <input type="text" class="search-box" id="auditSearch" placeholder="Search events…" oninput="sysAuditSearchDebounce()"/>
+        <select class="filter-select" id="auditLimit" onchange="sysLoadAudit()">
+          <option value="50">Last 50</option>
+          <option value="100">Last 100</option>
+          <option value="200">Last 200</option>
+          <option value="500">Last 500</option>
+        </select>
+        <button class="refresh-btn" onclick="sysLoadAudit()"><i class="fa-solid fa-arrows-rotate"></i> Reload</button>
+      </div>
+      <div class="card" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0">
+        <div style="padding:9px 16px;background:#F8FAFC;border-bottom:1px solid var(--border);display:flex;gap:0;font-size:10.5px;font-weight:600;color:var(--muted);font-family:'JetBrains Mono',monospace">
+          <span style="width:48px">#SEQ</span>
+          <span style="width:136px">TIMESTAMP</span>
+          <span style="width:90px">SEV</span>
+          <span style="width:200px">EVENT TYPE</span>
+          <span style="width:140px">ACTOR</span>
+          <span style="flex:1">ENTITY</span>
+          <span style="width:60px">DETAIL</span>
+        </div>
+        <div class="audit-log-wrap" id="auditLogWrap" style="max-height:600px"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Loading audit events…</div></div>
+      </div>
+    </div>
+
+    <!-- ▌TAB 4 — FLEET INTELLIGENCE ▐ -->
+    <div class="tab-panel" id="tab-fleetIntel">
+      <div class="section-label">Vehicle Status Overview</div>
+      <div class="fleet-split" id="fleetStatusCards">
+        <div class="card kpi-card kpi-blue shimmer" style="height:100px"></div>
+        <div class="card kpi-card kpi-green shimmer" style="height:100px"></div>
+        <div class="card kpi-card kpi-red shimmer" style="height:100px"></div>
+      </div>
+      <div class="two-col" style="margin-top:0">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><i class="fa-solid fa-truck"></i> Recently Registered Vehicles</div>
+            <span class="live-badge">LIVE</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead><tr><th>Vehicle</th><th>Registration</th><th>VIN</th><th>Status</th><th>Added</th></tr></thead>
+              <tbody id="recentVehiclesTbody"><tr><td class="empty" colspan="5">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><i class="fa-solid fa-trash-can" style="color:var(--red)"></i> Decommission History</div>
+            <span style="font-size:11px;color:var(--muted)">From audit log</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead><tr><th>Vehicle</th><th>Reason</th><th>Decommissioned By</th><th>Time</th></tr></thead>
+              <tbody id="decommTbody"><tr><td class="empty" colspan="4">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ▌TAB 5 — DB CONSOLE ▐ -->
+    <div class="tab-panel" id="tab-dbConsole">
+      <div class="section-label">Live Database Table Statistics</div>
+      <div class="db-grid" id="dbGrid"><div style="color:var(--muted);font-size:13px;padding:32px">Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DELETE USER MODAL ═══════════════ -->
+<div class="modal-overlay" id="deleteUserModal">
+  <div class="modal-box">
+    <div class="modal-title"><i class="fa-solid fa-user-xmark"></i> Remove User Account</div>
+    <div class="modal-sub">This will permanently delete the user and all associated data. This action cannot be undone.</div>
+    <div class="modal-target" id="deleteUserTarget">—</div>
+    <select class="filter-select" id="deleteUserReason" style="width:100%;padding:9px 12px;margin-bottom:4px">
+      <option value="">Select removal reason…</option>
+      <option value="Policy Violation">Policy Violation</option>
+      <option value="Fraudulent Account">Fraudulent Account</option>
+      <option value="Account Requested">User Requested Deletion</option>
+      <option value="Duplicate Account">Duplicate Account</option>
+      <option value="System Cleanup">System Cleanup</option>
+      <option value="Security Breach">Security Breach</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="sysCloseDeleteModal()">Cancel</button>
+      <button class="btn-modal-confirm" id="confirmDeleteBtn" onclick="sysConfirmDeleteUser()"><i class="fa-solid fa-trash"></i> Delete User</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="sysToast"><i class="fa-solid fa-circle-check"></i><span id="sysToastMsg"></span></div>
+
+<!-- ═══════════════ SCRIPT ═══════════════ -->
+<script>
+/* ══════ STATE ══════ */
+const SYS = {
+    token: localStorage.getItem('trufleet_token') || '',
+    allUsers: [],
+    allAuditEvents: [],
+    auditTypeFilter: 'ALL',
+    pendingDeleteUserId: null,
+    pendingDeleteUserName: '',
+    startTime: Date.now(),
+    autoRefreshTimer: null
+};
+
+const API = (path, opts = {}) => fetch('/api/sysadmin' + path, {
+    ...opts,
+    headers: { 'Authorization': 'Bearer ' + SYS.token, 'Content-Type': 'application/json', ...(opts.headers||{}) }
+}).then(r => {
+    if (r.status === 401) { window.location.href = 'login.html'; }
+    return r.json();
+});
+
+/* ══════ LIVE CLOCK ══════ */
+function sysTickClock() {
+    const n = new Date();
+    const t = n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const d = n.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    document.getElementById('liveClock').textContent = `${d}  ${t}`;
+    const up = Math.floor((Date.now() - SYS.startTime) / 1000);
+    const h = String(Math.floor(up/3600)).padStart(2,'0');
+    const m = String(Math.floor((up%3600)/60)).padStart(2,'0');
+    const s = String(up%60).padStart(2,'0');
+    document.getElementById('sysUptime').textContent = `Uptime: ${h}:${m}:${s}`;
+}
+setInterval(sysTickClock, 1000);
+sysTickClock();
+
+/* ══════ TAB NAVIGATION ══════ */
+function sysTab(btn, tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+tabId).classList.add('active');
+    if (tabId === 'userReg')   sysLoadUsers();
+    if (tabId === 'auditTrail') sysLoadAudit();
+    if (tabId === 'fleetIntel') sysLoadFleetIntel();
+    if (tabId === 'dbConsole')  sysLoadDbConsole();
+}
+
+/* ══════ TOAST ══════ */
+function sysToast(msg, isErr = false) {
+    const el = document.getElementById('sysToast');
+    const mi = el.querySelector('i');
+    mi.className = isErr ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-circle-check';
+    el.style.background = isErr ? '#C53030' : '#1A2332';
+    document.getElementById('sysToastMsg').textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+/* ══════ SEVERITY CHIP ══════ */
+function sevChip(sev) {
+    const map = { CRITICAL:'sev-critical', WARNING:'sev-warning', INFO:'sev-info' };
+    return `<span class="${map[sev]||'sev-info'}">${sev||'INFO'}</span>`;
+}
+
+/* ══════ ROLE BADGE ══════ */
+function roleBadge(role) {
+    const map = { admin:'badge-red', manager:'badge-purple', driver:'badge-blue', client:'badge-orange' };
+    return `<span class="badge ${map[role]||'badge-gray'}">${role||'—'}</span>`;
+}
+
+/* ══════ FORMAT DATE ══════ */
+function fmtDt(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + ' ' +
+           d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+/* ═══════════════════════════════════════
+   TAB 1 — COMMAND CENTER
+═══════════════════════════════════════ */
+async function sysLoadOverview() {
+    const [ov, db, audit] = await Promise.all([
+        API('/overview'),
+        API('/db-stats'),
+        API('/audit-log?limit=20')
+    ]);
+
+    /* KPI cards */
+    if (!ov.error) {
+        document.getElementById('overviewKpis').innerHTML = `
+        <div class="kpi-card kpi-blue"><div class="kpi-icon"><i class="fa-solid fa-users"></i></div><div class="kpi-value">${ov.totalUsers??0}</div><div class="kpi-label">Total Users</div></div>
+        <div class="kpi-card kpi-green"><div class="kpi-icon"><i class="fa-solid fa-user-check"></i></div><div class="kpi-value">${ov.approvedUsers??0}</div><div class="kpi-label">Approved Accounts</div></div>
+        <div class="kpi-card kpi-orange"><div class="kpi-icon"><i class="fa-solid fa-user-clock"></i></div><div class="kpi-value">${ov.pendingUsers??0}</div><div class="kpi-label">Pending Approval</div></div>
+        <div class="kpi-card kpi-purple"><div class="kpi-icon"><i class="fa-solid fa-truck"></i></div><div class="kpi-value">${ov.totalVehicles??0}</div><div class="kpi-label">Fleet Vehicles</div></div>
+        <div class="kpi-card kpi-red"><div class="kpi-icon"><i class="fa-solid fa-route"></i></div><div class="kpi-value">${ov.activeTrips??0}</div><div class="kpi-label">Active Trips</div></div>
+        <div class="kpi-card kpi-yellow"><div class="kpi-icon"><i class="fa-solid fa-scroll"></i></div><div class="kpi-value">${ov.auditEvents??0}</div><div class="kpi-label">Audit Events</div></div>`;
+    }
+
+    /* DB stats table */
+    if (!db.error && db.tables) {
+        const tbody = db.tables.map(t =>
+            `<tr><td><i class="fa-solid fa-table" style="color:var(--accent);margin-right:7px;font-size:11px"></i>${t.name}</td><td><strong>${t.count}</strong></td><td><span class="badge badge-green" style="font-size:10px">ONLINE</span></td></tr>`
+        ).join('');
+        document.querySelector('#cmdDbTable tbody').innerHTML = tbody || '<tr><td class="empty" colspan="3">No data</td></tr>';
+    }
+
+    /* Mini audit feed */
+    if (!audit.error && audit.events) {
+        const rows = audit.events.slice(0,12).map(e => `
+            <div class="audit-row">
+                <span class="audit-seq">#${String(e.seq||0).padStart(4,'0')}</span>
+                <span class="audit-ts">${(e.timestamp||'').slice(0,19).replace('T',' ')}</span>
+                <span style="width:80px;flex-shrink:0">${sevChip(e.severity)}</span>
+                <span class="audit-type">${e.type||'—'}</span>
+                <span class="audit-entity">${e.entityLabel||e.actorName||'—'}</span>
+            </div>`).join('');
+        document.getElementById('cmdAuditMini').innerHTML = rows || '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">No audit events yet</div>';
+    }
+}
+
+/* ═══════════════════════════════════════
+   TAB 2 — USER REGISTRY
+═══════════════════════════════════════ */
+async function sysLoadUsers() {
+    document.getElementById('userTbody').innerHTML = '<tr><td class="empty" colspan="6">Loading users…</td></tr>';
+    const data = await API('/users');
+    if (data.error) { sysToast('Failed to load users: ' + data.error, true); return; }
+    SYS.allUsers = data.users || [];
+    document.getElementById('tabUserCount').textContent = SYS.allUsers.length;
+    sysFilterUsers();
+}
+
+function sysFilterUsers() {
+    const q     = (document.getElementById('userSearch').value||'').toLowerCase();
+    const role  = document.getElementById('roleFilter').value;
+    const status= document.getElementById('statusFilter').value;
+    const filtered = SYS.allUsers.filter(u => {
+        const name  = (u.full_name||'').toLowerCase();
+        const email = (u.email||'').toLowerCase();
+        if (q && !name.includes(q) && !email.includes(q)) return false;
+        if (role   && u.role !== role) return false;
+        if (status === 'approved' && !u.is_approved) return false;
+        if (status === 'pending'  &&  u.is_approved) return false;
+        return true;
+    });
+    const rows = filtered.map(u => `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:9px">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--primary);flex-shrink:0">
+                ${(u.full_name||u.email||'?')[0].toUpperCase()}
+              </div>
+              <div>
+                <div style="font-weight:600;font-size:13px">${escHtml(u.full_name||'—')}</div>
+                <div style="font-size:11px;color:var(--muted)">${escHtml(u.email||'—')}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-size:12px;color:var(--muted)">${escHtml(u.email||'—')}</td>
+          <td>
+            <select class="role-select" onchange="sysChangeRole('${u.id}','${escHtml(u.full_name||u.email)}',this.value)" title="Change role">
+              ${['admin','manager','driver','client'].map(r=>`<option value="${r}"${u.role===r?' selected':''}>${r.charAt(0).toUpperCase()+r.slice(1)}</option>`).join('')}
+            </select>
+          </td>
+          <td>${u.is_approved
+              ? '<span class="badge badge-green"><i class="fa-solid fa-circle-check" style="font-size:9px"></i>Approved</span>'
+              : '<span class="badge badge-orange"><i class="fa-solid fa-clock" style="font-size:9px"></i>Pending</span>'}</td>
+          <td style="font-size:12px;color:var(--muted)">${fmtDt(u.created_at)}</td>
+          <td>
+            ${u.is_approved
+              ? `<button class="act-btn act-btn-orange" onclick="sysToggleApproval('${u.id}',false,'${escHtml(u.full_name||u.email)}')"><i class="fa-solid fa-ban"></i> Revoke</button>`
+              : `<button class="act-btn act-btn-green" onclick="sysToggleApproval('${u.id}',true,'${escHtml(u.full_name||u.email)}')"><i class="fa-solid fa-check"></i> Approve</button>`}
+            <button class="act-btn act-btn-red" onclick="sysOpenDeleteModal('${u.id}','${escHtml(u.full_name||u.email)}')"><i class="fa-solid fa-trash"></i> Remove</button>
+          </td>
+        </tr>`).join('');
+    document.getElementById('userTbody').innerHTML = rows || '<tr><td class="empty" colspan="6">No users match the current filters.</td></tr>';
+}
+
+async function sysChangeRole(userId, userName, newRole) {
+    const res = await API(`/users/${userId}/role`, { method:'PUT', body: JSON.stringify({ role: newRole }) });
+    if (res.error) { sysToast('Role change failed: '+res.error, true); await sysLoadUsers(); return; }
+    // Update local state
+    const u = SYS.allUsers.find(x => x.id === userId);
+    if (u) u.role = newRole;
+    sysToast(`Role updated → ${newRole} for ${userName}`);
+}
+
+async function sysToggleApproval(userId, approve, userName) {
+    const res = await API(`/users/${userId}/approval`, { method:'PUT', body: JSON.stringify({ is_approved: approve }) });
+    if (res.error) { sysToast('Approval change failed: '+res.error, true); return; }
+    const u = SYS.allUsers.find(x => x.id === userId);
+    if (u) u.is_approved = approve;
+    sysFilterUsers();
+    sysToast(`${userName} — ${approve?'account approved':'approval revoked'}`);
+}
+
+function sysOpenDeleteModal(userId, userName) {
+    SYS.pendingDeleteUserId   = userId;
+    SYS.pendingDeleteUserName = userName;
+    document.getElementById('deleteUserTarget').textContent = userName;
+    document.getElementById('deleteUserReason').value = '';
+    document.getElementById('deleteUserModal').classList.add('open');
+}
+function sysCloseDeleteModal() {
+    document.getElementById('deleteUserModal').classList.remove('open');
+    SYS.pendingDeleteUserId = null;
+}
+async function sysConfirmDeleteUser() {
+    const reason = document.getElementById('deleteUserReason').value;
+    if (!reason) { sysToast('Select a removal reason before confirming.', true); return; }
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true; btn.textContent = 'Removing…';
+    const res = await API(`/users/${SYS.pendingDeleteUserId}`, { method:'DELETE', body: JSON.stringify({ reason }) });
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete User';
+    sysCloseDeleteModal();
+    if (res.error) { sysToast('Delete failed: '+res.error, true); return; }
+    SYS.allUsers = SYS.allUsers.filter(u => u.id !== SYS.pendingDeleteUserId);
+    sysFilterUsers();
+    document.getElementById('tabUserCount').textContent = SYS.allUsers.length;
+    sysToast(`User "${SYS.pendingDeleteUserName}" permanently removed.`);
+}
+
+/* ═══════════════════════════════════════
+   TAB 3 — AUDIT TRAIL
+═══════════════════════════════════════ */
+let _auditSearchTimer = null;
+function sysAuditSearchDebounce() {
+    clearTimeout(_auditSearchTimer);
+    _auditSearchTimer = setTimeout(sysLoadAudit, 350);
+}
+
+function sysAuditTypeFilter(btn) {
+    document.querySelectorAll('[data-atype]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    SYS.auditTypeFilter = btn.dataset.atype;
+    sysLoadAudit();
+}
+
+async function sysLoadAudit() {
+    const limit  = document.getElementById('auditLimit').value || 100;
+    const sev    = document.getElementById('sevFilter').value || '';
+    const q      = (document.getElementById('auditSearch')?.value||'').trim();
+    const type   = SYS.auditTypeFilter !== 'ALL' ? SYS.auditTypeFilter : '';
+    let url = `/audit-log?limit=${limit}`;
+    if (type) url += `&type=${encodeURIComponent(type)}`;
+    if (sev)  url += `&sev=${encodeURIComponent(sev)}`;
+    if (q)    url += `&q=${encodeURIComponent(q)}`;
+    const data = await API(url);
+    if (data.error) { sysToast('Audit load failed: '+data.error, true); return; }
+    SYS.allAuditEvents = data.events || [];
+    document.getElementById('tabAuditCount').textContent = SYS.allAuditEvents.length;
+    renderAuditLog(SYS.allAuditEvents, 'auditLogWrap');
+}
+
+function renderAuditLog(events, containerId) {
+    if (!events || events.length === 0) {
+        document.getElementById(containerId).innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">No audit events match the current filters.</div>';
+        return;
+    }
+    const rows = events.map((e,i) => {
+        const detId = `audit-det-${i}`;
+        return `
+        <div class="audit-row" onclick="sysToggleAuditDetail('${detId}')">
+            <span class="audit-seq">#${String(e.seq||0).padStart(4,'0')}</span>
+            <span class="audit-ts">${(e.timestamp||'').slice(0,19).replace('T',' ')}</span>
+            <span style="width:90px;flex-shrink:0">${sevChip(e.severity)}</span>
+            <span class="audit-type">${e.type||'—'}</span>
+            <span class="audit-actor">${escHtml(e.actorName||'system')}</span>
+            <span class="audit-entity">${escHtml(e.entityLabel||'—')}</span>
+            <span class="audit-details-btn">detail</span>
+        </div>
+        <div class="audit-expand" id="${detId}">
+            <pre>${JSON.stringify({ actor:{ id:e.actorId, name:e.actorName, role:e.actorRole }, entity:{ type:e.entityType, id:e.entityId, label:e.entityLabel }, details:e.details }, null, 2)}</pre>
+        </div>`;
+    }).join('');
+    document.getElementById(containerId).innerHTML = rows;
+}
+
+function sysToggleAuditDetail(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+/* ═══════════════════════════════════════
+   TAB 4 — FLEET INTELLIGENCE
+═══════════════════════════════════════ */
+async function sysLoadFleetIntel() {
+    const [fa, auditRaw] = await Promise.all([
+        API('/fleet-activity'),
+        API('/audit-log?limit=500&type=VEHICLE')
+    ]);
+
+    /* Status cards */
+    if (!fa.error && fa.statusBreakdown) {
+        const sb = fa.statusBreakdown;
+        const total = Object.values(sb).reduce((a,b)=>a+(b||0),0) || 1;
+        const statuses = [
+            { key:'active',      label:'Active',      cls:'kpi-green',  icon:'fa-circle-check' },
+            { key:'maintenance', label:'Maintenance', cls:'kpi-orange', icon:'fa-wrench' },
+            { key:'inactive',    label:'Inactive',    cls:'kpi-yellow', icon:'fa-pause-circle' },
+            { key:'blocked',     label:'Blocked',     cls:'kpi-red',    icon:'fa-ban' },
+        ];
+        const cards = statuses.map(s => `
+            <div class="kpi-card ${s.cls}">
+                <div class="kpi-icon"><i class="fa-solid ${s.icon}"></i></div>
+                <div class="kpi-value">${sb[s.key]||0}</div>
+                <div class="kpi-label">${s.label} Vehicles</div>
+            </div>`).join('');
+        document.getElementById('fleetStatusCards').innerHTML = cards;
+    }
+
+    /* Recent vehicles */
+    if (!fa.error && fa.recentVehicles) {
+        const rows = fa.recentVehicles.map(v => `
+            <tr>
+                <td><strong>${escHtml(v.make||'—')} ${escHtml(v.model||'')}</strong><br><span style="font-size:11px;color:var(--muted)">${v.year||'—'}</span></td>
+                <td><span class="badge badge-blue" style="font-family:'JetBrains Mono',monospace;font-size:11px">${escHtml(v.registration_number||'—')}</span></td>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">${escHtml(v.vin||'—')}</td>
+                <td>${vehicleStatusBadge(v.status)}</td>
+                <td style="font-size:12px;color:var(--muted)">${fmtDt(v.created_at)}</td>
+            </tr>`).join('');
+        document.getElementById('recentVehiclesTbody').innerHTML = rows || '<tr><td class="empty" colspan="5">No vehicles found.</td></tr>';
+    }
+
+    /* Decommission history from audit log */
+    if (!auditRaw.error && auditRaw.events) {
+        const decomm = auditRaw.events.filter(e => e.type === 'VEHICLE_DECOMMISSIONED');
+        if (decomm.length === 0) {
+            document.getElementById('decommTbody').innerHTML = '<tr><td class="empty" colspan="4">No decommissions recorded yet.</td></tr>';
+        } else {
+            const rows = decomm.map(e => `
+                <tr>
+                    <td><strong>${escHtml(e.entityLabel||'—')}</strong></td>
+                    <td><span class="badge badge-red" style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${escHtml((e.details?.decommission_reason)||'—')}</span>
+                        ${e.details?.notes ? `<br><span style="font-size:11px;color:var(--muted);margin-top:3px;display:block">${escHtml(e.details.notes)}</span>`:''}</td>
+                    <td style="font-size:12px">${escHtml(e.actorName||'—')}</td>
+                    <td style="font-size:12px;color:var(--muted)">${(e.timestamp||'').slice(0,16).replace('T',' ')}</td>
+                </tr>`).join('');
+            document.getElementById('decommTbody').innerHTML = rows;
+        }
+    }
+}
+
+function vehicleStatusBadge(status) {
+    const map = { active:'badge-green', maintenance:'badge-orange', inactive:'badge-yellow', blocked:'badge-red' };
+    return `<span class="badge ${map[status]||'badge-gray'}">${status||'—'}</span>`;
+}
+
+/* ═══════════════════════════════════════
+   TAB 5 — DB CONSOLE
+═══════════════════════════════════════ */
+async function sysLoadDbConsole() {
+    const data = await API('/db-stats');
+    if (data.error) { sysToast('DB stats failed: '+data.error, true); return; }
+    const tableIcons = {
+        users:'fa-users', vehicles:'fa-truck', drivers:'fa-id-card',
+        dispatch_requests:'fa-route', trips:'fa-map-route', maintenance_records:'fa-wrench',
+        insurance_policies:'fa-shield-halved', notifications:'fa-bell'
+    };
+    const tableColors = {
+        users:'kpi-blue', vehicles:'kpi-purple', drivers:'kpi-green',
+        dispatch_requests:'kpi-orange', trips:'kpi-red', maintenance_records:'kpi-yellow',
+        insurance_policies:'kpi-blue', notifications:'kpi-gray'
+    };
+    const cards = (data.tables||[]).map(t => `
+        <div class="db-card">
+            <div class="db-card-icon" style="background:var(--accent-light);color:var(--accent)">
+                <i class="fa-solid ${tableIcons[t.name]||'fa-table'}"></i>
+            </div>
+            <div class="db-card-count" style="color:var(--primary)">${(t.count||0).toLocaleString()}</div>
+            <div class="db-card-name">${t.name.replace(/_/g,' ')}</div>
+            <span class="db-card-live">LIVE</span>
+        </div>`).join('');
+    document.getElementById('dbGrid').innerHTML = cards || '<div style="color:var(--muted);font-size:13px">No table data available.</div>';
+}
+
+/* ══════ GLOBAL REFRESH ══════ */
+function sysRefreshAll() {
+    const activePanel = document.querySelector('.tab-panel.active');
+    if (!activePanel) return;
+    const id = activePanel.id.replace('tab-','');
+    if (id === 'cmdCenter')  sysLoadOverview();
+    if (id === 'userReg')    sysLoadUsers();
+    if (id === 'auditTrail') sysLoadAudit();
+    if (id === 'fleetIntel') sysLoadFleetIntel();
+    if (id === 'dbConsole')  sysLoadDbConsole();
+    sysToast('Data refreshed');
+}
+
+/* ══════ HELPERS ══════ */
+function escHtml(str) {
+    return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════ AUTO-REFRESH every 30s ══════ */
+SYS.autoRefreshTimer = setInterval(sysRefreshAll, 30000);
+
+/* ══════ BOOT ══════ */
+sysLoadOverview();
+</script>
+</body>
+</html>

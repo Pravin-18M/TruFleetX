@@ -24,6 +24,7 @@ const driverRoutes    = require('./routes/driver.routes');
 const dispatchRoutes  = require('./routes/dispatch.routes');
 const managerRoutes      = require('./routes/manager.routes');
 const driverPortalRoutes = require('./routes/driver_portal.routes');
+const sysadminRoutes     = require('./routes/sysadmin.routes');
 
 app.use('/api/auth',      authRoutes);
 app.use('/api/users',     userRoutes);
@@ -34,6 +35,7 @@ app.use('/api/drivers',   driverRoutes);
 app.use('/api/dispatch',  dispatchRoutes);
 app.use('/api/manager',   managerRoutes);
 app.use('/api/driver',    driverPortalRoutes);
+app.use('/api/sysadmin',  sysadminRoutes);
 
 
 // --- Root Route to serve the landing page ---
