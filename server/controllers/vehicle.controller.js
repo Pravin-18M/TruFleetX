@@ -154,14 +154,40 @@ exports.updateVehicle = async (req, res) => {
     res.json({ message: 'Vehicle updated successfully.', vehicle: data[0] });
 };
 
-// DELETE vehicle
+// DELETE vehicle — requires a decommission reason for audit trail
 exports.deleteVehicle = async (req, res) => {
     const { vehicleId } = req.params;
+    const { reason, notes } = req.body || {};
+
+    if (!reason || !reason.trim()) {
+        return res.status(400).json({ error: 'A decommission reason is required.' });
+    }
+
+    // Fetch vehicle info before deletion for the audit log
+    const { data: vehicle } = await supabase
+        .from('vehicles')
+        .select('make, model, registration_number, vin')
+        .eq('id', vehicleId)
+        .single();
+
     const { error } = await supabase
         .from('vehicles')
         .delete()
         .eq('id', vehicleId);
 
     if (error) return res.status(500).json({ error: error.message });
-    res.json({ message: 'Vehicle removed from fleet.' });
+
+    // Structured audit log — in production this should write to an audit_logs table
+    const adminId   = req.user?.id   || 'unknown';
+    const adminName = req.user?.full_name || req.user?.email || 'unknown';
+    console.log(JSON.stringify({
+        event:       'VEHICLE_DECOMMISSIONED',
+        timestamp:   new Date().toISOString(),
+        performed_by: { id: adminId, name: adminName },
+        vehicle:     { id: vehicleId, ...(vehicle || {}) },
+        reason,
+        notes:       notes || null
+    }));
+
+    res.json({ message: 'Vehicle successfully decommissioned and removed from the fleet registry.' });
 };
