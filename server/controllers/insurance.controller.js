@@ -171,3 +171,39 @@ exports.deletePolicy = async (req, res) => {
     if (error) return res.status(500).json({ error: error.message });
     res.json({ message: 'Policy deleted.' });
 };
+
+// GET fleet insurance view — ALL vehicles with their latest insurance policy and risk status
+// This is the vehicle-centric view: every fleet asset appears, insured or not.
+exports.getFleetInsuranceView = async (req, res) => {
+    const { data, error } = await supabase
+        .from('vehicles')
+        .select('id, make, model, registration_number, vin, year, status, created_at, insurance_policies(id, provider, policy_number, start_date, expiry_date, document_url)')
+        .order('created_at', { ascending: false });
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    const today = new Date();
+    const enriched = (data || []).map(v => {
+        const policies = Array.isArray(v.insurance_policies) ? v.insurance_policies : [];
+        // Sort policies by expiry desc so index 0 = most recently-expiring = effective active policy
+        const sorted = policies.slice().sort((a, b) => new Date(b.expiry_date) - new Date(a.expiry_date));
+        // Prefer the latest active (future) policy; fall back to latest expired
+        const activePolicy = sorted.find(p => new Date(p.expiry_date) >= today);
+        const latest = activePolicy || sorted[0] || null;
+
+        let insStatus = 'uninsured';
+        let daysLeft  = null;
+        if (latest) {
+            const expiry = new Date(latest.expiry_date);
+            daysLeft = Math.ceil((expiry - today) / 86400000);
+            insStatus = daysLeft < 0 ? 'expired' : daysLeft <= 7 ? 'critical' : daysLeft <= 30 ? 'expiring' : 'active';
+        }
+        return { ...v, latestPolicy: latest, insStatus, daysLeft, totalPolicies: policies.length };
+    });
+
+    // Sort by risk priority: uninsured → expired → critical → expiring → active
+    const riskOrder = { uninsured: 0, expired: 1, critical: 2, expiring: 3, active: 4 };
+    enriched.sort((a, b) => (riskOrder[a.insStatus] ?? 5) - (riskOrder[b.insStatus] ?? 5));
+
+    res.json(enriched);
+};

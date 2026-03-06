@@ -48,7 +48,7 @@ exports.addVehicle = async (req, res) => {
     try {
         const {
             make, model, year, vin, registration_number, engine_number,
-            insurance_provider, insurance_expiry, policy_number
+            insurance_provider, insurance_expiry, insurance_start_date, policy_number
         } = req.body;
 
         if (!make || !model || !year || !vin) {
@@ -94,13 +94,17 @@ exports.addVehicle = async (req, res) => {
 
         // ── Create insurance policy if provider + expiry supplied ───────
         if (insurance_provider && insurance_expiry) {
-            await supabase.from('insurance_policies').insert([{
+            // policy_number is NOT NULL in schema — auto-generate if not supplied by admin
+            const resolvedPolicyNo = (policy_number || '').trim() || `TRU-${vehicle.id.slice(-8).toUpperCase()}`;
+            const { error: insErr } = await supabase.from('insurance_policies').insert([{
                 vehicle_id:    vehicle.id,
                 provider:      insurance_provider,
-                policy_number: policy_number || null,
+                policy_number: resolvedPolicyNo,
+                start_date:    insurance_start_date || null,
                 expiry_date:   insurance_expiry,
                 document_url:  insurance_document_url
             }]);
+            if (insErr) console.error('[addVehicle] insurance insert failed:', insErr.message);
         }
 
         res.status(201).json({ message: 'Vehicle registered successfully.', vehicle });

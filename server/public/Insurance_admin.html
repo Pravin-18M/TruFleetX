@@ -379,6 +379,24 @@
         }
         .upload-box:hover { border-color: var(--accent); background: var(--accent-light); }
 
+        /* FILTER TABS */
+        .filter-tab {
+            padding: 8px 18px;
+            border: 1px solid #E2E8F0;
+            border-radius: 20px;
+            background: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .filter-tab:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+        .filter-tab.tab-active { background: var(--primary); color: white; border-color: var(--primary); }
+
         /* RESPONSIVE */
         @media (max-width: 1200px) {
             .alert-section { grid-template-columns: 1fr; }
@@ -519,29 +537,57 @@
                 </div>
             </div>
 
-            <!-- 3. ALL POLICIES TABLE -->
+            <!-- 3. FLEET INSURANCE REGISTRY -->
             <div class="table-wrapper">
+
+                <!-- Risk Filter Tabs -->
+                <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+                    <button id="tab-all"       class="filter-tab tab-active" onclick="setFilter('all')">
+                        <i class="fa-solid fa-layer-group"></i> All Vehicles
+                    </button>
+                    <button id="tab-active"    class="filter-tab" onclick="setFilter('active')">
+                        <i class="fa-solid fa-circle-check" style="color:#10B981"></i> Active
+                    </button>
+                    <button id="tab-expiring"  class="filter-tab" onclick="setFilter('expiring')">
+                        <i class="fa-solid fa-triangle-exclamation" style="color:#F59E0B"></i> Expiring (30d)
+                    </button>
+                    <button id="tab-critical"  class="filter-tab" onclick="setFilter('critical')">
+                        <i class="fa-solid fa-circle-exclamation" style="color:#EF4444"></i> Critical (7d)
+                    </button>
+                    <button id="tab-expired"   class="filter-tab" onclick="setFilter('expired')">
+                        <i class="fa-solid fa-circle-xmark" style="color:#EF4444"></i> Expired
+                    </button>
+                    <button id="tab-uninsured" class="filter-tab" onclick="setFilter('uninsured')">
+                        <i class="fa-solid fa-shield-halved" style="color:#94A3B8"></i> No Policy
+                    </button>
+                </div>
+
                 <div class="table-card">
-                    <div style="padding: 1.5rem; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
-                        <span class="section-title">Master Policy Registry</span>
-                        <div style="position: relative;">
-                            <i class="fa-solid fa-search" style="position: absolute; left: 10px; top: 10px; color: #94A3B8;"></i>
-                            <input type="text" id="policySearch" oninput="filterPolicies(this.value)" placeholder="Search vehicle, policy, provider" style="padding: 8px 10px 8px 35px; border: 1px solid #E2E8F0; border-radius: 6px; font-family: 'Inter';">
+                    <div style="padding:1.5rem;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
+                        <span class="section-title">
+                            <i class="fa-solid fa-shield-halved" style="color:var(--accent);"></i>
+                            &nbsp;<span id="registryTitle">Fleet Insurance Registry</span>
+                        </span>
+                        <div style="position:relative;">
+                            <i class="fa-solid fa-search" style="position:absolute;left:10px;top:10px;color:#94A3B8;"></i>
+                            <input type="text" id="fleetSearch" oninput="filterFleet(this.value)" placeholder="Search vehicle, provider, policy..." style="padding:8px 10px 8px 35px;border:1px solid #E2E8F0;border-radius:6px;font-family:'Inter';">
                         </div>
                     </div>
                     <table>
                         <thead>
                             <tr>
-                                <th>Vehicle Info</th>
+                                <th>Vehicle</th>
+                                <th>Reg No</th>
                                 <th>Provider</th>
-                                <th>Policy Number</th>
-                                <th>Expiry Date</th>
-                                <th>Status</th>
+                                <th>Policy No</th>
+                                <th>Valid From</th>
+                                <th>Valid Until</th>
+                                <th>Risk Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="policyTableBody">
-                            <tr><td colspan="6" style="text-align:center;padding:2rem;color:#94A3B8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading policies...</td></tr>
+                        <tbody id="fleetInsTableBody">
+                            <tr><td colspan="8" style="text-align:center;padding:2rem;color:#94A3B8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading fleet coverage...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -683,7 +729,7 @@
             });
         }
 
-        async function openDrawer(policyObj) {
+        async function openDrawer(policyObj, preselectedVehicleId) {
             await ensureVehicles();
             document.getElementById('drawerOverlay').classList.add('open');
 
@@ -713,7 +759,7 @@
                 provSel.value = '';
             }
 
-            populateVehicleSelect(isEdit ? policyObj.vehicle_id : null);
+            populateVehicleSelect(isEdit ? policyObj.vehicle_id : (preselectedVehicleId || null));
             if (isEdit) document.getElementById('f-vehicle-id').disabled = true;
             else        document.getElementById('f-vehicle-id').disabled = false;
         }
@@ -779,75 +825,127 @@
             }
         }
 
-        // ── LOAD POLICY TABLE ────────────────────────────────────────
-        // Backend returns: [..., { vehicle: { registration_number, make, model, vin, status }, provider, policy_number, expiry_date, ... }]
-        // Auto-reflects insurance records created when vehicles are added via Vehicle Management page.
-        let _allPolicies = [];
+        // ── FLEET INSURANCE REGISTRY (vehicle-centric) ────────────────
+        // GETs ALL fleet vehicles + their latest policy from /api/insurance/fleet-view.
+        // Vehicles added via Fleet Manager with insurance will appear here automatically.
+        let _fleetData      = [];
+        let _activeFilter   = 'all';
+        let _searchTerm     = '';
 
-        async function loadPolicies() {
-            const tbody = document.getElementById('policyTableBody');
+        // Risk status → display config
+        const RISK_CONFIG = {
+            active:    { pill: 'st-active',  label: 'Active',        icon: 'fa-circle-check',        color: '#10B981' },
+            expiring:  { pill: 'st-warning', label: 'Expiring Soon', icon: 'fa-triangle-exclamation', color: '#F59E0B' },
+            critical:  { pill: 'st-expired', label: 'Critical',      icon: 'fa-circle-exclamation',   color: '#EF4444' },
+            expired:   { pill: 'st-expired', label: 'Expired',       icon: 'fa-circle-xmark',         color: '#DC2626' },
+            uninsured: { pill: '',           label: 'No Policy',     icon: 'fa-shield-halved',        color: '#94A3B8' }
+        };
+
+        async function loadFleetView() {
+            const tbody = document.getElementById('fleetInsTableBody');
             try {
-                const res = await fetch('/api/insurance', { headers: authHeaders });
+                const res = await fetch('/api/insurance/fleet-view', { headers: authHeaders });
+                if (res.status === 401 || res.status === 403) { window.location.href = 'login.html'; return; }
                 if (!res.ok) throw new Error();
-                _allPolicies = await res.json();
-                renderPolicyRows(_allPolicies);
+                _fleetData = await res.json();
+                applyFilterAndRender();
             } catch {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--danger);">Failed to load policies.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--danger);"><i class="fa-solid fa-circle-exclamation"></i> Failed to load fleet insurance data.</td></tr>';
             }
         }
 
-        function renderPolicyRows(policies) {
-            const tbody = document.getElementById('policyTableBody');
-            if (!policies.length) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#94A3B8;">No policies yet. Add a vehicle with insurance details or use &ldquo;Add Policy&rdquo;.</td></tr>';
+        function applyFilterAndRender() {
+            let data = _fleetData;
+            if (_activeFilter !== 'all') data = data.filter(v => v.insStatus === _activeFilter);
+            if (_searchTerm) {
+                const q = _searchTerm.toLowerCase();
+                data = data.filter(v => [
+                    v.make, v.model, v.registration_number, v.vin,
+                    v.latestPolicy?.provider, v.latestPolicy?.policy_number
+                ].filter(Boolean).join(' ').toLowerCase().includes(q));
+            }
+            renderFleetTable(data);
+        }
+
+        function setFilter(f) {
+            _activeFilter = f;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('tab-active'));
+            document.getElementById('tab-' + f).classList.add('tab-active');
+            // Update title
+            const labels = { all:'Fleet Insurance Registry', active:'Active Coverage', expiring:'Expiring Soon (30 days)', critical:'Critical — Expiring in 7 Days', expired:'Expired Policies', uninsured:'Uninsured Vehicles' };
+            document.getElementById('registryTitle').textContent = labels[f] || 'Fleet Insurance Registry';
+            applyFilterAndRender();
+        }
+
+        function filterFleet(q) {
+            _searchTerm = q.trim();
+            applyFilterAndRender();
+        }
+
+        function renderFleetTable(data) {
+            const tbody = document.getElementById('fleetInsTableBody');
+            if (!data.length) {
+                const emptyLabels = {
+                    all: 'No vehicles registered yet. Add vehicles via Fleet Manager.',
+                    uninsured: '✅ Great news — all fleet vehicles have insurance coverage!',
+                    expired: '✅ No expired policies found.',
+                    critical: '✅ No policies expiring within 7 days.',
+                    expiring: '✅ No policies expiring within 30 days.',
+                    active: 'No active policies found. Add insurance to your fleet vehicles.'
+                };
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2.5rem;color:#64748B;">${emptyLabels[_activeFilter] || 'No records found.'}</td></tr>`;
                 return;
             }
-            tbody.innerHTML = policies.map(p => {
-                const days = daysLeft(p.expiry_date);
-                const reg  = vehicleReg(p);
-                const name = vehicleName(p);
-                const safe = JSON.stringify(p).replace(/'/g, "&#39;");
-                const startStr = p.start_date ? fmtDate(p.start_date) : '—';
+            tbody.innerHTML = data.map(v => {
+                const p    = v.latestPolicy;
+                const cfg  = RISK_CONFIG[v.insStatus] || RISK_CONFIG.uninsured;
+                const safe = p ? JSON.stringify(p).replace(/'/g, "&#39;") : null;
+
+                // Row background tint for immediate visual risk scanning
+                const rowBg = v.insStatus === 'uninsured' ? 'background:#FAFAFA;' :
+                              v.insStatus === 'expired'   ? 'background:#FFF5F5;' :
+                              v.insStatus === 'critical'  ? 'background:#FFFBEB;' : '';
+
+                const daysTag = (p && v.daysLeft !== null)
+                    ? `<div style="font-size:0.75rem;color:${cfg.color};margin-top:2px;font-weight:600;">${v.daysLeft < 0 ? 'Expired ' + Math.abs(v.daysLeft) + 'd ago' : v.daysLeft + ' days left'}</div>`
+                    : '';
+
+                const actionBtn = (v.insStatus === 'uninsured')
+                    ? `<button onclick="openDrawer(null,'${v.id}')" style="background:var(--primary);color:white;border:none;padding:6px 14px;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-plus"></i> Insure Now</button>`
+                    : `<button onclick='openDrawer(${safe})' style="background:white;border:1px solid #E2E8F0;padding:6px 14px;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;color:var(--text-main);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='#E2E8F0'"><i class="fa-solid fa-rotate"></i> Renew</button>`;
+
                 return `
-                <tr data-search="${(reg + ' ' + name + ' ' + (p.provider||'') + ' ' + (p.policy_number||'')).toLowerCase()}">
+                <tr style="${rowBg}">
                     <td>
-                        <strong>${reg}</strong>
-                        ${name ? `<br><span style="color:#64748B;font-size:0.8rem;">${name}</span>` : ''}
-                    </td>
-                    <td>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <i class="fa-solid fa-building-columns" style="color:#2563EB;"></i>
-                            ${p.provider || '—'}
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div style="width:36px;height:36px;background:${v.insStatus==='uninsured'?'#F1F5F9':v.insStatus==='active'?'#ECFDF5':'#FEF2F2'};border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                                <i class="fa-solid fa-truck" style="color:${cfg.color};font-size:0.9rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:600;font-size:0.95rem;">${v.make} ${v.model}</div>
+                                <div style="font-size:0.75rem;color:#94A3B8;">${v.year || ''}</div>
+                            </div>
                         </div>
                     </td>
-                    <td>${p.policy_number || '—'}</td>
+                    <td style="font-weight:500;">${v.registration_number || '—'}</td>
                     <td>
-                        <div>${fmtDate(p.expiry_date)}</div>
-                        ${p.start_date ? `<span style="color:#94A3B8;font-size:0.75rem;">From ${startStr}</span>` : ''}
+                        ${p ? `<div style="display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-building-columns" style="color:#2563EB;font-size:0.9rem;"></i>${p.provider}</div>` : '<span style="color:#94A3B8;">—</span>'}
                     </td>
-                    <td>${pillHtml(days)}</td>
+                    <td style="font-size:0.9rem;">${p?.policy_number || '—'}</td>
+                    <td style="font-size:0.9rem;color:#64748B;">${p?.start_date ? fmtDate(p.start_date) : '—'}</td>
                     <td>
-                        <button title="Edit Policy" style="background:none;border:none;cursor:pointer;color:#64748B;padding:4px 8px;border-radius:6px;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='none'" onclick='openDrawer(${safe})'>
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </button>
+                        <div style="font-weight:500;">${p ? fmtDate(p.expiry_date) : '—'}</div>
+                        ${daysTag}
                     </td>
+                    <td>
+                        <span class="status-pill ${cfg.pill}" style="${v.insStatus==='uninsured'?'background:#F1F5F9;color:#64748B;':''}"
+                              title="${v.totalPolicies} total polic${v.totalPolicies===1?'y':'ies'}">
+                            <i class="fa-solid ${cfg.icon}"></i> ${cfg.label}
+                        </span>
+                    </td>
+                    <td>${actionBtn}</td>
                 </tr>`;
             }).join('');
-        }
-
-        // ── LIVE SEARCH ──────────────────────────────────────────────
-        function filterPolicies(q) {
-            const term = q.toLowerCase().trim();
-            if (!term) { renderPolicyRows(_allPolicies); return; }
-            const filtered = _allPolicies.filter(p => {
-                const hay = [
-                    p.vehicle?.registration_number,
-                    p.vehicle?.make, p.vehicle?.model, p.vehicle?.vin,
-                    p.provider, p.policy_number
-                ].filter(Boolean).join(' ').toLowerCase();
-                return hay.includes(term);
-            });
-            renderPolicyRows(filtered);
         }
 
         // ── FORM SUBMIT (ADD or UPDATE POLICY) ───────────────────────
@@ -886,7 +984,7 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || data.message || 'Failed');
                 closeDrawer();
-                await Promise.all([loadStats(), loadUrgent(), loadPolicies()]);
+                await Promise.all([loadStats(), loadUrgent(), loadFleetView()]);
             } catch (err) {
                 alert(err.message || 'Failed to save policy.');
             } finally {
@@ -929,7 +1027,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
             loadUrgent();
-            loadPolicies();
+            loadFleetView();   // vehicle-centric fleet coverage table
             renderChart();
         });
     </script>

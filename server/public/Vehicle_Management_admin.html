@@ -624,6 +624,16 @@
                         <input type="date" id="f-ins-expiry" class="form-control">
                     </div>
 
+                    <div class="form-group">
+                        <label class="form-label">Policy Start Date <span style="color:#94A3B8;font-weight:400;">(optional)</span></label>
+                        <input type="date" id="f-ins-start" class="form-control">
+                    </div>
+
+                    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;font-size:0.82rem;color:#2563EB;display:flex;align-items:center;gap:8px;">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Insurance details filled above will automatically appear in the <strong>Insurance Section</strong>.
+                    </div>
+
                 </div>
 
                 <div class="drawer-footer">
@@ -842,9 +852,11 @@
                 const insProvider = document.getElementById('f-ins-provider').value.trim();
                 const policyNo    = document.getElementById('f-policy-no').value.trim();
                 const insExpiry   = document.getElementById('f-ins-expiry').value;
+                const insStart    = document.getElementById('f-ins-start').value;
                 if (insProvider) fd.append('insurance_provider', insProvider);
                 if (policyNo)    fd.append('policy_number',      policyNo);
                 if (insExpiry)   fd.append('insurance_expiry',   insExpiry);
+                if (insStart)    fd.append('insurance_start_date', insStart);
 
                 const rcFile  = document.getElementById('rcUpload').files[0];
                 const insFile = document.getElementById('insUpload').files[0];

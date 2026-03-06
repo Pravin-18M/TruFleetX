@@ -23,6 +23,11 @@ router.get('/urgent', authenticate, authorize('admin', 'manager'), insuranceCont
 // @access  Private (admin, manager)
 router.get('/upcoming', authenticate, authorize('admin', 'manager'), insuranceController.getUpcomingRenewals);
 
+// @route   GET /api/insurance/fleet-view
+// @desc    All vehicles with their insurance status (vehicle-centric — every asset appears)
+// @access  Private (admin, manager)
+router.get('/fleet-view', authenticate, authorize('admin', 'manager'), insuranceController.getFleetInsuranceView);
+
 // @route   POST /api/insurance
 // @desc    Add a new insurance policy
 // @access  Private (admin)
